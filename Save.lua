@@ -29,7 +29,7 @@ ns.Save = Save
 
 local VERSION = 1
 local MAXX, MAXY = K.MAXX, K.MAXY
-local GRIDS = { "item", "iarg", "know", "hitp", "mon", "stealth" }
+local GRIDS = { "item", "iarg", "know", "hitp", "mon", "stealth", "look" }
 -- The plain values of G (numbers, strings, booleans) that are part of a game.
 local SCALARS = {
    "level", "playerx", "playery", "lastpx", "lastpy", "lasthx", "lasthy", "gtime", "wizard", "lastnum",
@@ -109,7 +109,13 @@ function Save.unpack(data)
       for _, name in ipairs(GRIDS) do
          level[name] = {}
          for x = 1, MAXX do level[name][x] = {} end
-         UnpackGrid(packed[name], level[name])
+         if packed[name] then
+            UnpackGrid(packed[name], level[name])
+         else  -- (a save from before the grid existed)
+            for x = 1, MAXX do
+               for y = 1, MAXY do level[name][x][y] = 0 end
+            end
+         end
       end
       G.levels[index] = level
    end

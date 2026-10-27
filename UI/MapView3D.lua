@@ -271,7 +271,12 @@ local function DrawTile(layers, x, y, ground)
          Icon(layers[ACTOR], V.ClassIcon(G.class), mx, my + size * 0.15, size, size)
       end
    elseif monster ~= 0 then
-      local display = models and V.MonsterDisplay(monster)
+      local look = G.look[x][y]
+      if look == 0 then
+         look = ns.rnd(1000)
+         G.look[x][y] = look
+      end
+      local display = models and V.MonsterDisplay(monster, look)
       if display then
          -- monsters face the player they are after
          local toward = DIRECTION[Sign(G.playerx - x)][Sign(G.playery - y)]

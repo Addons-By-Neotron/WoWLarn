@@ -138,9 +138,17 @@ V.PLAYER_COLOR = { 0.3, 1, 0.3 }
 -- The creature display each monster is shown as in the 2.5D view.  V.DISPLAY is the list that
 -- goes with the addon; what the player picked in the model viewer (/larn models) is kept in
 -- the saved variables and wins.
+local function Range(first, last)
+   local list = {}
+   for display = first, last do list[#list + 1] = display end
+   return list
+end
+
+-- A monster has a display or a list of displays, one of which each monster gets by chance.
 V.DISPLAY = {
-   -- [monster id] = displayID
+   -- [monster id] = displayID, or a list of them
    [K.LEMMING] = 31,  -- a murloc
+   [K.GNOME] = Range(6920, 6931),
 }
 
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
@@ -152,9 +160,14 @@ for id, name in pairs(V.MONSTER_NAME) do
    ns.MonsterData[id].name = name
 end
 
-function V.MonsterDisplay(id)
+-- The display of a monster; look is the number it was given by chance (Draw: G.look).
+function V.MonsterDisplay(id, look)
    local own = ns.mod.db.global.displays
-   return (own and own[id]) or V.DISPLAY[id]
+   local display = (own and own[id]) or V.DISPLAY[id]
+   if type(display) == "table" then
+      display = display[((look or 1) - 1) % #display + 1]
+   end
+   return display
 end
 
 function V.MonsterGlyph(id)

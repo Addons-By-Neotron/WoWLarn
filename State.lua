@@ -31,7 +31,7 @@ local MAXX, MAXY = K.MAXX, K.MAXY
 local G = {}
 ns.G = G
 
-local LEVEL_GRIDS = { "item", "iarg", "know", "hitp", "mon", "stealth" }
+local LEVEL_GRIDS = { "item", "iarg", "know", "hitp", "mon", "stealth", "look" }
 
 local function Grid()
    local grid = {}
@@ -88,6 +88,7 @@ end
 -- know[x][y]    nonzero once seen         hitp[x][y]  monster hit points
 -- mon[x][y]     monster id (C: mitem[x][y].mon)
 -- stealth[x][y] nonzero if the monster there is awake
+-- look[x][y]    which of its looks the monster there has (0: not chosen yet), see Visuals.lua
 
 function G.Reset()
    FillArray(G.c, 100, 0)
