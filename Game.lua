@@ -183,7 +183,7 @@ local function Finish()
    local entry = ns.Scores.record(cause)
    ui:Log("damage", "%s %s", G.name, ns.Scores.deathLine(cause))
    ui:Log("system", L["Score: %d   Difficulty: %d"], c[K.GOLD], c[K.HARDGAME])
-   if entry and cause ~= ns.Scores.QUIT then ns.scoreboard:Show(entry) end
+   if entry then ns.scoreboard:Show(entry) end
    ui:Log("system", L["Game over. Press any key to start again."])
 end
 

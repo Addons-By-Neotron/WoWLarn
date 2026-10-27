@@ -144,7 +144,7 @@ function Scores.record(cause)
    local board = Board()
    local score = c[K.GOLD]
    local entry = {
-      key = Scores.key(), who = G.name, class = G.class and G.class.original or "?", score = score,
+      key = Scores.key(), who = G.name, class = G.class and (LOCALIZED_CLASS_NAMES_MALE[G.class.token] or G.class.token) or "?", score = score,
       hardlev = c[K.HARDGAME], level = G.level, what = cause, time = idiv(G.gtime, 100),
       sex = G.sex, date = date and date("%Y-%m-%d") or "",
    }

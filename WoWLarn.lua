@@ -120,6 +120,7 @@ function mod:PrintHelp()
    self:info(L["Available commands:"])
    self:info(L["/larn  - show/hide the game window"])
    self:info(L["/larn config  - open settings"])
+   self:info(L["/larn scores  - show the high scores"])
    self:info(L["/larn reset  - reset the window position"])
 end
 
@@ -132,6 +133,9 @@ function mod:ChatCommand(input)
    elseif cmd == "view" or cmd == "3d" then
       self.db.profile.view = self.db.profile.view == "3d" and "flat" or "3d"
       ns.ui:Refresh("map")
+   elseif cmd == "scores" then
+      ns.main:Show()
+      ns.scoreboard:Show()
    elseif cmd == "models" then
       ns.modelViewer:Toggle()
    elseif cmd == "reset" then

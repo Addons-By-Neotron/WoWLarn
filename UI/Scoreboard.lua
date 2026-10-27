@@ -86,12 +86,25 @@ function scoreboard:Create(parent)
    return frame
 end
 
+local ORIGINAL = {}
+
+-- The class as WoW names it (entries from before that kept the original Ularn names).
+local function ClassOf(entry)
+   local token = ORIGINAL[entry.class]
+   if not token then
+      for _, class in ipairs(ns.Classes) do
+         if class.original == entry.class then token = class.token end
+      end
+   end
+   return token and LOCALIZED_CLASS_NAMES_MALE[token] or entry.class
+end
+
 local function Line(kind, rank, entry, highlight)
    local text
    if kind == "winners" then
-      text = format(L["%2d) %9d  %s (%s), %d mobuls, difficulty %d"], rank, entry.score, entry.who, entry.class, entry.time, entry.hardlev)
+      text = format(L["%2d) %9d  %s (%s), %d mobuls, difficulty %d"], rank, entry.score, entry.who, ClassOf(entry), entry.time, entry.hardlev)
    else
-      text = format("%2d) %9d  %s (%s), %s", rank, entry.score, entry.who, entry.class,
+      text = format("%2d) %9d  %s (%s), %s", rank, entry.score, entry.who, ClassOf(entry),
          ns.Scores.deathLine(entry.what, entry.level, entry.sex))
    end
    return highlight and ("|cffffd100" .. text .. "|r") or text
