@@ -962,7 +962,6 @@ do
    check(not ns.Save.exists(), "save cleared")
 end
 for _, cell in ipairs(ns.side.cells) do
-   check(cell.text:IsObjectType and true or true, "stat cell")
    if cell.scripts and cell.scripts.OnEnter then cell.scripts.OnEnter(cell) end
 end
 print("ALL OK")
