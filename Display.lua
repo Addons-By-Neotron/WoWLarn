@@ -38,6 +38,24 @@ local DIROFFX = { [0] = 0, 0, 1, 0, -1, 1, -1, 1, -1 }
 local DIROFFY = { [0] = 0, 1, 0, -1, 0, -1, -1, 1, 1 }
 Display.DIROFFX, Display.DIROFFY = DIROFFX, DIROFFY
 
+-- C: the monster shown on a tile. Invisible stalkers and demons (without the eye of Larn)
+-- are not seen, and a mimic looks like another monster that changes now and then.
+function Display.visibleMonster(x, y)
+   local id = mon[x][y]
+   if id == 0 then return 0 end
+   if id == K.MIMIC then
+      if G.gtime % 10 == 0 or not G.mimicmonst then
+         repeat G.mimicmonst = ns.rnd(K.MAXMONST) until G.mimicmonst ~= K.INVISIBLESTALKER
+      end
+      return G.mimicmonst
+   elseif id == K.INVISIBLESTALKER and c[K.SEEINVISIBLE] == 0 then
+      return 0
+   elseif id >= K.DEMONLORD and id <= K.LUCIFER and c[K.EYEOFLARN] == 0 then
+      return 0
+   end
+   return id
+end
+
 -- C: showcell(). Marks the tiles around the player as seen.
 function Display.showcell(x, y)
    local radius = 1

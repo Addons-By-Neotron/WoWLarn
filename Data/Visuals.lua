@@ -62,6 +62,13 @@ function V.ObjectIcon(id)
    return visual and visual.icon and (ICONS .. visual.icon)
 end
 
+-- Monsters are drawn as their ASCII letter until they get icons and models (milestone 10).
+V.MONSTER_COLOR = { 1, 0.35, 0.3 }
+
+function V.MonsterGlyph(id)
+   return ns.Tables.monstglyphs:sub(id + 1, id + 1)
+end
+
 function V.ObjectGlyph(id)
    return ns.Tables.objglyphs:sub(id + 1, id + 1)
 end

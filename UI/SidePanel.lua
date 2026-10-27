@@ -165,7 +165,7 @@ end
 
 -- Minimap colors: [kind] = { r, g, b }.
 local MINIMAP = {
-   wall = { 0.5, 0.5, 0.55 }, object = { 1, 0.82, 0 }, player = { 0.3, 1, 0.3 },
+   wall = { 0.5, 0.5, 0.55 }, monster = { 1, 0.2, 0.2 }, object = { 1, 0.82, 0 }, player = { 0.3, 1, 0.3 },
 }
 
 function side:UpdateMinimap()
@@ -181,6 +181,8 @@ function side:UpdateMinimap()
             kind = "player"
          elseif known[y] == 0 then
             kind = "unknown"
+         elseif ns.Display.visibleMonster(x, y) ~= 0 then
+            kind = "monster"
          elseif items[y] == K.OWALL then
             kind = "wall"
          elseif items[y] ~= 0 then

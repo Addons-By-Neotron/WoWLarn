@@ -57,6 +57,16 @@ local function CopyGrid(from, to)
    end
 end
 
+local function CopyLoot(from)
+   local to = {}
+   for key, list in pairs(from or {}) do
+      local copy = {}
+      for i, entry in ipairs(list) do copy[i] = { entry[1], entry[2] } end
+      to[key] = copy
+   end
+   return to
+end
+
 local function FillArray(array, count, value)
    for i = 1, count do array[i] = value end
 end
@@ -68,6 +78,7 @@ G.ivenarg = {}      -- inventory item arguments
 G.spelknow = {}     -- 1..SPNUM
 G.scrollknown = {}  -- 1..MAXSCROLL
 G.potionknown = {}  -- 1..MAXPOTION
+G.loot = {}         -- items carried by the monsters, [x * 100 + y] = { { id, arg }, ... } (C: mitem[][].it)
 G.levels = {}       -- saved levels, [level + 1]
 G.visited = {}      -- [level + 1] = true once a level has been made
 for _, name in ipairs(LEVEL_GRIDS) do
@@ -90,6 +101,10 @@ function G.Reset()
       FillGrid(G[name], 0)
    end
    G.levels, G.visited = {}, {}
+   G.loot = {}
+   G.monster = nil      -- per-game copy of ns.MonsterData, made by Monster.init
+   G.lastmonst = ""     -- name of the monster last hit (C: lastmonst)
+   G.lasthx, G.lasthy = 1, 1  -- where the player last hit a monster
    G.level = 0
    G.playerx, G.playery = 1, 1
    G.lastpx, G.lastpy = 1, 1
@@ -122,6 +137,7 @@ function G.SaveLevel()
    for _, name in ipairs(LEVEL_GRIDS) do
       CopyGrid(G[name], saved[name])
    end
+   saved.loot = CopyLoot(G.loot)
 end
 
 -- C: getlevel(). Copies a stored level back into the live arrays.
@@ -130,12 +146,14 @@ function G.GetLevel()
    for _, name in ipairs(LEVEL_GRIDS) do
       CopyGrid(saved[name], G[name])
    end
+   G.loot = CopyLoot(saved.loot)
 end
 
 function G.ClearLevel()
    for _, name in ipairs(LEVEL_GRIDS) do
       FillGrid(G[name], 0)
    end
+   G.loot = {}
 end
 
 function G.FillKnow(value)

@@ -377,10 +377,13 @@ Each milestone is playable or testable in game.
    - the monster hooks `Monster.makeMonst` and `Monster.createMonster` are stubs until milestone 4, so levels have no monsters yet; Dealer McDope's pad (`OPAD`) is the goblin alchemist's
    - deviations from the C, all deliberate: `scprob` and `potprob` are rolled one past their end in the C (it reads the next array); the C most likely reads a 0 from the array that follows, so the first entry is used instead. A door in a treasure room may sit in a corner, so tests treat diagonal steps as connected. Canned maps have no level-1 exit; entering the dungeon opens it, as in the C. The `rnd(n)` loop limits in `makeObject` are re-rolled on every pass, as in the C.
    - still to do from this list: pits, trapdoors, elevators and the rest of the features (milestone 7)
-4. **Monsters + combat:**
-   - monster creation (`makemonst`/`fillmonst`) and `movemonst` (all AI)
-   - `hitmonster`/`hitplayer`/`spattack`, `died`, experience and levelling, `regen`, random spawns
-   - portraits on tiles and the target model with animations
+4. **Monsters + combat** (done, flat tile renderer):
+   - `Monster.lua`: `makeMonst`, `createMonster`, `fillMonst`, `hitmonster`, `hitm`, `hitplayer`, all 16 `spattack` attacks, `dropsomething`; `MoveMonst.lua`: `movemonst`, `movemt` (smart and dumb movement), `mmove`, `teleportMonst`; `Create.setHP` fills a level (demon lords on 11 to 15, demon princes in the volcano); `Player`: experience and level changes, max HP/spell helpers, `stealSomething`, `adjustCValues`, `emptyHanded`; `Item.createGem`
+   - `G.monster` is a per-game copy of `ns.MonsterData` (`Monster.init`, called from `makePlayer`), because genocide changes the flags; `G.loot[x * 100 + y]` holds what a monster carries (C: `mitem[][].it`) and is saved with the level
+   - monsters are drawn as their ASCII letter in red (tiles and minimap); invisible stalkers, demons without the eye of Larn and the mimic follow `Display.visibleMonster`
+   - deliberate carry-overs from the C: a fire-breathing monster still hurts a fire-resistant player (the C `else` only guards the message); the scared-monster branch of `movemt` reads the `tmpitem` left over from an earlier move, as the C does
+   - left out on purpose: the spheres of annihilation (`movsphere`, `rmsphere`, the `OANNIHILATION` branch of `mmove`) wait for the spells in milestone 6; `annihilate` and `genmonst` belong to scrolls and spells (5 and 6)
+   - still to do from this list: monster icons or portraits on the tiles and the target model with animations (they need the models of milestone 10; the glyphs are the fallback), the death screen and scoreboard (milestone 9)
 5. **Items:**
    - `makeobject` and pickup (`lookforobject`)
    - inventory window, `PickItem`, wield/wear/take off, drop

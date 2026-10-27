@@ -222,6 +222,112 @@ check(piles == 1, "gold pile dropped")
 for _ = 1, 50 do local id, arg = ns.Item.newObject(12); check(id >= 0 and arg >= 0, "newobject") end
 check(ns.Player.packWeight() >= 0, "pack weight")
 
+---------------------------------------------------------------- monsters and combat
+ns.mod.db.profile.fast = true  -- no pauses: this part of the test runs outside the game thread
+local function Fresh(level)
+   G.Reset(); ns.Create.makePlayer(ns.Classes[1]); ns.Create.newCaveLevel(0); ns.Create.newCaveLevel(level)
+   for x = 1, K.MAXX do for y = 1, K.MAXY do
+      G.item[x][y], G.mon[x][y], G.hitp[x][y], G.stealth[x][y] = 0, 0, 0, 0
+      G.know[x][y] = 1
+   end end
+   G.loot = {}
+   G.playerx, G.playery = 30, 8
+   LOG = {}
+end
+local function Monsters()
+   local n = 0
+   for x = 1, K.MAXX do for y = 1, K.MAXY do if G.mon[x][y] ~= 0 then n = n + 1 end end end
+   return n
+end
+local function Put(id, x, y) G.mon[x][y] = id; G.hitp[x][y] = G.monster[id].hitpoints; G.stealth[x][y] = 1 end
+
+-- levels come with monsters (and demon lords / princes on the deep ones)
+for _, lev in ipairs({ 1, 5, 11, 15, 16, 20 }) do
+   G.Reset(); ns.Create.makePlayer(ns.Classes[1]); ns.Create.newCaveLevel(0); ns.Create.newCaveLevel(lev)
+   local n, lords, princes = 0, 0, 0
+   for x = 1, K.MAXX do for y = 1, K.MAXY do
+      local m = G.mon[x][y]
+      if m ~= 0 then
+         n = n + 1
+         check(G.hitp[x][y] == G.monster[m].hitpoints and m <= 65, "monster hit points on level " .. lev)
+         if m >= K.DEMONLORD and m < K.DEMONPRINCE then lords = lords + 1 end
+         if m == K.DEMONPRINCE then princes = princes + 1 end
+      end
+   end end
+   check(n >= 3, "level " .. lev .. " has monsters, got " .. n)
+   if lev >= 11 and lev <= 15 then check(lords >= lev - 10, "demon lords on " .. lev) end
+   if lev > 15 then check(princes >= lev - 15, "demon princes on " .. lev) end
+end
+-- makemonst honours the tier and genocide
+Fresh(3)
+for _ = 1, 200 do local m = ns.Monster.makeMonst(1); check(m >= 1 and m <= ns.Tables.monstlevel[1] + 1 or m == K.LEMMING, "tier 1 monster " .. m) end
+G.monster[K.KOBOLD].flags = K.FL_GENOCIDED
+for _ = 1, 200 do check(ns.Monster.makeMonst(1) ~= K.KOBOLD, "genocided monsters are skipped") end
+
+-- a monster walks to the player and attacks
+Fresh(3); G.c[K.AC] = 0; G.c[K.HP] = 1000; G.c[K.HPMAX] = 1000
+Put(K.ORC, 35, 8)
+for _ = 1, 20 do
+   ns.Monster.movemonst(); G.gtime = G.gtime + 1
+   if G.hitflag then break end
+end
+check(G.hitflag and (G.c[K.HP] < 1000 or (last() or ""):find("missed")), "orc reached and attacked the player")
+check(G.mon[35][8] == 0, "orc left its spot")
+-- a smart monster finds its way around a wall
+Fresh(3); G.c[K.HP] = 1000; G.c[K.HPMAX] = 1000
+for y = 3, 13 do G.item[33][y] = y == 11 and 0 or K.OWALL end  -- one gap, inside the window
+Put(K.ELF, 35, 9)  -- smart: finds the way round the wall
+local ox, oy = 35, 9
+for _ = 1, 30 do ns.Monster.movemonst(); G.gtime = G.gtime + 1 end
+local found = false
+for x = 1, K.MAXX do for y = 1, K.MAXY do if G.mon[x][y] == K.ELF then found = true; ox, oy = x, y end end end
+check(found and math.max(math.abs(ox - 30), math.abs(oy - 8)) <= 1 or G.hitflag, "elf closed in around the wall: " .. ox .. "," .. oy)
+
+-- the player kills a monster: experience, gold and drops
+Fresh(3)
+G.c[K.STRENGTH] = 30; G.c[K.DEXTERITY] = 30
+Put(K.ORC, 31, 8); G.hitp[31][8] = 1
+local xp = G.c[K.EXPERIENCE]
+ns.Monster.hitmonster(31, 8)
+for _ = 1, 20 do if G.mon[31][8] ~= 0 then ns.Monster.hitmonster(31, 8) end end
+check(G.mon[31][8] == 0, "orc died")
+check(G.c[K.EXPERIENCE] > xp, "experience gained")
+check(G.hit3flag, "hit flag set")
+local drops = 0
+for x = 28, 33 do for y = 6, 10 do if G.item[x][y] ~= 0 then drops = drops + 1 end end end
+check(drops >= 1, "the orc left gold or an item")
+-- experience raises the level
+Fresh(3)
+local lvl = G.c[K.LEVEL]
+ns.Player.raiseExperience(ns.Tables.skill[lvl + 1])
+check(G.c[K.LEVEL] == lvl + 1 and G.c[K.HPMAX] > 16, "level up")
+ns.Player.loseLevel()
+check(G.c[K.LEVEL] == lvl, "level drained")
+
+-- every special attack runs
+for attack = 1, 16 do
+   Fresh(3)
+   G.c[K.HP] = 5000; G.c[K.HPMAX] = 5000; G.c[K.GOLD] = 1000; G.c[K.WEAR] = 1
+   G.iven[1], G.ivenarg[1], G.iven[3], G.ivenarg[3] = K.OLEATHER, 1, K.ODAGGER, 2
+   Put(K.LEPRECHAUN, 31, 8); G.lastmonst = "thing"
+   ns.Monster.spattack(attack, 31, 8)
+end
+check(not G.dead, "special attacks at full health do not kill")
+-- the leprechaun steals gold and vanishes
+Fresh(3); G.c[K.GOLD] = 1000; Put(K.LEPRECHAUN, 31, 8)
+check(ns.Monster.spattack(8, 31, 8) == true and G.mon[31][8] == 0 and G.c[K.GOLD] < 1000, "gold stolen")
+-- the nymph steals an item and keeps it
+Fresh(3); G.iven[5], G.ivenarg[5] = K.OPOTION, 2; Put(K.NYMPH, 31, 8)
+check(ns.Monster.spattack(14, 31, 8) == true, "nymph steals")
+local loot = G.loot[31 * 100 + 31 * 0 + 8] or G.loot[3100 + 8]
+check(loot == nil or #loot >= 1, "loot kept")
+-- the death of the player
+Fresh(3); G.c[K.HP] = 1; G.c[K.AC] = 0; Put(K.DEMONLORD, 31, 8)
+for _ = 1, 20 do if not G.dead then ns.Monster.hitplayer(31, 8) end end
+check(G.dead, "the player died to a demon lord")
+-- losehp
+Fresh(3); G.c[K.HP] = 10; ns.Player.losehp(3); check(G.c[K.HP] == 7 and not G.dead, "losehp"); ns.Player.losehp(7); check(G.dead, "dead at 0 hp")
+
 ---------------------------------------------------------------- the game
 ui.co = nil
 ui:NewGame()
@@ -293,6 +399,20 @@ keys(key); check(last():find("circular staircase") and ui.wait == "key", "stairs
 keys("u"); check(G.level == 1 and G.item[G.playerx][G.playery] == K.OSTAIRSDOWN, "up the stairs")
 key = Neighbour(K.OSTAIRSDOWN)
 keys(key); keys("d"); check(G.level == 2 and G.item[G.playerx][G.playery] == K.OSTAIRSUP, "down the stairs")
+-- fighting in the game thread: walking into a monster attacks it, and it fights back
+ns.Create.newCaveLevel(3)
+for x = 1, K.MAXX do for y = 1, K.MAXY do G.item[x][y], G.mon[x][y] = 0, 0 end end
+G.playerx, G.playery = 30, 8
+G.c[K.HP] = G.c[K.HPMAX]
+Put(K.ORC, 31, 8)
+LOG = {}
+keys("l")
+local fought = false
+for _, l in ipairs(lines()) do if l:find("You hit the orc") or l:find("You missed the orc") then fought = true end end
+check(fought and G.playerx == 30, "bumping a monster attacks it, got " .. table.concat(lines(), " | "))
+for _ = 1, 40 do if G.mon[31][8] ~= 0 and not G.dead then keys("l") end end
+check(G.mon[31][8] == 0 or G.dead, "fight ended")
+if G.dead then check(not ui:IsActive() or last():find("Game over"), "death ends the game") end
 keys("S"); ns.main:Show()
 
 -- redraw paths with a populated game

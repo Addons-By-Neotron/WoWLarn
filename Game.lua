@@ -46,10 +46,10 @@ local function Run(dir)
       if moved > 0 then
          if c[K.HASTEMONST] ~= 0 then Monster.movemonst() end
          Monster.movemonst()
-         Monster.randmonst()
+         Monster.randMonst()
          Regen.regen()
       end
-      if G.hitflag then moved = 0 end
+      if G.hitflag or G.dead then moved = 0 end
       if moved ~= 0 then
          Display.showcell(G.playerx, G.playery)
          ui:Nap(RUN_DELAY)
@@ -141,6 +141,7 @@ function Game.Run()
          if c[K.HASTEMONST] ~= 0 then Monster.movemonst() end
          Monster.movemonst()
       end
+      if G.dead then break end
       if not G.viewflag then
          Display.showcell(G.playerx, G.playery)
       else

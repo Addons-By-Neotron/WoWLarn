@@ -61,6 +61,7 @@ function Create.makePlayer(class)
    end
 
    G.class = class
+   ns.Monster.init()
    G.playerx = rnd(MAXX - 2) + 1
    G.playery = rnd(MAXY - 2) + 1
    G.gtime = 0
@@ -98,7 +99,7 @@ end
 
 -- Hit points of a freshly made monster (C: monster[mon].hitpoints).
 local function MonsterHP(id)
-   return id > 0 and ns.MonsterData[id].hitpoints or 0
+   return G.monster[id].hitpoints
 end
 
 -- C: eat(). Digs the maze out of solid wall with a recursive backtracker. The C works on
@@ -482,15 +483,48 @@ function Create.makeObject(j)
    end
 end
 
--- C: sethp(). Monsters arrive in milestone 4; the town has none.
+-- C: sethp(). Creates the set of monsters for a level. Must be done when entering a new
+-- level: with flag the old monsters are wiped out, otherwise they are left there.
 function Create.setHP(flag)
+   local level = G.level
    if flag then
       G.FillStealth(0)
    end
-   if G.level == 0 then
+   if level == 0 then
       c[K.TELEFLAG] = 0
       return
    end
+
+   local count
+   if flag then
+      count = rnd(12) + 2 + idiv(level, 2)
+   else
+      count = idiv(level, 2) + 1
+   end
+   for _ = 1, count do
+      ns.Monster.fillMonst(ns.Monster.makeMonst(level))
+   end
+
+   -- Levels 11 to 15 get 1 to 5 demon lords, the volcano levels 1 to 5 demon princes.
+   if level >= DBOTTOM - 4 and level <= DBOTTOM then
+      local j = 1
+      while j <= level - 10 do
+         if ns.Monster.fillMonst(K.DEMONLORD + rund(7)) == -1 then
+            j = j - 1
+         end
+         j = j + 1
+      end
+   end
+   if level > DBOTTOM then
+      local j = 1
+      while j <= level - DBOTTOM do
+         if ns.Monster.fillMonst(K.DEMONPRINCE) == -1 then
+            j = j - 1
+         end
+         j = j + 1
+      end
+   end
+   ns.Player.positionPlayer()
 end
 
 -- C: newcavelevel(). Must be called whenever the player changes level.

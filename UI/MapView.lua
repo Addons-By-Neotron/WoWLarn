@@ -115,6 +115,15 @@ local function DrawTile(cell, x, y, ground)
    end
    Fill(cell.bg, ground)
    cell.actor:Hide()
+   local monster = ns.Display.visibleMonster(x, y)
+   if monster ~= 0 then
+      cell.icon:Hide()
+      cell.glyph:SetText(V.MonsterGlyph(monster))
+      cell.glyph:SetTextColor(unpack(V.MONSTER_COLOR))
+      cell.glyph:Show()
+      return
+   end
+   cell.glyph:SetTextColor(unpack(V.GLYPH_COLOR))
    local icon = object ~= 0 and V.ObjectIcon(object)
    if icon then
       cell.icon:SetTexture(icon)

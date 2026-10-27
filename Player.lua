@@ -146,6 +146,201 @@ function Player.losehp(x)
    ns.ui:Refresh("stats")
 end
 
+-- C: raisehp(), raisemhp(), losemhp(), raisespells(), raisemspells(), losemspells().
+function Player.raiseHP(x)
+   c[K.HP] = math.min(c[K.HP] + x, c[K.HPMAX])
+end
+
+function Player.raiseMaxHP(x)
+   c[K.HPMAX] = c[K.HPMAX] + x
+   c[K.HP] = c[K.HP] + x
+end
+
+function Player.loseMaxHP(x)
+   c[K.HP] = math.max(c[K.HP] - x, 1)
+   c[K.HPMAX] = math.max(c[K.HPMAX] - x, 1)
+end
+
+function Player.raiseSpells(x)
+   c[K.SPELLS] = math.min(c[K.SPELLS] + x, c[K.SPELLMAX])
+end
+
+function Player.raiseMaxSpells(x)
+   c[K.SPELLMAX] = c[K.SPELLMAX] + x
+   c[K.SPELLS] = c[K.SPELLS] + x
+end
+
+function Player.loseMaxSpells(x)
+   c[K.SPELLMAX] = math.max(c[K.SPELLMAX] - x, 0)
+   c[K.SPELLS] = math.max(c[K.SPELLS] - x, 0)
+end
+
+-- C: raiseexperience(). skill[c[LEVEL]] in C is T.skill[level + 1] here.
+function Player.raiseExperience(x)
+   local ui, skill = ns.ui, ns.Tables.skill
+   local old = c[K.LEVEL]
+   c[K.EXPERIENCE] = c[K.EXPERIENCE] + x
+   while c[K.EXPERIENCE] >= skill[c[K.LEVEL] + 1] and c[K.LEVEL] < K.MAXPLEVEL do
+      local tmp = ns.idiv(c[K.CONSTITUTION] - c[K.HARDGAME], 2)
+      c[K.LEVEL] = c[K.LEVEL] + 1
+      Player.raiseMaxHP(ns.rnd(3) + ns.rnd(tmp > 0 and tmp or 1))
+      Player.raiseMaxSpells(ns.rund(3))
+      if c[K.LEVEL] < 7 - c[K.HARDGAME] then
+         Player.raiseMaxHP(ns.idiv(c[K.CONSTITUTION], 4))
+      end
+   end
+   if c[K.LEVEL] ~= old then
+      ui:Message(L["Welcome to level %d!"], c[K.LEVEL])
+      local level = c[K.LEVEL]
+      if level == 94 then  -- earth guardian
+         c[K.WTW] = 99999
+      elseif level == 95 then  -- air guardian
+         c[K.INVISIBILITY] = 99999
+      elseif level == 96 then  -- fire guardian
+         c[K.FIRERESISTANCE] = 99999
+      elseif level == 97 then  -- water guardian
+         c[K.CANCELLATION] = 99999
+      elseif level == 98 then  -- time guardian
+         c[K.HASTESELF] = 99999
+      elseif level == 99 then  -- ethereal guardian
+         c[K.STEALTH] = 99999
+         c[K.SPIRITPRO] = 99999
+      elseif level == 100 then
+         ui:Message(L["You are now The Creator!"])
+         G.FillKnow(1)
+         for i = 1, K.SPNUM do G.spelknow[i] = 1 end
+         for i = 1, K.MAXSCROLL do G.scrollknown[i] = 1 end
+         for i = 1, K.MAXPOTION do G.potionknown[i] = 1 end
+      end
+   end
+   ui:Refresh("stats")
+end
+
+-- C: loseexperience() and loselevel().
+function Player.loseExperience(x)
+   local ui, skill = ns.ui, ns.Tables.skill
+   local old = c[K.LEVEL]
+   c[K.EXPERIENCE] = math.max(c[K.EXPERIENCE] - x, 0)
+   while c[K.EXPERIENCE] < skill[c[K.LEVEL]] do
+      c[K.LEVEL] = c[K.LEVEL] - 1
+      if c[K.LEVEL] <= 1 then c[K.LEVEL] = 1 end
+      local tmp = ns.idiv(c[K.CONSTITUTION] - c[K.HARDGAME], 2)
+      Player.loseMaxHP(ns.rnd(tmp > 0 and tmp or 1))
+      if c[K.LEVEL] < 7 - c[K.HARDGAME] then
+         Player.loseMaxHP(ns.idiv(c[K.CONSTITUTION], 4))
+      end
+      Player.loseMaxSpells(ns.rund(3))
+   end
+   if old ~= c[K.LEVEL] then
+      ui:Message(L["You went down to level %d!"], c[K.LEVEL])
+   end
+   ui:Refresh("stats")
+end
+
+function Player.loseLevel()
+   if c[K.LEVEL] > 1 then
+      Player.loseExperience(c[K.EXPERIENCE] - ns.Tables.skill[c[K.LEVEL]] + 1)
+   end
+end
+
+-- C: emptyhanded(). True if the player carries nothing but what is worn or wielded.
+function Player.emptyHanded()
+   for i = 1, IVENSIZE do
+      if iven[i] ~= 0 and i ~= c[K.WIELD] and i ~= c[K.WEAR] and i ~= c[K.SHIELD] then
+         return false
+      end
+   end
+   return true
+end
+
+-- C: adjustcvalues(). Takes back what an object gave while it was carried.
+function Player.adjustCValues(id, arg)
+   local flag = false
+   if id == K.ODEXRING then
+      c[K.DEXTERITY] = c[K.DEXTERITY] - (arg + 1)
+      flag = true
+   elseif id == K.OSTRRING then
+      c[K.STREXTRA] = c[K.STREXTRA] - (arg + 1)
+      flag = true
+   elseif id == K.OCLEVERRING then
+      c[K.INTELLIGENCE] = c[K.INTELLIGENCE] - (arg + 1)
+      flag = true
+   elseif id == K.OHAMMER then
+      c[K.DEXTERITY] = c[K.DEXTERITY] - 10
+      c[K.STREXTRA] = c[K.STREXTRA] - 10
+      c[K.INTELLIGENCE] = c[K.TMP2]
+      flag = true
+   elseif id == K.OORB then
+      c[K.ORB] = c[K.ORB] - 1
+      c[K.AWARENESS] = c[K.AWARENESS] - 1
+   elseif id == K.OSWORDofSLASHING then
+      c[K.DEXTERITY] = c[K.DEXTERITY] - 5
+      flag = true
+   elseif id == K.OSLAYER then
+      c[K.INTELLIGENCE] = c[K.INTELLIGENCE] - 10
+      flag = true
+   elseif id == K.OPSTAFF then
+      c[K.WISDOM] = c[K.WISDOM] - 10
+      flag = true
+   elseif id == K.OORBOFDRAGON then
+      c[K.SLAYING] = c[K.SLAYING] - 1
+      return
+   elseif id == K.OSPIRITSCARAB then
+      c[K.NEGATESPIRIT] = c[K.NEGATESPIRIT] - 1
+      return
+   elseif id == K.OCUBEofUNDEAD then
+      c[K.CUBEofUNDEAD] = c[K.CUBEofUNDEAD] - 1
+      return
+   elseif id == K.ONOTHEFT then
+      c[K.NOTHEFT] = c[K.NOTHEFT] - 1
+      return
+   elseif id == K.OLANCE then
+      c[K.LANCEDEATH] = 0
+      return
+   elseif id == K.OLARNEYE then
+      c[K.EYEOFLARN] = 0
+      if c[K.BLINDCOUNT] == 0 then
+         ns.ui:Message(L["Your sight fades for a moment..."])
+         ns.ui:Nap(2000)
+         ns.ui:Message(L["Your sight returns but everything looks dull and faded."])
+      end
+      return
+   elseif id == K.OPOTION or id == K.OSCROLL then
+      return
+   else
+      flag = true
+   end
+   if flag then ns.ui:Refresh("stats") end
+
+   for i = K.STRENGTH, K.STRENGTH + 5 do
+      if c[i] < 3 then c[i] = 3 end
+   end
+end
+
+-- C: stealsomething(). A monster takes an item from the player's pockets; it is kept in
+-- the monster's loot. Returns true if something was stolen.
+function Player.stealSomething(x, y)
+   local key = x * 100 + y
+   local loot = G.loot[key]
+   if loot and #loot >= 6 then return false end  -- max of 6 stolen items per monster
+   for _ = 1, 100 do
+      local i = ns.rund(IVENSIZE) + 1
+      if iven[i] ~= 0 and c[K.WEAR] ~= i and c[K.WIELD] ~= i and c[K.SHIELD] ~= i then
+         ns.ui:Message("  %s", ns.Tables.objectname[iven[i]] or "?")
+         Player.adjustCValues(iven[i], ivenarg[i])
+         if not loot then
+            loot = {}
+            G.loot[key] = loot
+         end
+         loot[#loot + 1] = { iven[i], ivenarg[i] }
+         iven[i], ivenarg[i] = 0, 0
+         ns.ui:Refresh("stats")
+         return true
+      end
+   end
+   return false
+end
+
 -- C: died(). The full scoreboard and tombstone arrive in milestone 9.
 function Player.died(cause)
    G.dead = cause or true

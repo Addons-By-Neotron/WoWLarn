@@ -211,3 +211,19 @@ function Item.something(x, y, lev)
    local id, arg = Item.newObject(lev)
    Item.createItem(x, y, id, arg)
 end
+
+-- C: creategem(). A gem on a square near the player.
+function Item.createGem()
+   local id, j
+   local roll = rnd(4)
+   if roll == 1 then
+      id, j = K.ODIAMOND, 50
+   elseif roll == 2 then
+      id, j = K.ORUBY, 40
+   elseif roll == 3 then
+      id, j = K.OEMERALD, 30
+   else
+      id, j = K.OSAPPHIRE, 20
+   end
+   Item.createItem(G.playerx, G.playery, id, rnd(j) + idiv(j, 10))
+end
