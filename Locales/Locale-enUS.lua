@@ -463,3 +463,6 @@ L["All spells"] = true
 L["locked until level %d"] = true
 L["Items %d of %d"] = true
 L["Your pack holds %d items at your level (%d at most); more slots open as you level."] = true
+L["The door is stuck and won't open."] = true
+L["Your struggle makes a loud noise!"] = true
+L["The door opens."] = true

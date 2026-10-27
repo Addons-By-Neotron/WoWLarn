@@ -400,7 +400,10 @@ function Object.lookForObject()
       end
       if ns.rnd(11) < 7 then
          local trap = G.iarg[x][y]
+         -- (the C says nothing when the door does not open)
+         Msg(L["The door is stuck and won't open."])
          if trap == 6 then
+            Msg(L["Your struggle makes a loud noise!"])
             c[K.AGGRAVATE] = c[K.AGGRAVATE] + ns.rnd(400)
          elseif trap == 7 or trap == 8 then
             Msg(L["You are jolted by an electric shock!"])
@@ -413,6 +416,7 @@ function Object.lookForObject()
          end
          G.playerx, G.playery = G.lastpx, G.lastpy
       else
+         Msg(L["The door opens."])
          Forget()
          G.item[x][y] = K.OOPENDOOR
       end
