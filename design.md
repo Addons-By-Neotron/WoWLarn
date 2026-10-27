@@ -382,6 +382,7 @@ Each milestone is playable or testable in game.
    - `G.monster` is a per-game copy of `ns.MonsterData` (`Monster.init`, called from `makePlayer`), because genocide changes the flags; `G.loot[x * 100 + y]` holds what a monster carries (C: `mitem[][].it`) and is saved with the level
    - monsters are drawn as their ASCII letter in red (tiles and minimap); invisible stalkers, demons without the eye of Larn and the mimic follow `Display.visibleMonster`
    - deliberate carry-overs from the C: a fire-breathing monster still hurts a fire-resistant player (the C `else` only guards the message); the scared-monster branch of `movemt` reads the `tmpitem` left over from an earlier move, as the C does
+   - difficulty: `Monster.init` scales the monsters by `c[HARDGAME]` (C: `sethard`); no option sets the difficulty yet, so it is always 0
    - left out on purpose: the spheres of annihilation (`movsphere`, `rmsphere`, the `OANNIHILATION` branch of `mmove`) wait for the spells in milestone 6; `annihilate` and `genmonst` belong to scrolls and spells (5 and 6)
    - still to do from this list: monster icons or portraits on the tiles and the target model with animations (they need the models of milestone 10; the glyphs are the fallback), the death screen and scoreboard (milestone 9)
 5. **Items:**

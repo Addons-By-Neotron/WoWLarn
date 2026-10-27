@@ -3,7 +3,7 @@
 local _, ns = ...
 
 -- monster[id] for id 1..65 (C: monster[], without the dummy entry 0).
--- Pristine values: the per-game copy scaled by difficulty is built in Create.lua.
+-- Pristine values: Monster.init makes the per-game copy, scaled by the difficulty (C: sethard).
 -- flags: 1 genocided, 2 has a head, 4 cannot be beheaded.
 ns.MonsterData = {
    [1] = { name = "lemming", level = 1, armorclass = 0, damage = 0, attack = 0, intelligence = 3, gold = 0, hitpoints = 0, experience = 1, flags = 2 },

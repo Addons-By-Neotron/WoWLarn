@@ -62,6 +62,19 @@ function Monster.init()
       copy[id] = row
    end
    G.monster = copy
+
+   -- C: sethard(). Scales the monsters by the difficulty; nothing changes at 0.
+   local k = c[K.HARDGAME]
+   if k ~= 0 then
+      for id = 0, MAXMONST + 8 do
+         local row = copy[id]
+         row.hitpoints = math.min(idiv((6 + k) * row.hitpoints + 1, 6), 32767)
+         row.damage = math.min(idiv((6 + k) * row.damage + 1, 5), 127)
+         row.gold = math.min(idiv(10 * row.gold, 10 + k), 32767)
+         row.armorclass = math.max(row.armorclass - k, -127)
+         row.experience = math.max(idiv(7 * row.experience, 7 + k) + 1, 1)
+      end
+   end
 end
 
 -- C: makemonst(lev). A random monster id for the given cave level.
@@ -541,6 +554,7 @@ end
 
 -- C: hitplayer(). The monster at (x, y) attacks the player.
 function Monster.hitplayer(x, y)
+   if G.dead then return end  -- the C exits when the player dies
    local monster = G.monster
    local mster = mon[x][y]
    G.lastnum = mster

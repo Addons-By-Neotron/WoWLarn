@@ -316,15 +316,56 @@ check(not G.dead, "special attacks at full health do not kill")
 -- the leprechaun steals gold and vanishes
 Fresh(3); G.c[K.GOLD] = 1000; Put(K.LEPRECHAUN, 31, 8)
 check(ns.Monster.spattack(8, 31, 8) == true and G.mon[31][8] == 0 and G.c[K.GOLD] < 1000, "gold stolen")
--- the nymph steals an item and keeps it
-Fresh(3); G.iven[5], G.ivenarg[5] = K.OPOTION, 2; Put(K.NYMPH, 31, 8)
-check(ns.Monster.spattack(14, 31, 8) == true, "nymph steals")
-local loot = G.loot[31 * 100 + 31 * 0 + 8] or G.loot[3100 + 8]
-check(loot == nil or #loot >= 1, "loot kept")
+-- the nymph steals an item, keeps it through a save, and drops it when she dies
+Fresh(3)
+for i = 1, K.IVENSIZE do G.iven[i], G.ivenarg[i] = 0, 0 end
+G.c[K.WIELD], G.c[K.WEAR], G.c[K.SHIELD] = 0, 0, 0
+G.iven[5], G.ivenarg[5] = K.OPOTION, 2; Put(K.NYMPH, 31, 8)
+local function FindNymph()
+   for x = 1, K.MAXX do for y = 1, K.MAXY do
+      if G.mon[x][y] == K.NYMPH then return x, y end
+   end end
+end
+local function HasPotion()
+   for _, list in pairs(G.loot) do
+      for _, entry in ipairs(list) do if entry[1] == K.OPOTION then return true end end
+   end
+   return false
+end
+-- stealing may fail now and then (100 random picks); try again like a determined nymph
+for _ = 1, 10 do
+   if not HasPotion() then
+      local nx, ny = FindNymph()
+      ns.Monster.spattack(14, nx, ny)
+   end
+end
+check(HasPotion() and G.iven[5] == 0, "the potion is in the nymph's loot")
+G.SaveLevel(); G.loot = {}; G.GetLevel()
+check(HasPotion(), "loot survives a level save")
+local nx, ny = FindNymph()
+G.hitp[nx][ny] = 1
+G.c[K.EXPERIENCE] = 0
+ns.Monster.hitm(nx, ny, 50)
+check(G.mon[nx][ny] == 0 and next(G.loot) == nil, "dead nymph gives up her loot")
+local potions = 0
+for x = 1, K.MAXX do for y = 1, K.MAXY do if G.item[x][y] == K.OPOTION then potions = potions + 1 end end end
+check(potions >= 1, "the stolen potion is on the floor")
+-- difficulty scaling (C: sethard)
+G.Reset(); G.c[K.HARDGAME] = 2; ns.Monster.init()
+check(G.monster[K.ORC].hitpoints > ns.MonsterData[K.ORC].hitpoints, "harder game, tougher monsters")
+G.Reset(); ns.Monster.init()
+check(G.monster[K.ORC].hitpoints == ns.MonsterData[K.ORC].hitpoints, "normal game leaves monsters alone")
 -- the death of the player
 Fresh(3); G.c[K.HP] = 1; G.c[K.AC] = 0; Put(K.DEMONLORD, 31, 8)
 for _ = 1, 20 do if not G.dead then ns.Monster.hitplayer(31, 8) end end
 check(G.dead, "the player died to a demon lord")
+-- a death stops the turn: one death message however many monsters are adjacent
+Fresh(3); G.c[K.HP] = 1; G.c[K.AC] = 0; G.c[K.STEALTH] = 0
+Put(K.ELF, 31, 8); Put(K.ELF, 31, 9); Put(K.ELF, 29, 8)
+for _ = 1, 5 do if not G.dead then ns.Monster.movemonst(); G.gtime = G.gtime + 1 end end
+local alas = 0
+for _, l in ipairs(lines()) do if l:find("Alas") then alas = alas + 1 end end
+check(G.dead and alas == 1, "one death message, got " .. alas)
 -- losehp
 Fresh(3); G.c[K.HP] = 10; ns.Player.losehp(3); check(G.c[K.HP] == 7 and not G.dead, "losehp"); ns.Player.losehp(7); check(G.dead, "dead at 0 hp")
 

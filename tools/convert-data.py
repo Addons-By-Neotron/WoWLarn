@@ -152,7 +152,7 @@ def tables():
     assert rows[0][0] == "" and len(rows) == 66, len(rows)
     out = [HEADER, "local _, ns = ...\n",
            "-- monster[id] for id 1..65 (C: monster[], without the dummy entry 0).",
-           "-- Pristine values: the per-game copy scaled by difficulty is built in Create.lua.",
+           "-- Pristine values: Monster.init makes the per-game copy, scaled by the difficulty (C: sethard).",
            "-- flags: 1 genocided, 2 has a head, 4 cannot be beheaded.",
            "ns.MonsterData = {"]
     for i, (name, level, ac, dam, att, intel, gold, hp, exp, flagval) in enumerate(rows):
