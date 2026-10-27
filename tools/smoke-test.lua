@@ -982,6 +982,7 @@ do
    ns.mod.db.profile.view = "3d"
    ns.map:Layout(); ns.map:Draw()
    check(ns.map3d.shown, "3d view drawn")
+   do local x, y = ns.map3d:TileAt(300, 300); check(x == nil or type(x) == "number", "3d tile at cursor"); ns.map:Describe(G.playerx, G.playery) end
    ns.mod.db.profile.view = "flat"
    ns.map:Draw()
    check(not ns.map3d.shown, "flat view again")

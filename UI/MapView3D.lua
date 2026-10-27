@@ -346,6 +346,26 @@ function map3d:Animate(kind, x, y, monster)
 end
 
 -- Where the player is drawn: it glides to the tile it moved to.
+-- The tile under the cursor (pixels from the top left of the view): the floor it points at, or
+-- the tile of a monster or an object standing there.
+function map3d:TileAt(sx, sy)
+   if not camera.centerX then return nil end
+   local u, v = (sx - camera.centerX) / FOCAL, (camera.centerY - sy) / FOCAL
+   local function Floor(z)
+      local slope = SIN - v * COS
+      if slope <= 0.01 then return nil end
+      local t = (CAMERA_HEIGHT - z) / slope
+      local back = t * (COS + v * SIN)
+      return floor((camera.x + u * t) / TILE) + 1, floor((camera.y - back) / TILE) + 1
+   end
+   local x, y = Floor(TILE * 0.6)  -- (the middle of a standing thing)
+   if x and x >= 1 and y >= 1 and x <= MAXX and y <= MAXY and G.know[x][y] ~= 0
+      and (ns.Display.visibleMonster(x, y) ~= 0 or (G.item[x][y] ~= 0 and G.item[x][y] ~= K.OWALL)) then
+      return x, y
+   end
+   return Floor(0)
+end
+
 function map3d:Position()
    local px, py = G.playerx, G.playery
    if self.level ~= G.level or not self.toX or max(math.abs(px - self.toX), math.abs(py - self.toY)) > 1 then

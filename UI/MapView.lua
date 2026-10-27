@@ -19,6 +19,7 @@ You should have received a copy of the GNU General Public License
 along with WoWLarn.  If not, see <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 **********************************************************************
+local L = LibStub("AceLocale-3.0"):GetLocale("WoWLarn")
 ]]
 local _, ns = ...
 local K = ns.K
@@ -71,10 +72,69 @@ function map:Create(parent)
    self.cells = {}
    ns.map3d:Create(frame)
    frame:SetScript("OnSizeChanged", function() self:Layout() end)
+   self:EnableTooltips(frame)
    return frame
 end
 
 -- Builds the grid of tiles that fits the frame.
+-- The tile under the cursor, or nil.  x, y are in pixels from the top left of the map.
+function map:TileAt(sx, sy)
+   if self:Is3D() then return ns.map3d:TileAt(sx, sy) end
+   if not self.camX or not self.cols then return nil end
+   local col = floor((sx - self.offsetX) / TILE) + 1
+   local row = floor((sy - self.offsetY) / TILE) + 1
+   if col < 1 or row < 1 or col > self.cols or row > self.rows then return nil end
+   return self.camX + col - 1, self.camY + row - 1
+end
+
+-- Fills the tooltip for what is on the tile (x, y); false if there is nothing to tell.
+function map:Describe(x, y)
+   if x < 1 or y < 1 or x > MAXX or y > MAXY or G.know[x][y] == 0 then return false end
+   if x == G.playerx and y == G.playery then
+      GameTooltip:SetText(G.name or L["You"], 1, 1, 1)
+      GameTooltip:Show()
+      return true
+   end
+   local monster = ns.Display.visibleMonster(x, y)
+   if monster ~= 0 then
+      GameTooltip:SetText(G.monster[monster].name, 1, 0.3, 0.3)
+      GameTooltip:Show()
+      return true
+   end
+   local object = G.item[x][y]
+   if object == 0 or object == K.OWALL then return false end
+   ns.ItemInfo.tooltip(object, G.iarg[x][y])
+   return true
+end
+
+-- Shows the tooltip of the tile the cursor is over, while the map itself is under it.
+function map:EnableTooltips(frame)
+   frame:EnableMouse(true)
+   local since, shown = 0, nil
+   frame:SetScript("OnUpdate", function(_, elapsed)
+      since = since + elapsed
+      if since < 0.05 then return end
+      since = 0
+      local focus = GetMouseFoci and GetMouseFoci()[1] or GetMouseFocus and GetMouseFocus()
+      local x, y
+      if focus == frame and G.class then
+         local scale = frame:GetEffectiveScale()
+         local cx, cy = GetCursorPosition()
+         x, y = self:TileAt(cx / scale - frame:GetLeft(), frame:GetTop() - cy / scale)
+      end
+      local key = x and (x * 100 + y .. ":" .. G.level)
+      if key == shown then return end
+      shown = key
+      if not x then
+         GameTooltip:Hide()
+         return
+      end
+      GameTooltip:SetOwner(frame, "ANCHOR_CURSOR")
+      if not self:Describe(x, y) then GameTooltip:Hide() end
+   end)
+   frame:SetScript("OnLeave", function() shown = nil; GameTooltip:Hide() end)
+end
+
 function map:Layout()
    TILE = ns.mod.db.profile.tileSize or DEFAULT_TILE
    local width, height = self.frame:GetWidth(), self.frame:GetHeight()
@@ -102,6 +162,7 @@ function map:Layout()
       end
    end
    self.cols, self.rows = cols, rows
+   self.offsetX, self.offsetY = offsetX, offsetY
    self.flatHidden = false  -- (the cells were shown again above)
    self:Draw()
 end
@@ -228,6 +289,7 @@ function map:Draw()
    local cols, rows = self.cols, self.rows
    local camX = max(1, min(G.playerx - floor(cols / 2), MAXX - cols + 1))
    local camY = max(1, min(G.playery - floor(rows / 2), MAXY - rows + 1))
+   self.camX, self.camY = camX, camY
    local ground = V.Ground(G.level)
    for row = 1, rows do
       for col = 1, cols do
