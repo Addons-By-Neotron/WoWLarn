@@ -118,6 +118,7 @@ function G.Reset()
    G.nomove, G.dropflag, G.viewflag = false, false, false
    G.rmst = 80          -- random monster creation counter
    G.name, G.sex, G.class = "", 1, nil
+   G.gemsSold = {}  -- the gem kinds that have been sold (their worth is not shown before)
    G.stock, G.course, G.drug = nil, {}, {}  -- DND stock, school courses and elixirs bought
    G.taxes, G.lastBank, G.ramboflag = 0, 0, false
 end

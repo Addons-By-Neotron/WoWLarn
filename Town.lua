@@ -308,6 +308,7 @@ end
 
 local function SellGem(slot)
    if iven[slot] == K.OLARNEYE then c[K.EYEOFLARN] = 0 end
+   G.gemsSold[iven[slot]] = true
    c[K.GOLD] = c[K.GOLD] + GemValue(slot)
    iven[slot], ivenarg[slot] = 0, 0
 end
@@ -460,6 +461,7 @@ function Town.tradingPost()
             local name = ns.Player.itemName(slot)
             if ui:YesNo(format(L["%s is worth %s to us.  Do you want to sell it?"], name, Gold(value))) == "y" then
                c[K.GOLD] = c[K.GOLD] + value
+               if GEMS[id] then G.gemsSold[id] = true end
                if c[K.WEAR] == slot then c[K.WEAR] = 0 end
                if c[K.WIELD] == slot then c[K.WIELD] = 0 end
                if c[K.SHIELD] == slot then c[K.SHIELD] = 0 end

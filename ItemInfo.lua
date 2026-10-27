@@ -142,7 +142,7 @@ function ItemInfo.lines(id, arg)
       lines[#lines + 1] = effect
       lines[#lines + 1] = L["Works as long as you carry it."]
    end
-   if GEMS[id] then lines[#lines + 1] = format(L["The bank pays %d gold for it."], arg * 100) end
+   if GEMS[id] and G.gemsSold[id] then lines[#lines + 1] = format(L["The bank pays %d gold for it."], arg * 100) end
    if MISC[id] then lines[#lines + 1] = MISC[id] end
    return lines
 end
