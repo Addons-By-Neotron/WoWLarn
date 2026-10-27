@@ -44,6 +44,7 @@ mod.defaults = {
    global = {
       scores = { winners = {}, dead = {} },  -- the scoreboards, see Scores.lua
       taxes = {},  -- what each winner owes the LRS
+      displays = {},  -- [monster id] = the display chosen in the model viewer
    },
 }
 
@@ -131,6 +132,8 @@ function mod:ChatCommand(input)
    elseif cmd == "view" or cmd == "3d" then
       self.db.profile.view = self.db.profile.view == "3d" and "flat" or "3d"
       ns.ui:Refresh("map")
+   elseif cmd == "models" then
+      ns.modelViewer:Toggle()
    elseif cmd == "reset" then
       ns.main:ResetPosition()
    elseif cmd == "help" then

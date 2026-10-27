@@ -135,6 +135,18 @@ end
 V.MONSTER_COLOR = { 1, 0.35, 0.3 }
 V.PLAYER_COLOR = { 0.3, 1, 0.3 }
 
+-- The creature display each monster is shown as in the 2.5D view.  V.DISPLAY is the list that
+-- goes with the addon; what the player picked in the model viewer (/larn models) is kept in
+-- the saved variables and wins.
+V.DISPLAY = {
+   -- [monster id] = displayID
+}
+
+function V.MonsterDisplay(id)
+   local own = ns.mod.db.global.displays
+   return (own and own[id]) or V.DISPLAY[id]
+end
+
 function V.MonsterGlyph(id)
    return ns.Tables.monstglyphs:sub(id + 1, id + 1)
 end

@@ -97,6 +97,17 @@ local function BuildOptions()
                   ns.ui:Refresh("map")
                end,
             },
+            models = {
+               type = "toggle",
+               name = L["Creature models"],
+               desc = L["Show your character and the monsters as 3D models in the 2.5D view."],
+               order = 18,
+               get = function() return mod.db.profile.models ~= false end,
+               set = function(_, value)
+                  mod.db.profile.models = value
+                  ns.ui:Refresh("map")
+               end,
+            },
             minimap = {
                type = "toggle",
                name = L["Minimap button"],

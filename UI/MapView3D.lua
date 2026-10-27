@@ -42,6 +42,8 @@ local FOG_REACH = 1700  -- ahead at which things are at their darkest
 local floor, max, min = math.floor, math.max, math.min
 local MAXX, MAXY = K.MAXX, K.MAXY
 
+local FACING = math.pi * 1.5  -- the way models look: towards the camera
+local MODEL_ASPECT = 1.7  -- how much taller than wide a model is drawn
 local FLOOR, WALL, ACTOR = 0, 1, 2  -- the layers of a row, back to front
 
 ----------------------------------------------------------------
@@ -53,19 +55,20 @@ local function NewLayer(view, level)
    local frame = CreateFrame("Frame", nil, view)
    frame:SetAllPoints(view)
    frame:SetFrameLevel(level)
-   frame.quads, frame.icons, frame.glyphs = {}, {}, {}
-   frame.usedQuads, frame.usedIcons, frame.usedGlyphs = 0, 0, 0
+   frame.quads, frame.icons, frame.glyphs, frame.models = {}, {}, {}, {}
+   frame.usedQuads, frame.usedIcons, frame.usedGlyphs, frame.usedModels = 0, 0, 0, 0
    return frame
 end
 
 local function Begin(layer)
-   layer.usedQuads, layer.usedIcons, layer.usedGlyphs = 0, 0, 0
+   layer.usedQuads, layer.usedIcons, layer.usedGlyphs, layer.usedModels = 0, 0, 0, 0
 end
 
 local function Finish(layer)
    for index = layer.usedQuads + 1, #layer.quads do layer.quads[index]:Hide() end
    for index = layer.usedIcons + 1, #layer.icons do layer.icons[index]:Hide() end
    for index = layer.usedGlyphs + 1, #layer.glyphs do layer.glyphs[index]:Hide() end
+   for index = layer.usedModels + 1, #layer.models do layer.models[index]:Hide() end
 end
 
 -- A four-cornered piece of the view, corners in order around it (top left, top right, bottom
@@ -101,6 +104,33 @@ local function Icon(layer, texture, x, y, width, height)
    icon:SetPoint("BOTTOM", layer, "TOPLEFT", x, -y)
    icon:SetSize(width, height)
    icon:Show()
+end
+
+-- A creature standing on the floor at (x, y) in the view: a model of the unit ("player") or of
+-- a display, width pixels wide and about twice as tall.
+local function Model(layer, look, x, y, width)
+   layer.usedModels = layer.usedModels + 1
+   local frame = layer.models[layer.usedModels]
+   if not frame then
+      frame = CreateFrame("Frame", nil, layer)
+      frame.model = CreateFrame("PlayerModel", nil, frame)
+      frame.model:SetAllPoints()
+      frame.model:SetScript("OnModelLoaded", function(self) self:SetFacing(FACING) end)
+      layer.models[layer.usedModels] = frame
+   end
+   if frame.look ~= look then  -- (setting the look again would restart it)
+      frame.look = look
+      if look == "player" then
+         frame.model:SetUnit("player")
+      else
+         frame.model:SetDisplayInfo(look)
+      end
+      frame.model:SetFacing(FACING)
+   end
+   frame:ClearAllPoints()
+   frame:SetPoint("BOTTOM", layer, "TOPLEFT", x, -y)
+   frame:SetSize(width, width * MODEL_ASPECT)
+   frame:Show()
 end
 
 local function Glyph(layer, text, color, x, y, size)
@@ -210,11 +240,21 @@ local function DrawTile(layers, x, y, ground)
    if not mx then return end
    local monster = ns.Display.visibleMonster(x, y)
    local object = G.item[x][y]
+   local models = ns.mod.db.profile.models ~= false and not ns.mod.db.profile.ascii
    if x == G.playerx and y == G.playery then
       local size = TILE * 0.9 * scale
-      Icon(layers[ACTOR], V.ClassIcon(G.class), mx, my + size * 0.15, size, size)
+      if models then
+         Model(layers[ACTOR], "player", mx, my + size * 0.1, size * 1.1)
+      else
+         Icon(layers[ACTOR], V.ClassIcon(G.class), mx, my + size * 0.15, size, size)
+      end
    elseif monster ~= 0 then
-      Glyph(layers[ACTOR], V.MonsterGlyph(monster), V.MONSTER_COLOR, mx, my + TILE * 0.1 * scale, TILE * 0.9 * scale)
+      local display = models and V.MonsterDisplay(monster)
+      if display then
+         Model(layers[ACTOR], display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale)
+      else
+         Glyph(layers[ACTOR], V.MonsterGlyph(monster), V.MONSTER_COLOR, mx, my + TILE * 0.1 * scale, TILE * 0.9 * scale)
+      end
    elseif object ~= 0 then
       local icon = V.ObjectIcon(object)
       local size = TILE * 0.6 * scale

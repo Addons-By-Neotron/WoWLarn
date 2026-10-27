@@ -55,6 +55,7 @@ UI\Inventory.lua
 UI\Spellbook.lua
 UI\Store.lua
 UI\Scoreboard.lua
+UI\ModelViewer.lua
 UI\ClassPicker.lua
 UI\MainFrame.lua
 Game.lua
