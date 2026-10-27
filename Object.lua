@@ -128,10 +128,10 @@ local function PickUpGold(kind)
 end
 
 -- Drugs: eat, snort or smoke it, take it, or ignore it.
-local function Drug(found, prompt, useKey, id, effect)
+local function Drug(link, useKey, id, effect)
    local ui = ns.ui
-   Msg(found)
-   local choice = ui:Choose(prompt, useKey .. "t")
+   Msg(L["You find a vial of %s."], link)
+   local choice = ui:Choose(L["Do you want to (d) drink it, (t) take it, or (i) ignore it?"], useKey .. "t")
    if choice == useKey then
       effect()
       Forget()
@@ -525,8 +525,8 @@ function Object.lookForObject()
       ui:Refresh("all")
 
    elseif id == K.OSPEED then
-      Drug(L["You find some speed."], L["Do you (s) snort it, (t) take it, or (i) ignore it?"], "s", id, function()
-         Msg(L["Ohwowmanlikethingstotallyseemtoslowdown!"])
+      Drug(ns.ItemInfo.link(id, 0), "d", id, function()
+         Msg(L["Everything around you seems to slow down!"])
          c[K.HASTESELF] = c[K.HASTESELF] + 200 + c[K.LEVEL]
          c[K.HALFDAM] = c[K.HALFDAM] + 300 + ns.rnd(200)
          AtLeast3(K.INTELLIGENCE, 2)
@@ -537,8 +537,8 @@ function Object.lookForObject()
       end)
 
    elseif id == K.OSHROOMS then
-      Drug(L["You find some magic mushrooms."], L["Do you (e) eat them, (t) take them, or (i) ignore them?"], "e", id, function()
-         Msg(L["Things start to get real spacey..."])
+      Drug(ns.ItemInfo.link(id, 0), "d", id, function()
+         Msg(L["The world turns glowy and strange..."])
          c[K.HASTEMONST] = c[K.HASTEMONST] + ns.rnd(75) + 25
          c[K.CONFUSE] = c[K.CONFUSE] + 30 + ns.rnd(10)
          c[K.WISDOM] = c[K.WISDOM] + 2
@@ -546,8 +546,8 @@ function Object.lookForObject()
       end)
 
    elseif id == K.OACID then
-      Drug(L["You find some LSD."], L["Do you (e) eat it, (t) take it, or (i) ignore it?"], "e", id, function()
-         Msg(L["You are now frying your ass off!"])
+      Drug(ns.ItemInfo.link(id, 0), "d", id, function()
+         Msg(L["Your mind expands, and the room starts to spin!"])
          c[K.CONFUSE] = c[K.CONFUSE] + 30 + ns.rnd(10)
          c[K.WISDOM] = c[K.WISDOM] + 2
          c[K.INTELLIGENCE] = c[K.INTELLIGENCE] + 2
@@ -561,8 +561,8 @@ function Object.lookForObject()
       end)
 
    elseif id == K.OHASH then
-      Drug(L["You find some hashish."], L["Do you (s) smoke it, (t) take it, or (i) ignore it?"], "s", id, function()
-         Msg(L["WOW! You feel stooooooned..."])
+      Drug(ns.ItemInfo.link(id, 0), "d", id, function()
+         Msg(L["The brew hits hard.  You feel strong, and very sluggish..."])
          c[K.HASTEMONST] = c[K.HASTEMONST] + ns.rnd(75) + 25
          c[K.INTELLIGENCE] = c[K.INTELLIGENCE] + 2
          c[K.WISDOM] = c[K.WISDOM] + 2
@@ -573,8 +573,8 @@ function Object.lookForObject()
       end)
 
    elseif id == K.OCOKE then
-      Drug(L["You find some cocaine."], L["Do you want to (s) snort it, (t) take it, or (i) ignore it?"], "s", id, function()
-         Msg(L["Your nose begins to bleed!"])
+      Drug(ns.ItemInfo.link(id, 0), "d", id, function()
+         Msg(L["Fel energy surges through you!  Your nose begins to bleed!"])
          AtLeast3(K.DEXTERITY, 2)
          AtLeast3(K.CONSTITUTION, 2)
          c[K.CHARISMA] = c[K.CHARISMA] + 3
