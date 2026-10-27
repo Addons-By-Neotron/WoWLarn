@@ -158,6 +158,7 @@ V.DISPLAY = {
    [K.GNOME] = Displays({ 6920, 6931 }),
    [K.KOBOLD] = Displays({ 114157, 114160 }, { 114709, 114718 }),
    [K.HOBGOBLIN] = Displays(30244, { 30261, 30267 }),
+   [K.ORC] = Displays({ 9794, 9805 }),
 }
 
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
