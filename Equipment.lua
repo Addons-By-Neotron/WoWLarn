@@ -36,9 +36,9 @@ local EFFECTS = {
    [K.OPROTRING] = function(arg) return format(L["+%d armor class"], arg + 1) end,
    [K.ODAMRING] = function(arg) return format(L["+%d weapon class"], arg + 1) end,
    [K.OBELT] = function(arg) return format(L["+%d weapon class"], arg * 2 + 2) end,
-   [K.OREGENRING] = function(arg) return format(L["+%d regeneration"], arg + 1) end,
-   [K.ORINGOFEXTRA] = function(arg) return format(L["+%d regeneration"], 5 * (arg + 1)) end,
-   [K.OENERGYRING] = function(arg) return format(L["+%d spell energy"], arg + 1) end,
+   [K.OREGENRING] = function(arg) return format(L["+%d health regeneration"], arg + 1) end,
+   [K.ORINGOFEXTRA] = function(arg) return format(L["+%d health regeneration"], 5 * (arg + 1)) end,
+   [K.OENERGYRING] = function(arg) return format(L["+%d mana regeneration"], arg + 1) end,
    [K.ODEXRING] = function(arg) return format(L["+%d dexterity"], arg + 1) end,
    [K.OSTRRING] = function(arg) return format(L["+%d strength"], arg + 1) end,
    [K.OCLEVERRING] = function(arg) return format(L["+%d intelligence"], arg + 1) end,
@@ -148,7 +148,7 @@ function Equipment.summary()
       c[K.AC], armor, shield, rings, c[K.MOREDEFENSES])
    lines[#lines + 1] = format(L["Weapon class %d: weapon %d, rings %d, belts %d, other %d"],
       c[K.WCLASS], weapon, damage, belts, c[K.MOREDAM])
-   lines[#lines + 1] = format(L["Regeneration %d, spell energy %d"], c[K.REGEN], c[K.ENERGY])
+   lines[#lines + 1] = format(L["Health regeneration %d, mana regeneration %d"], c[K.REGEN], c[K.ENERGY])
    local stats = {}
    for _, entry in ipairs({ { strength, L["strength"] }, { dexterity, L["dexterity"] },
       { intelligence, L["intelligence"] }, { wisdom, L["wisdom"] } }) do

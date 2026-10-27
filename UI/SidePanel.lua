@@ -151,6 +151,33 @@ function side:Create(parent)
    self.spells = Bar(stats, 0.2, 0.35, 0.85)
    self.spells:SetPoint("TOPLEFT", self.hp, "BOTTOMLEFT", 0, -3)
    self.spells:SetPoint("TOPRIGHT", self.hp, "BOTTOMRIGHT", 0, -3)
+   -- what the bars mean, and how fast they fill
+   local function Tooltip(bar, title, lines)
+      bar:EnableMouse(true)
+      bar:SetScript("OnEnter", function(self)
+         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+         GameTooltip:SetText(title, 1, 1, 1)
+         for _, line in ipairs(lines()) do GameTooltip:AddLine(line, nil, nil, nil, true) end
+         GameTooltip:Show()
+      end)
+      bar:SetScript("OnLeave", GameTooltip_Hide)
+   end
+   Tooltip(self.hp, L["Health"], function()
+      local c = G.c
+      return {
+         L["The hit points you have.  At zero you die."],
+         format(L["You regain %d every %d turns."], c[K.REGEN], math.max(1, 22 + c[K.HARDGAME] * 2 - c[K.LEVEL])),
+         L["Rings of health regeneration make you regain more at a time."],
+      }
+   end)
+   Tooltip(self.spells, L["Mana"], function()
+      local c = G.c
+      return {
+         L["Casting a spell uses mana.  Every spell costs one point of mana."],
+         format(L["You regain 1 every %d turns."], math.max(1, 100 + 4 * (c[K.HARDGAME] - c[K.LEVEL] - c[K.ENERGY]))),
+         format(L["Mana regeneration: %d.  Rings of mana regeneration take 4 turns off the wait for each point."], c[K.ENERGY]),
+      }
+   end)
    self.exp = Bar(stats, 0.75, 0.6, 0.1)
    self.exp:SetPoint("TOPLEFT", self.spells, "BOTTOMLEFT", 0, -3)
    self.exp:SetPoint("TOPRIGHT", self.spells, "BOTTOMRIGHT", 0, -3)
@@ -243,7 +270,7 @@ function side:UpdateStats()
    self.hp.text:SetText(format("%s %d / %d", L["HP"], c[K.HP], c[K.HPMAX]))
    self.spells:SetMinMaxValues(0, math.max(1, c[K.SPELLMAX]))
    self.spells:SetValue(c[K.SPELLS])
-   self.spells.text:SetText(format("%s %d / %d", L["Spells"], c[K.SPELLS], c[K.SPELLMAX]))
+   self.spells.text:SetText(format("%s %d / %d", L["Mana"], c[K.SPELLS], c[K.SPELLMAX]))
    -- skill[level] in the C is T.skill[level + 1]: the experience for the next level.
    local low, high = T.skill[level], T.skill[level + 1] or T.skill[level]
    self.exp:SetMinMaxValues(low, math.max(low + 1, high))
