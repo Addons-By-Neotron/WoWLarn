@@ -380,8 +380,13 @@ function Player.itemName(slot)
 end
 
 -- C: pocketfull(). True if the player can't carry one more thing.
+-- How many inventory slots can be used at this level (the C: 15 + level / 2, at most 26).
+function Player.pocketLimit()
+   return math.min(15 + ns.idiv(c[K.LEVEL], 2), IVENSIZE)
+end
+
 function Player.pocketFull()
-   local limit = math.min(15 + ns.idiv(c[K.LEVEL], 2), IVENSIZE)
+   local limit = Player.pocketLimit()
    for i = 1, limit do
       if iven[i] == 0 then return false end
    end
@@ -450,6 +455,10 @@ function Player.take(itm, arg)
       end
    end
    ui:Message(L["You can't carry anything else."])
+   local limit = Player.pocketLimit()
+   if limit < IVENSIZE then
+      ui:Message(L["Your pack holds %d items at your level (%d at most); more slots open as you level."], limit, IVENSIZE)
+   end
    return false
 end
 

@@ -460,3 +460,6 @@ L["You stand before a statue."] = true
 L["There is a mirror here."] = true
 L["There is a dead fountain here."] = true
 L["All spells"] = true
+L["locked until level %d"] = true
+L["Items %d of %d"] = true
+L["Your pack holds %d items at your level (%d at most); more slots open as you level."] = true

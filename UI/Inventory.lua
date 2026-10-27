@@ -101,9 +101,16 @@ end
 function inventory:Update()
    if not self.frame or not self.frame:IsShown() then return end
    local filter = self.filter
+   local limit = ns.Player.pocketLimit()
+   local used = 0
    for slot, button in ipairs(self.rows) do
       local id = G.iven[slot]
-      if id == 0 then
+      if id ~= 0 then used = used + 1 end
+      if slot > limit and id == 0 then
+         -- a slot that opens up with the level: say when
+         button.icon:Hide()
+         button.text:SetText(format("|cff555555%s) %s|r", Letter(slot), format(L["locked until level %d"], (slot - 15) * 2)))
+      elseif id == 0 then
          button.icon:Hide()
          button.text:SetText("|cff777777" .. Letter(slot) .. ")|r")
       else
@@ -120,5 +127,6 @@ function inventory:Update()
       end
    end
    local pounds = ns.Player.packWeight()
-   self.weight:SetText(string.format(pounds == 1 and L["Carrying %d pound"] or L["Carrying %d pounds"], pounds))
+   self.weight:SetText(format(L["Items %d of %d"], used, limit) .. "   "
+      .. format(pounds == 1 and L["Carrying %d pound"] or L["Carrying %d pounds"], pounds))
 end
