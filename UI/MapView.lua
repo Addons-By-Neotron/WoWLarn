@@ -182,7 +182,7 @@ end
 
 -- Draws the part of the level around the player.
 function map:Draw()
-   if not self.cols or G.c[K.LEVEL] == 0 then return end
+   if not self.cols or not G.class then return end
    local cols, rows = self.cols, self.rows
    local camX = max(1, min(G.playerx - floor(cols / 2), MAXX - cols + 1))
    local camY = max(1, min(G.playery - floor(rows / 2), MAXY - rows + 1))
