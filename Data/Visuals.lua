@@ -119,6 +119,13 @@ V.EFFECTS = {
    { K.HASTEMONST, L["Monsters hasted"], "Spell_Nature_Bloodlust" },
 }
 
+-- The effects that hurt rather than help: the ones in the effects row that a scroll of
+-- remove curse lifts (Magic.lua, CURSE).
+V.CURSE = {
+   [K.BLINDCOUNT] = true, [K.CONFUSE] = true, [K.AGGRAVATE] = true, [K.HASTEMONST] = true,
+   [K.ITCHING] = true, [K.CLUMSINESS] = true, [K.HALFDAM] = true,
+}
+
 function V.ObjectIcon(id)
    local visual = V.object[id]
    return visual and visual.icon and (ICONS .. visual.icon)

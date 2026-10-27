@@ -756,3 +756,6 @@ L["Mana"] = true
 L["Casting a spell uses mana.  Every spell costs one point of mana."] = true
 L["You regain 1 every %d turns."] = true
 L["Mana regeneration: %d.  Rings of mana regeneration take 4 turns off the wait for each point."] = true
+L["Curse"] = true
+L["Boon"] = true
+L["A scroll of remove curse or a potion of instant healing lifts it."] = true

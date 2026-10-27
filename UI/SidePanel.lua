@@ -223,10 +223,15 @@ function side:Create(parent)
       button:EnableMouse(true)
       button:SetScript("OnEnter", function(self)
          GameTooltip:SetOwner(self, "ANCHOR_TOP")
-         GameTooltip:SetText(self.effect[2])
+         local curse = V.CURSE[self.effect[1]]
+         GameTooltip:SetText(self.effect[2], curse and 1 or 0.3, curse and 0.3 or 1, 0.3)
+         GameTooltip:AddLine(curse and L["Curse"] or L["Boon"], curse and 1 or 0.3, curse and 0.3 or 1, 0.3)
          local turns = G.c[self.effect[1]]
          if turns > 1 then
             GameTooltip:AddLine(format(L["%d turns left"], turns), 0.7, 0.7, 0.7)
+         end
+         if curse then
+            GameTooltip:AddLine(L["A scroll of remove curse or a potion of instant healing lifts it."], 0.9, 0.9, 0.9, true)
          end
          GameTooltip:Show()
       end)
