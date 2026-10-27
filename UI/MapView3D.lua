@@ -386,14 +386,15 @@ function map3d:Position()
    end
    if self.t0 and now - self.t0 >= TWEEN then self.t0 = nil end
    if self.t0 then
-      if not self.view:GetScript("OnUpdate") then
+      self.driver = self.driver or CreateFrame("Frame")  -- (the view has its own OnUpdate)
+      if not self.driver:GetScript("OnUpdate") then
          local since = 0
-         self.view:SetScript("OnUpdate", function(view, elapsed)
+         self.driver:SetScript("OnUpdate", function(driver, elapsed)
             since = since + elapsed
             if since < 0.03 then return end
             since = 0
             Redraw()
-            if not map3d.t0 then view:SetScript("OnUpdate", nil) end
+            if not map3d.t0 then driver:SetScript("OnUpdate", nil) end
          end)
       end
       return curX, curY, true
