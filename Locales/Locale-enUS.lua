@@ -759,3 +759,15 @@ L["Mana regeneration: %d.  Rings of mana regeneration take 4 turns off the wait 
 L["Curse"] = true
 L["Boon"] = true
 L["A scroll of remove curse or a potion of instant healing lifts it."] = true
+L["Strength makes your hits stronger."] = true
+L["Intelligence makes your spells more likely to work."] = true
+L["Wisdom makes your strongest spells, like phantasmal forces and finger of death, more likely to work."] = true
+L["Constitution gives you more hit points when you gain a level."] = true
+L["Dexterity helps you hit monsters, and helps you avoid pits and trap doors."] = true
+L["Charisma makes monsters more likely to be awed by you and not attack, and makes charm monster last longer."] = true
+L["A better armor class makes monsters miss more often and hurt you less."] = true
+L["A better weapon class makes you hit more often and harder."] = true
+L["Your level goes up with experience.  Each level gives you more hit points and mana, and a new pack slot every second level."] = true
+L["Rings of health regeneration make you regain more each time."] = true
+L["Casting a spell uses one point of mana."] = true
+L["Rings of mana regeneration make it come back faster.  Mana regeneration: %d."] = true

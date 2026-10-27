@@ -74,25 +74,25 @@ local function Strength() return C(K.STRENGTH) + C(K.STREXTRA) end
 local function Number(label, value) return format("%s %d", label, value) end
 local STAT_CELLS = {
    { text = function() return Number(L["STR"], Strength()) end, title = function() return L["Strength"] end,
-     tip = L["Strength adds to the damage of every hit you make, together with your weapon class."] },
+     tip = L["Strength makes your hits stronger."] },
    { text = function() return Number(L["INT"], C(K.INTELLIGENCE)) end, title = function() return L["Intelligence"] end,
-     tip = L["Intelligence makes spells work: a spell can fail unless a roll of 1 to 18 is at most your intelligence."] },
+     tip = L["Intelligence makes your spells more likely to work."] },
    { text = function() return Number(L["WIS"], C(K.WISDOM)) end, title = function() return L["Wisdom"] end,
-     tip = L["Wisdom decides whether the strongest spells, like phantasmal forces and finger of death, take hold."] },
+     tip = L["Wisdom makes your strongest spells, like phantasmal forces and finger of death, more likely to work."] },
    { text = function() return Number(L["CON"], C(K.CONSTITUTION)) end, title = function() return L["Constitution"] end,
-     tip = L["Constitution decides how many hit points you gain with each level."] },
+     tip = L["Constitution gives you more hit points when you gain a level."] },
    { text = function() return Number(L["DEX"], C(K.DEXTERITY)) end, title = function() return L["Dexterity"] end,
-     tip = L["Dexterity helps you hit monsters, and keeps you out of pits and trap doors."] },
+     tip = L["Dexterity helps you hit monsters, and helps you avoid pits and trap doors."] },
    { text = function() return Number(L["CHA"], C(K.CHARISMA)) end, title = function() return L["Charisma"] end,
-     tip = L["Charisma can awe a monster so that it does not attack, and makes the charm monster spell last longer."] },
+     tip = L["Charisma makes monsters more likely to be awed by you and not attack, and makes charm monster last longer."] },
    { text = function() return Number(L["AC"], C(K.AC)) end, title = function() return L["Armor class"] end,
-     tip = L["The higher your armor class, the less damage monsters do to you, and the more often they miss."],
+     tip = L["A better armor class makes monsters miss more often and hurt you less."],
      extra = function() return table.concat(ns.Equipment.summary(), "\n", 1, 1) end },
    { text = function() return Number(L["WC"], C(K.WCLASS)) end, title = function() return L["Weapon class"] end,
-     tip = L["Your weapon class adds to your chance to hit and to the damage you do."],
+     tip = L["A better weapon class makes you hit more often and harder."],
      extra = function() return table.concat(ns.Equipment.summary(), "\n", 2, 2) end },
    { text = function() return Number(L["Level"], C(K.LEVEL)) end, title = function() return L["Level"] end,
-     tip = L["Your level goes up with experience.  Each level gives hit points and spell points, and opens a pack slot every second level."] },
+     tip = L["Your level goes up with experience.  Each level gives you more hit points and mana, and a new pack slot every second level."] },
    { text = function() return Number(L["Gold"], C(K.GOLD)) end, title = function() return L["Gold"] end,
      tip = L["Gold buys things in the town.  The bank keeps it safe, and what you have when the game ends is your score."],
      extra = function() return format(L["In the bank: %d"], C(K.BANKACCOUNT)) end },
@@ -167,15 +167,15 @@ function side:Create(parent)
       return {
          L["The hit points you have.  At zero you die."],
          format(L["You regain %d every %d turns."], c[K.REGEN], math.max(1, 22 + c[K.HARDGAME] * 2 - c[K.LEVEL])),
-         L["Rings of health regeneration make you regain more at a time."],
+         L["Rings of health regeneration make you regain more each time."],
       }
    end)
    Tooltip(self.spells, L["Mana"], function()
       local c = G.c
       return {
-         L["Casting a spell uses mana.  Every spell costs one point of mana."],
+         L["Casting a spell uses one point of mana."],
          format(L["You regain 1 every %d turns."], math.max(1, 100 + 4 * (c[K.HARDGAME] - c[K.LEVEL] - c[K.ENERGY]))),
-         format(L["Mana regeneration: %d.  Rings of mana regeneration take 4 turns off the wait for each point."], c[K.ENERGY]),
+         format(L["Rings of mana regeneration make it come back faster.  Mana regeneration: %d."], c[K.ENERGY]),
       }
    end)
    self.exp = Bar(stats, 0.75, 0.6, 0.1)
