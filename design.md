@@ -126,7 +126,9 @@ The C code blocks for input everywhere: `getcharacter()`, `readnum()`, `getyn()`
 
 - The UI-side dispatcher keeps track of which request is pending and only resumes the coroutine with an answer of the right type. Other input is ignored or queued, for example a movement key arriving during a YesNo.
 - `died()` / `quit()` / save-and-exit end the coroutine by returning, not `os.exit`. The window then shows the scoreboard and offers a new game.
-- Wrap every resume in `xpcall` with `geterrorhandler()`. On error, show it, mark the game "crashed", and don't resume.
+- Errors are caught by checking the result of `coroutine.resume` and passing it to `geterrorhandler()`; the game is then marked "crashed" and restarts on the next key.
+- **Never wrap game logic in `pcall`/`xpcall`, and never yield inside a `table.sort` comparator or `string.gsub` callback.** WoW runs Lua 5.1, which cannot yield across them.
+- Keys from the keyboard, control buttons, dialog buttons and clicks all go through one input path, `ui:InjectKey(key)`. Higher-level requests (`YesNo`, `GetNumber`, `More`, `PickDirection`) are loops over `ui:GetKey()`, so a button click is just a synthetic key.
 - Level generation and maze recursion run inside one resume. `eat()` recursion depth is at most about 600, which is fine for Lua.
 
 ---
@@ -301,8 +303,8 @@ WildCraft is a pseudo-3D mount-racing addon for Classic Forever (Interface 16001
 - **Keyboard:** the game frame uses `EnableKeyboard(true)`. While the window is shown and **focused**, it calls `SetPropagateKeyboardInput(false)`, so game keys don't trigger WoW bindings. Otherwise it propagates.
   - Use `OnChar` for printable characters, which handles shift and layout, and `OnKeyDown` for Esc, Enter, Backspace, arrows, numpad and Ctrl-combos.
   - Arrow keys and numpad map to the 8 directions as well as vi-keys.
-- **Focus:** clicking the window focuses it; clicking outside, or a configurable unfocus key, releases it. Show focus state visibly on the frame border. Never hold the keyboard while the window is hidden.
-- **Combat lockdown:** `SetPropagateKeyboardInput` is protected in combat on Retail. Auto-unfocus on `PLAYER_REGEN_DISABLED` and refuse to focus in combat. Buttons and mouse keep working. Verify on each client.
+- **Focus:** clicking the window focuses it; Esc at the top-level command prompt, or clicking outside (`GLOBAL_MOUSE_DOWN`, where the client has it), releases it. Show focus state visibly on the frame border. Never hold the keyboard while the window is hidden.
+- **Combat lockdown:** `SetPropagateKeyboardInput` may be restricted in combat on Retail. Milestone 1 calls it on this non-secure frame without special handling; **verify in combat on each client**, and if it errors, auto-unfocus on `PLAYER_REGEN_DISABLED` and refuse to focus in combat (buttons and mouse keep working).
 - **Esc:** closes the topmost dialog or cancels the pending prompt. At the top-level command prompt it unfocuses, then closes the window.
 - **Mouse:** control buttons, map clicks (§6.1), inventory and store clicks. Everything playable by keyboard is also playable by mouse.
 

@@ -9,10 +9,11 @@ globals = {
 
 read_globals = {
     -- Lua extensions
-    "format", "strtrim", "tinsert", "wipe",
+    "format", "strtrim", "tinsert", "wipe", "unpack",
 
     -- Frames / widgets
-    "CreateFrame", "UIParent", "GameTooltip",
+    "CreateFrame", "UIParent", "GameTooltip", "GameTooltip_Hide", "UISpecialFrames", "BackdropTemplateMixin",
+    "ChatFontNormal", "GameFontNormal", "IsShiftKeyDown", "MouseIsOver", "geterrorhandler",
 
     -- Functions
     "InCombatLockdown", "C_Timer", "GetBuildInfo", "hooksecurefunc", "issecretvalue",

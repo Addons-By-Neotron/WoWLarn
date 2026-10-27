@@ -21,9 +21,11 @@ along with WoWLarn.  If not, see <https://www.gnu.org/licenses/old-licenses/gpl-
 **********************************************************************
 ]]
 local L = LibStub("AceLocale-3.0"):GetLocale("WoWLarn")
+local _, ns = ...
 
 local mod = LibStub("AceAddon-3.0"):NewAddon("WoWLarn", "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0", "LibMagicUtil-1.0")
 LibStub("LibLogger-1.0"):Embed(mod)
+ns.mod = mod
 
 ----------------------------------------------------------------
 -- Saved variable defaults
@@ -31,6 +33,9 @@ LibStub("LibLogger-1.0"):Embed(mod)
 
 mod.defaults = {
    profile = {
+      scale = 1,
+      fast = false,  -- skip the delays (naps) between game steps
+      window = { point = "CENTER", x = 0, y = 0 },
    },
 }
 
@@ -56,6 +61,7 @@ function mod:OnDisable()
 end
 
 function mod:ApplyProfile()
+   ns.main:ApplyScale()
    self:NotifyOptionsChanged()
 end
 
@@ -70,13 +76,27 @@ end
 
 function mod:PrintHelp()
    self:info(L["Available commands:"])
+   self:info(L["/larn  - show/hide the game window"])
    self:info(L["/larn config  - open settings"])
+   self:info(L["/larn reset  - reset the window position"])
 end
 
 function mod:ChatCommand(input)
    local cmd = strtrim(input or ""):lower()
-   if cmd == "config" then
+   if cmd == "" then
+      ns.main:Toggle()
+   elseif cmd == "config" then
       self:OpenConfig()
+   elseif cmd == "reset" then
+      ns.main:ResetPosition()
+   elseif cmd == "help" then
+      self:PrintHelp()
+--@debug@
+   elseif cmd == "new" then
+      ns.ui.co = nil
+      ns.main:Show()
+      if not ns.ui:IsActive() then ns.ui:NewGame() end
+--@end-debug@
    else
       self:PrintHelp()
    end

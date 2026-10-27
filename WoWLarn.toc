@@ -1,6 +1,7 @@
 ## Interface: 120100, 120105, 16001
 ## Title: WoWLarn
-## Notes: 
+## Notes: A graphical World of Warcraft port of the roguelike Ularn
+## IconTexture: Interface\Icons\INV_Misc_Book_08
 ## Author: NeoTron
 ## Version: @project-version@
 ## DefaultState: enabled
@@ -13,3 +14,12 @@ embeds.xml
 Locales.xml
 WoWLarn.lua
 Options.lua
+Runner.lua
+UI\Widgets.lua
+UI\MessageLog.lua
+UI\Prompt.lua
+UI\ControlBar.lua
+UI\SidePanel.lua
+UI\MapView.lua
+UI\MainFrame.lua
+Game.lua

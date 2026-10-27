@@ -21,6 +21,7 @@ along with WoWLarn.  If not, see <https://www.gnu.org/licenses/old-licenses/gpl-
 **********************************************************************
 ]]
 local L = LibStub("AceLocale-3.0"):GetLocale("WoWLarn")
+local _, ns = ...
 local mod = LibStub("AceAddon-3.0"):GetAddon("WoWLarn")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
@@ -46,6 +47,23 @@ local function BuildOptions()
          get = Get,
          set = Set,
          args = {
+            scale = {
+               type = "range",
+               name = L["Window scale"],
+               order = 10,
+               min = 0.5, max = 2, step = 0.05, isPercent = true,
+               set = function(_, value)
+                  mod.db.profile.scale = value
+                  ns.main:ApplyScale()
+               end,
+            },
+            fast = {
+               type = "toggle",
+               name = L["Fast mode"],
+               desc = L["Skip the short pauses between game steps, such as spell animations."],
+               order = 20,
+               width = "full",
+            },
          },
       },
    }
