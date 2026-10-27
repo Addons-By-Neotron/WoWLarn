@@ -1,0 +1,31 @@
+-- Luacheck configuration for World of Warcraft addons
+std = "lua51"
+max_line_length = 140
+self = false
+
+globals = {
+    "WoWLarnDB",
+}
+
+read_globals = {
+    -- Lua extensions
+    "format", "strtrim", "tinsert", "wipe",
+
+    -- Frames / widgets
+    "CreateFrame", "UIParent", "GameTooltip",
+
+    -- Functions
+    "InCombatLockdown", "C_Timer", "GetBuildInfo", "hooksecurefunc", "issecretvalue",
+
+    -- Libraries
+    "LibStub",
+}
+
+exclude_files = {
+    "Libs/**",
+}
+
+ignore = {
+    "212", -- Unused argument
+    "213", -- Unused loop variable
+}

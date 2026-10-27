@@ -1,0 +1,15 @@
+## Interface: 120100, 120105, 16001
+## Title: WoWLarn
+## Notes: 
+## Author: NeoTron
+## Version: @project-version@
+## DefaultState: enabled
+## X-eMail: neotron@gmail.com
+## X-Date: @project-date-integer@
+## OptionalDeps: Ace3, LibMagicUtil-1.0, LibLogger
+## SavedVariables: WoWLarnDB
+
+embeds.xml
+Locales.xml
+WoWLarn.lua
+Options.lua
