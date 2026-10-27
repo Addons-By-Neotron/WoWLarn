@@ -498,3 +498,7 @@ L["intelligence"] = true
 L["wisdom"] = true
 L["From items:"] = true
 L["Artifacts:"] = true
+L["The %s takes %d damage."] = true
+L["You hit the %s for %d damage."] = true
+L["The %s hit you for %d damage."] = true
+L["You lose %d hit points."] = true

@@ -138,8 +138,9 @@ end
 
 -- C: losehp(). Removes hit points; kills the player at zero. Callers must check G.dead
 -- afterwards, since nothing stops the game code the way the C exit() in died() does.
-function Player.losehp(x)
+function Player.losehp(x, quiet)
    if G.dead then return end
+   if not quiet and x > 0 then ns.ui:Message(L["You lose %d hit points."], x) end
    c[K.HP] = c[K.HP] - x
    if c[K.HP] <= 0 then
       ns.ui:Message(L["Alas, you have died."])

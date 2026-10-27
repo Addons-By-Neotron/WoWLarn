@@ -205,8 +205,9 @@ local function DropSomething(x, y, monst)
    end
 end
 
--- C: hitm(). Damages the monster at (x, y); returns the hit points it absorbed.
-function Monster.hitm(x, y, amt)
+-- C: hitm(). Damages the monster at (x, y); returns the hit points it absorbed. The damage
+-- done is reported with hitmsg (a format of the monster name and the damage) if given.
+function Monster.hitm(x, y, amt, hitmsg)
    local monster = G.monster
    local monst = mon[x][y]
    local amt2 = amt  -- save the initial damage so we can return it
@@ -248,6 +249,7 @@ function Monster.hitm(x, y, amt)
    end
 
    local hpoints = hitp[x][y]
+   Msg(hitmsg or L["The %s takes %d damage."], G.lastmonst, amt)
    if hpoints <= amt then
       Msg(L["The %s died!"], G.lastmonst)
       ns.Player.raiseExperience(monster[monst].experience)
@@ -298,7 +300,6 @@ function Monster.hitmonster(x, y)
    local flag, damag = false, 0
    -- need at least a random chance to hit
    if rnd(20) < tmp or rnd(71) < 5 then
-      Msg(L["You hit the %s."], G.lastmonst)
       flag = true
       damag = FullHit(1)
       if damag < 9999 then
@@ -325,7 +326,7 @@ function Monster.hitmonster(x, y)
    end
 
    if flag then
-      Monster.hitm(x, y, damag)
+      Monster.hitm(x, y, damag, L["You hit the %s for %d damage."])
       if monst >= DEMONLORD and c[K.LANCEDEATH] ~= 0 and hitp[x][y] ~= 0 then
          Msg(L["Your lance of death tickles the %s!"], G.lastmonst)
       end
@@ -624,12 +625,12 @@ function Monster.hitplayer(x, y)
    end
 
    if dam + bias > ac or rnd(ac > 0 and ac or 1) == 1 then
-      Msg(L["The %s hit you."], name)
       hit = true
       dam = dam - ac
       if dam < 0 then dam = 0 end
+      Msg(L["The %s hit you for %d damage."], name, dam)
       if dam > 0 then
-         ns.Player.losehp(dam)
+         ns.Player.losehp(dam, true)
       end
    end
 
