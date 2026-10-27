@@ -102,6 +102,9 @@ function Save.unpack(data)
    for _, name in ipairs({ "visited", "spheres", "stock", "course", "drug", "monster", "gemsSold" }) do
       G[name] = Copy(data[name])
    end
+   for id, name in pairs(ns.Visuals.MONSTER_NAME) do  -- (renamed since the game was saved)
+      if G.monster[id] then G.monster[id].name = name end
+   end
    G.gemsSold = G.gemsSold or {}  -- (saves from before this was kept)
    G.levels = {}
    for index, packed in pairs(data.levels) do
