@@ -741,10 +741,23 @@ do
    check(objects2 <= objects and objects2 >= objects - 4 and G.spelknow[select(2, Code("alter reality"))] == 0, "alter reality keeps the objects: " .. objects .. " " .. objects2)
    local reachable = G.item[G.playerx][G.playery] == 0 and G.mon[G.playerx][G.playery] == 0
    check(reachable, "alter reality puts the player on a free tile")
-   Arena(); G.spelknow[select(2, Code("genocide"))] = 1
-   keys("c"); keys(Code("genocide")); local glyph = T.monstglyphs:sub(K.ORC + 1, K.ORC + 1)
-   if ui.wait == "key" then keys(glyph) end
-   check(G.spelknow[select(2, Code("genocide"))] == 0 or (last() or ""):find("didn't work"), "genocide is used up")
+   Arena()
+   local glyph = T.monstglyphs:sub(K.ORC + 1, K.ORC + 1)
+   local gid; for j = 0, K.MAXMONST - 1 do if T.monstglyphs:sub(j + 1, j + 1) == glyph then gid = j break end end
+   G.monster[gid].hitpoints = 100
+   Monster(40, 8, gid); G.mon[40][8], G.hitp[40][8] = gid, 100
+   G.mon[42][8], G.hitp[42][8] = gid, 100
+   G.item[44][9], G.iarg[44][9] = K.OBOOK, 3
+   for _ = 1, 40 do
+      G.c[K.SPELLS] = 50; LOG = {}
+      keys("c"); keys(Code("genocide"))
+      if (last() or ""):find("Genocide which") then keys(glyph) end
+      if G.monster[gid].flags >= K.FL_GENOCIDED and ns.Monster.hasFlag(G.monster[gid].flags, K.FL_GENOCIDED) then break end
+   end
+   check(ns.Monster.hasFlag(G.monster[gid].flags, K.FL_GENOCIDED), "genocide marks the monster")
+   local left = 0; for x = 1, K.MAXX do for y = 1, K.MAXY do if G.mon[x][y] == gid then left = left + 1 end end end
+   check(left == 0 and G.item[44][9] == K.OBOOK, "genocide wipes the monsters out and keeps the level")
+   check(G.spelknow[select(2, Code("genocide"))] == 0, "genocide is used up")
    ns.Monster.init()
    Arena(); Cast("permanence"); check(G.spelknow[select(2, Code("permanence"))] == 0, "permanence is used up")
 
@@ -770,8 +783,25 @@ do
    check(table.concat(lines(), "|"):find("dispels"), "a demon dispels the sphere")
    Arena(); G.spheres = {}; G.c[K.SPHCAST] = 0
    ns.Sphere.newsphere(G.playerx, G.playery, 2, 20); check(G.dead == 258, "enveloped by a sphere"); G.dead = nil
-   Arena(); G.spheres = {}; G.c[K.SPHCAST] = 0
-   Monster(31, 8, K.ORC); G.item[32][8] = K.OANNIHILATION
+   local ate
+   for _ = 1, 10 do
+      Arena(); G.spheres = {}; G.c[K.SPHCAST] = 0
+      ns.Sphere.newsphere(33, 8, 0, 50); Monster(34, 8, K.ORC)
+      for _ = 1, 3 do ns.Monster.movemonst() end
+      local orcs = 0; for x = 1, K.MAXX do for y = 1, K.MAXY do if G.mon[x][y] == K.ORC then orcs = orcs + 1 end end end
+      if orcs == 0 and #G.spheres == 1 then ate = true break end
+      G.spheres = {}; G.c[K.SPHCAST] = 0
+   end
+   check(ate, "a monster that walks into a sphere is annihilated")
+   local dispelled
+   for _ = 1, 10 do
+      Arena(); G.spheres = {}; G.c[K.SPHCAST] = 0; LOG = {}
+      ns.Sphere.newsphere(33, 8, 0, 50); Monster(34, 8, K.DEMONLORD)
+      for _ = 1, 3 do ns.Monster.movemonst() end
+      if table.concat(lines(), "|"):find("dispels") and G.spheres[1] == nil then dispelled = true break end
+      G.spheres = {}; G.c[K.SPHCAST] = 0
+   end
+   check(dispelled, "a demon walking into a sphere dispels it")
    -- the scroll of pulverization
    Arena(); G.item[33][8] = K.OWALL; G.iven[1], G.ivenarg[1] = K.OSCROLL, K.SPULVERIZE
    keys("r"); keys("a"); keys("l"); check(G.item[33][8] == 0, "pulverization breaks the wall")
@@ -787,6 +817,22 @@ end
 Clear(); G.c[K.HP] = 1; G.item[31][8] = K.OTRAPARROW; keys("l")
 check(not ui:IsActive() or G.dead, "an arrow ends the game at 1 hp ")
 keys("S"); ns.main:Show()
+-- a new game, and death by one's own fireball in the live thread
+keys("a"); keys(" "); check(ui:IsActive() and ui.wait == "key", "a new game starts")
+do
+   local oldfast = ns.mod.db.profile.fast
+   ns.mod.db.profile.fast = true
+   ns.Create.newCaveLevel(3); Clear()
+   for i = 1, K.SPNUM do G.spelknow[i] = 1 end
+   G.c[K.INTELLIGENCE], G.c[K.LEVEL], G.c[K.HP], G.c[K.HPMAX] = 25, 40, 1, 5000
+   G.item[32][8] = K.OMIRROR
+   for _ = 1, 40 do
+      if G.dead or not ui:IsActive() then break end
+      G.c[K.SPELLS] = 50; keys("c"); keys("bal"); if debug.traceback(ui.co):find("PickDirection") then keys("l") end
+   end
+   check(G.dead or not ui:IsActive(), "your own fireball can kill you")
+   ns.mod.db.profile.fast = oldfast
+end
 
 -- redraw paths with a populated game
 ui:Flush(); ns.map:Layout(); ns.map:Draw(); ns.side:UpdateMinimap(); ns.side:UpdateStats()

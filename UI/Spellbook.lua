@@ -80,6 +80,7 @@ function spellbook:Create(parent)
       text:SetJustifyH("LEFT")
       text:SetJustifyV("TOP")
       text:SetWidth(COLUMN_W - 8)
+      text:SetWordWrap(false)  -- a wrapped name would shift the rows of the other columns
       text:Hide()
       self.columns[column] = text
    end

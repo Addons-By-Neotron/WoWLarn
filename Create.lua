@@ -530,6 +530,18 @@ function Create.setHP(flag)
 end
 
 -- C: newcavelevel(). Must be called whenever the player changes level.
+-- C: checkgen(). Wipes out the monsters that were genocided.
+function Create.checkGen()
+   local monster = G.monster
+   for y = 1, MAXY do
+      for x = 1, MAXX do
+         if ns.Monster.hasFlag(monster[mon[x][y]].flags, K.FL_GENOCIDED) then
+            mon[x][y] = 0  -- no more monster
+         end
+      end
+   end
+end
+
 function Create.newCaveLevel(x)
    if G.Visited(G.level) then
       G.SaveLevel()
@@ -538,6 +550,7 @@ function Create.newCaveLevel(x)
    if G.Visited(x) then
       G.GetLevel()
       Create.setHP(false)
+      Create.checkGen()
       return
    end
    G.ClearLevel()
@@ -548,4 +561,5 @@ function Create.newCaveLevel(x)
    if G.wizard or x == 0 then
       G.FillKnow(1)
    end
+   Create.checkGen()  -- wipe out any genocided monsters
 end
