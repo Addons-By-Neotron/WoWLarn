@@ -936,6 +936,7 @@ do
    check(#ns.Scores.dead() == 0 and #ns.Scores.winners() == 1, "win replaces the deaths")
    check(ns.Scores.taxes() == 100, "tax on a win: " .. ns.Scores.taxes())
    check(ns.Scores.payTaxes(60) == 60 and ns.Scores.taxes() == 40, "paying taxes")
+   check(#ns.Scores.letters() == 6 and ns.Scores.letters()[1][3]:find("2000 gold"), "letters")
    ns.scoreboard:Show(entry)
 end
 -- save and resume

@@ -184,6 +184,12 @@ local function Finish()
    ui:Log("damage", "%s %s", G.name, ns.Scores.deathLine(cause))
    ui:Log("system", L["Score: %d   Difficulty: %d"], c[K.GOLD], c[K.HARDGAME])
    if entry then ns.scoreboard:Show(entry) end
+   if entry and cause == ns.Scores.WIN then
+      for _, letter in ipairs(ns.Scores.letters()) do
+         ui:Log("system", "|cffffd100%s|r - %s", letter[1], letter[2])
+         ui:Log("system", "%s", letter[3])
+      end
+   end
    ui:Log("system", L["Game over. Press any key to start again."])
 end
 

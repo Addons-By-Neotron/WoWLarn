@@ -176,3 +176,26 @@ end
 function Scores.dead()
    return Board().dead
 end
+
+-- C: bill.c. The letters a winner gets: { sender, subject, text }. The tax bill comes first.
+function Scores.letters()
+   local gold, taxes, woman = c[K.GOLD], G.taxes, G.sex == 0
+   return {
+      { L["Ularn Revenue Service"], L["undeclared income"], format(
+         L["We heard you survived the caverns of Ularn.  Let me be the first to congratulate you on your success.  It is quite a feat.  It must also have been very profitable for you.  The Dungeon Master has informed us that you brought %d gold pieces back with you from your journey.  As the county of Ularn is in dire need of funds, we have spared no time in preparing your tax bill.  You owe %d gold pieces as of this notice, and is due within 5 days.  Failure to pay will mean penalties.  Once again, congratulations.  We look forward to your future successful expeditions."],
+         gold, taxes) },
+      { L["His Majesty King Wilfred"], L["a noble deed"], format(
+         L["I have heard of your magnificent feat and I, King Wilfred, hereby declare this day to be a national holiday.  Furthermore, three days hence, ye be invited to the castle to receive the honour of %s of the Realm.  Upon thy name shall it be written...  Bravery and courage be yours.  May you live in happiness for evermore..."],
+         woman and L["Lady"] or L["Knight"]) },
+      { L["Count Endelford"], woman and L["You Bitch!"] or L["You Bastard!"], format(
+         L["I heard (from sources) of your journey.  Congratulations!  You %s!  With several attempts I have yet to endure the caves, and you, a nobody, make the journey!  From this time onward, be warned: upon our meeting you shall pay the price!"],
+         woman and L["Bitch"] or L["Bastard"]) },
+      { L["Duke of Ularnty"], L["High Praise"],
+         L["With a certainty, a hero I declare to be amongst us!  A nod of favour I send to thee.  Methinks Count Endelford this day of right breaths fire as of dragon of whom ye are slayer.  I yearn to behold his anger and jealously.  Should ye choose to unleash some of thy wealth upon those who be unfortunate, I, Duke Mainair, shall equal thy gift also."] },
+      { L["St. Mary's Children's Home"], L["these poor children"], format(
+         L["News of your great conquest has spread to all of Ularndom.  Might I have a moment of a great %s's time?  We here at St. Mary's Children's Home are very poor and many children are starving.  Disease is widespread and very often fatal without good food.  Could you possibly find it in your heart to help us in our plight?  Whatever you could give would help much.  (your gift is tax-deductible)"],
+         woman and L["woman"] or L["man"]) },
+      { L["National Dianthroritis Society of Ularn"], L["hope"],
+         L["Congratulations on your successful expedition.  We are sure much courage and determination was needed on your quest.  There are many though, that could never hope to undertake such a journey due to an enfeebling disease -- dianthroritis.  We at the National Dianthroritis Society of Ularn wish to appeal to your philanthropy in order to save many good people -- possibly even yourself or a loved one a few years from now.  Much work needs to be done in researching this dreaded disease and you can help today.  Could you please see it in your heart to give generously?  Your continued good health can be your everlasting reward."] },
+   }
+end

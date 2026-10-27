@@ -404,7 +404,7 @@ Each milestone is playable or testable in game.
    - changed from the C: Esc at the "give money or just pray" question goes back to the first altar question (the C ignores Esc there)
    - left to milestone 8: the town buildings (school, banks, DND store, trading post, home, pad and LRS), which print "(Not implemented yet.)" until then
 8. **Town buildings (done, not yet checked in the client):** `Town.lua` and `UI/Store.lua`; item tooltips and `[Item]` links (`ItemInfo.lua`); store windows for DND store, school, bank and 5th branch, trading post, LRS taxes, home, and the goblin alchemist.
-9. **Endgame + persistence (mostly done):** `Scores.lua` + `UI/Scoreboard.lua` (winners and dead lists in `WoWLarn.global`, life protection in `Player.died`, taxes per character, LRS pays them), `Save.lua` (the game goes to `WoWLarn.char.game` at logout and when the window hides; resumed when a new session starts; death, a win or quitting clears it). Still to do: the tax letters (`bill.c`), a slash command to view the scoreboard, saving the equipped-slot idea of open decision 6.
+9. **Endgame + persistence (mostly done):** `Scores.lua` + `UI/Scoreboard.lua` (winners and dead lists in `WoWLarn.global`, life protection in `Player.died`, taxes per character, LRS pays them), `Save.lua` (the game goes to `WoWLarn.char.game` at logout and when the window hides; resumed when a new session starts; death, a win or quitting clears it). The tax letters (`bill.c`) are logged when you win (`Scores.letters`), and `/larn scores` shows the boards. Still to do: the equipped-slot idea of open decision 6.
 10. **2.5D view (first slice done, untested in the client):** `UI/MapView3D.lua` draws the floor and walls as perspective quads (`/larn view` or the Map view option switches it); items, monsters and the player are still icons and glyphs standing on the floor.
    Still to do:
     - projection, perspective floor quads, wall panels
@@ -423,7 +423,7 @@ Each milestone is playable or testable in game.
 
    | C item (price) | Effect (from C) | WoWLarn name |
    |---|---|---|
-   | Killer Speed (100) | haste self + half damage taken; −2 all stats (min 3) | **Goblin Rocket Fuel** |
+   | Killer Speed (100) | haste self + half damage dealt; −2 all stats (min 3) | **Goblin Rocket Fuel** |
    | Groovy Acid (250) | confused, +2 WIS/INT, long awareness *and* aggravate, heals all monsters on level | **Gnomish Mind-Expander** |
    | Monster Hash (500) | monsters hasted, +2 INT/WIS, −2 CON/DEX, half damage, long clumsiness | **Volatile Swamp Brew** |
    | Trippy Shrooms (1000) | monsters hasted, confused, +2 WIS/CHA | **Glowcap Stew** |
