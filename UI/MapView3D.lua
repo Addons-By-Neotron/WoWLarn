@@ -44,7 +44,7 @@ local FOG_REACH = 1700  -- ahead at which things are at their darkest
 local floor, max, min = math.floor, math.max, math.min
 local MAXX, MAXY = K.MAXX, K.MAXY
 
-local FACING = math.pi * 1.5  -- the way a model looks when it faces the camera (south)
+local FACING = 0  -- the facing at which a model looks towards the camera (south)
 local TURN = 1  -- 1 if a larger facing turns a model from south to east, -1 if the other way
 -- how far to turn from south, for the directions of the game (south, east, north, west, then
 -- northeast, northwest, southeast, southwest)

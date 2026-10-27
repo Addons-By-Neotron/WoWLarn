@@ -45,7 +45,7 @@ function viewer:Create()
    self.model = CreateFrame("PlayerModel", nil, frame)
    self.model:SetPoint("TOPLEFT", 8, -8)
    self.model:SetSize(WIDTH - 16, MODEL_H)
-   self.model:SetScript("OnModelLoaded", function(model) model:SetFacing(math.pi * 1.5) end)
+   self.model:SetScript("OnModelLoaded", function(model) model:SetFacing(0) end)
 
    self.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
    self.title:SetPoint("TOPLEFT", self.model, "BOTTOMLEFT", 0, -6)
@@ -93,7 +93,7 @@ end
 function viewer:Show(display)
    self.display = math.max(1, display)
    self.model:SetDisplayInfo(self.display)
-   self.model:SetFacing(math.pi * 1.5)
+   self.model:SetFacing(0)
    self.edit:SetText(tostring(self.display))
    self:Update()
 end
