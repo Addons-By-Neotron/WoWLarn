@@ -904,7 +904,7 @@ do
    ns.Player.recalc()
    local sum = table.concat(ns.Equipment.summary(), "\n")
    check(sum:find("rings 9"), "summary counts three protection rings: " .. sum)
-   check(sum:find("Regeneration 2"), "summary regen: " .. sum)
+   check(sum:find("Health regeneration 2"), "summary regen: " .. sum)
    local slot
    for i = 1, K.IVENSIZE do if G.iven[i] == K.OPROTRING then slot = i break end end
    check(ns.Equipment.short(slot) == "+3 armor class", "ring tag")
