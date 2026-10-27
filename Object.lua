@@ -105,15 +105,7 @@ local NO_ARG = {
 }
 local function FindItem(itm)
    local arg = G.iarg[G.playerx][G.playery]
-   local text = ns.Tables.objectname[itm]
-   if not NO_ARG[itm] then
-      if arg > 0 then
-         text = text .. " + " .. arg
-      elseif arg < 0 then
-         text = text .. " " .. arg
-      end
-   end
-   Msg(L["You find %s"], text)
+   Msg(L["You find %s"], ns.ItemInfo.link(itm, NO_ARG[itm] and 0 or arg))
    if ns.ui:Choose(L["Do you want to (t) take it, or (i) ignore it?"], "t") == "t" then
       if ns.Player.take(itm, arg) then Forget() end
    end

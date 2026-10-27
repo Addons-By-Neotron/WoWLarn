@@ -82,9 +82,10 @@ function inventory:Create(parent)
       button.slot = slot
       button:SetScript("OnEnter", function(self)
          local lines = G.iven[self.slot] ~= 0 and ns.Equipment.lines(self.slot) or {}
-         if #lines == 0 then return end
+         if G.iven[self.slot] == 0 then return end
          GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-         GameTooltip:SetText(ns.Player.itemName(self.slot))
+         ns.ItemInfo.tooltip(G.iven[self.slot], G.ivenarg[self.slot])
+         GameTooltip:AddLine(ns.Player.itemName(self.slot), 0.6, 0.6, 0.6)
          for _, line in ipairs(lines) do GameTooltip:AddLine(line, 1, 1, 1, true) end
          GameTooltip:Show()
       end)
@@ -141,7 +142,7 @@ function inventory:Update()
             button.icon:Hide()
          end
          local valid = not filter or filter(id)
-         local color = valid and "|cffffffff" or "|cff777777"
+         local color = valid and "|cff" .. ns.ItemInfo.color(id, G.ivenarg[slot]) or "|cff777777"
          button.text:SetText(color .. Letter(slot) .. ")|r " .. color .. ns.Player.itemName(slot) .. "|r")
          button.effect:SetText(ns.Equipment.short(slot) or "")
       end

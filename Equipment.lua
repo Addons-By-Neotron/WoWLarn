@@ -64,6 +64,11 @@ local SHORT = {
    [K.OCLEVERRING] = true, [K.OSWORDofSLASHING] = true,
 }
 
+-- The effect text of a passive item, or nil.
+function Equipment.effect(id, arg)
+   return EFFECTS[id] and EFFECTS[id](arg)
+end
+
 -- True if the item does something just by being carried.
 function Equipment.isPassive(id)
    return EFFECTS[id] ~= nil
@@ -90,16 +95,12 @@ function Equipment.short(slot)
    return WornBonus(slot)
 end
 
--- The lines of the tooltip of a slot.
+-- What a slot adds right now because it is worn or wielded (the rest is in ItemInfo).
 function Equipment.lines(slot)
    local id, arg = iven[slot], ivenarg[slot]
    local lines = {}
    local worn = WornBonus(slot)
    if worn then lines[#lines + 1] = worn end
-   if EFFECTS[id] then
-      lines[#lines + 1] = EFFECTS[id](arg)
-      lines[#lines + 1] = L["Works as long as you carry it."]
-   end
    return lines
 end
 

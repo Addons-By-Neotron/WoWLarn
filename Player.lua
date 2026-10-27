@@ -360,8 +360,7 @@ local PLAIN = {
 
 -- The name of an inventory slot as shown in the inventory (C: show3 without the letter).
 -- Potions and scrolls only show what they are once the player has found out.
-function Player.itemName(slot)
-   local id, arg = iven[slot], ivenarg[slot]
+function Player.objectName(id, arg)
    local T = ns.Tables
    local name = T.objectname[id] or "?"
    if id == K.OPOTION then
@@ -377,6 +376,11 @@ function Player.itemName(slot)
          name = name .. " " .. arg
       end
    end
+   return name
+end
+
+function Player.itemName(slot)
+   local name = Player.objectName(iven[slot], ivenarg[slot])
    if c[K.WIELD] == slot then name = name .. L[" (weapon in hand)"] end
    if c[K.WEAR] == slot or c[K.SHIELD] == slot then name = name .. L[" (being worn)"] end
    return name
@@ -444,7 +448,7 @@ function Player.take(itm, arg)
             eyeflag = true
          end
 
-         ui:Message(L["You pick up: %s"], Player.itemName(i))
+         ui:Message(L["You pick up: %s"], ns.ItemInfo.link(itm, arg))
          ui:Refresh("inv")
          if stats then Player.recalc() end
          ui:Refresh("stats")
@@ -493,7 +497,7 @@ function Player.dropObject(k)
    if c[K.WEAR] == k then c[K.WEAR] = 0 end
    if c[K.SHIELD] == k then c[K.SHIELD] = 0 end
    Player.adjustCValues(itm, ivenarg[k])
-   ui:Message(L["You drop: %s"], Player.itemName(k))
+   ui:Message(L["You drop: %s"], ns.ItemInfo.link(iven[k], ivenarg[k]))
    if pitflag then
       ui:Message(L["It disappears down the pit."])
    end

@@ -37,7 +37,9 @@ local CATEGORY_COLOR = {
 
 local function Colorize(text, category)
    local c = CATEGORY_COLOR[category] or CATEGORY_COLOR.info
-   return format("|cff%02x%02x%02x%s|r", math.floor(c[1] * 255), math.floor(c[2] * 255), math.floor(c[3] * 255), text)
+   local color = format("|cff%02x%02x%02x", math.floor(c[1] * 255), math.floor(c[2] * 255), math.floor(c[3] * 255))
+   -- an item link ends its own colour, so carry on with the colour of the message after it
+   return color .. text:gsub("|r", "|r" .. color) .. "|r"
 end
 
 function log:Create(parent)
@@ -57,6 +59,15 @@ function log:Create(parent)
          self:ScrollDown()
       end
    end)
+   -- [Item] links: the tooltip says what it is
+   frame:SetHyperlinksEnabled(true)
+   frame:SetScript("OnHyperlinkEnter", function(self, link)
+      local id, arg = link:match("^wowlarn:(%-?%d+):(%-?%d+)$")
+      if not id then return end
+      GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+      ns.ItemInfo.tooltip(tonumber(id), tonumber(arg))
+   end)
+   frame:SetScript("OnHyperlinkLeave", GameTooltip_Hide)
    self.frame = frame
    -- Anything logged before the window existed.
    for _, entry in ipairs(self.backlog or {}) do

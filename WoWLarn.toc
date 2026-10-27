@@ -28,6 +28,7 @@ Data\Visuals.lua
 Runner.lua
 Player.lua
 Equipment.lua
+ItemInfo.lua
 Create.lua
 Regen.lua
 Display.lua
