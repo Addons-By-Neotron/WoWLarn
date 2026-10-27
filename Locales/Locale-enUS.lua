@@ -795,3 +795,4 @@ L["Creature models"] = true
 L["Show your character and the monsters as 3D models in the 2.5D view."] = true
 L["Camera angle"] = true
 L["How high the camera is in the 2.5D view.  Steeper looks more like the flat map."] = true
+L["murloc"] = true

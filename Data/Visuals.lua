@@ -140,7 +140,17 @@ V.PLAYER_COLOR = { 0.3, 1, 0.3 }
 -- the saved variables and wins.
 V.DISPLAY = {
    -- [monster id] = displayID
+   [K.LEMMING] = 31,  -- a murloc
 }
+
+-- Monsters that go by another name than in the original (design.md, open decision 2).  The
+-- id and the rules stay those of the original monster.
+V.MONSTER_NAME = {
+   [K.LEMMING] = L["murloc"],
+}
+for id, name in pairs(V.MONSTER_NAME) do
+   ns.MonsterData[id].name = name
+end
 
 function V.MonsterDisplay(id)
    local own = ns.mod.db.global.displays
