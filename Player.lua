@@ -182,7 +182,7 @@ end
 -- C: raiseexperience(). skill[c[LEVEL]] in C is T.skill[level + 1] here.
 function Player.raiseExperience(x)
    local ui, skill = ns.ui, ns.Tables.skill
-   local old = c[K.LEVEL]
+   local old, oldHP, oldSpells, oldPack = c[K.LEVEL], c[K.HPMAX], c[K.SPELLMAX], Player.pocketLimit()
    c[K.EXPERIENCE] = c[K.EXPERIENCE] + x
    while c[K.EXPERIENCE] >= skill[c[K.LEVEL] + 1] and c[K.LEVEL] < K.MAXPLEVEL do
       local tmp = ns.idiv(c[K.CONSTITUTION] - c[K.HARDGAME], 2)
@@ -195,6 +195,11 @@ function Player.raiseExperience(x)
    end
    if c[K.LEVEL] ~= old then
       ui:Message(L["Welcome to level %d!"], c[K.LEVEL])
+      local gains = { format(L["%d hit points"], c[K.HPMAX] - oldHP) }
+      if c[K.SPELLMAX] > oldSpells then gains[#gains + 1] = format(L["%d mana"], c[K.SPELLMAX] - oldSpells) end
+      if Player.pocketLimit() > oldPack then gains[#gains + 1] = L["a new pack slot"] end
+      ui:Message(L["You gain %s."], table.concat(gains, ", "))
+      ui:Sound("levelup")
       local level = c[K.LEVEL]
       if level == 94 then  -- earth guardian
          c[K.WTW] = 99999

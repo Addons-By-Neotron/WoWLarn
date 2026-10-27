@@ -771,3 +771,7 @@ L["Your level goes up with experience.  Each level gives you more hit points and
 L["Rings of health regeneration make you regain more each time."] = true
 L["Casting a spell uses one point of mana."] = true
 L["Rings of mana regeneration make it come back faster.  Mana regeneration: %d."] = true
+L["%d hit points"] = true
+L["%d mana"] = true
+L["a new pack slot"] = true
+L["You gain %s."] = true

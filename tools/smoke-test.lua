@@ -964,6 +964,12 @@ end
 for _, cell in ipairs(ns.side.cells) do
    if cell.scripts and cell.scripts.OnEnter then cell.scripts.OnEnter(cell) end
 end
+-- level up message
+do
+   G.Reset(); ns.Create.makePlayer(ns.Classes[1])
+   ns.Player.raiseExperience(ns.Tables.skill[2] + 1)
+   check(last and tostring(last()):find("You gain"), "level up gains: " .. tostring(last and last()))
+end
 -- the 2.5D view
 do
    G.Reset(); ns.Create.makePlayer(ns.Classes[1]); ns.Create.newCaveLevel(2)

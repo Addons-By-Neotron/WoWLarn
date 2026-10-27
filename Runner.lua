@@ -105,6 +105,16 @@ function ui:Message(fmt, ...)
    self:Log("info", fmt, ...)
 end
 
+-- Plays one of the sounds of the game; the sound kits are looked up by name, and the game
+-- goes quiet if the client does not have one.
+local SOUND = { levelup = { "LEVELUP", 888 } }
+
+function ui:Sound(name)
+   local sound = SOUND[name]
+   if not sound or not PlaySound then return end
+   PlaySound((SOUNDKIT and SOUNDKIT[sound[1]]) or sound[2])
+end
+
 -- C: bottomline(), showcell(), draws(). what is "map", "stats" or "all". Redraws are
 -- batched and happen when the game thread next waits.
 function ui:Refresh(what)
