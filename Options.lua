@@ -87,6 +87,12 @@ local function BuildOptions()
                   ns.map:Layout()
                end,
             },
+            races = {
+               type = "toggle",
+               name = L["Races"],
+               desc = L["Your character's race adds a few points to the stats of a new game.  Not part of the original game."],
+               order = 17.5,
+            },
             ascii = {
                type = "toggle",
                name = L["Classic letters"],

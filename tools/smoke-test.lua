@@ -119,6 +119,9 @@ end
 G.Reset(); ns.Create.makePlayer(ns.Classes[2])
 check(G.ivenarg[1] == K.PTREASURE and G.spelknow[2] == 1 and G.spelknow[5] == 1 and G.c[K.SPELLMAX] == 2, "mage kit")
 G.Reset(); ns.Create.makePlayer(ns.Classes[8])
+ns.mod.db.profile.races = true; UnitRace = function() return "Dwarf", "Dwarf" end
+G.Reset(); ns.Create.makePlayer(ns.Classes[8]); check(G.race == "Dwarf" and G.c[K.CONSTITUTION] == ns.Classes[8].stats[4] + 2, "race bonus")
+ns.mod.db.profile.races = nil; UnitRace = nil; G.Reset(); ns.Create.makePlayer(ns.Classes[8])
 check(G.c[K.LANCEDEATH] == 1 and G.c[K.WIELD] == 1, "rambo")
 
 ---------------------------------------------------------------- town

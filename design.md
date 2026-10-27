@@ -411,7 +411,8 @@ Each milestone is playable or testable in game.
     - pooled `PlayerModel` actors with display lookup, per-monster tune, the depth fix (`Seat` technique) and animations
     - move tweens, spell effects, lighting/fog for remembered cells
     - debug model viewer for curating `Data/Visuals.lua`
-11. **Options + polish:** difficulty, monster renames, fast mode (no naps), tile size, ASCII fallback renderer, colors, LDB/minimap launcher, races (§9).
+11. **Options + polish (races done):** the Races option adds small stat bonuses for the race of the WoW character at the start of a new game (`Create.lua`, no extra pick). Left: more monster renames, colour options, ASCII mode for the 2.5D view.
+   Original list: difficulty, monster renames, fast mode (no naps), tile size, ASCII fallback renderer, colors, LDB/minimap launcher, races (§9).
 
 ---
 

@@ -823,3 +823,6 @@ L["National Dianthroritis Society of Ularn"] = true
 L["hope"] = true
 L["Congratulations on your successful expedition.  We are sure much courage and determination was needed on your quest.  There are many though, that could never hope to undertake such a journey due to an enfeebling disease -- dianthroritis.  We at the National Dianthroritis Society of Ularn wish to appeal to your philanthropy in order to save many good people -- possibly even yourself or a loved one a few years from now.  Much work needs to be done in researching this dreaded disease and you can help today.  Could you please see it in your heart to give generously?  Your continued good health can be your everlasting reward."] = true
 L["You"] = true
+L["Your %s blood adds to your abilities."] = true
+L["Races"] = true
+L["Your character's race adds a few points to the stats of a new game.  Not part of the original game."] = true

@@ -36,6 +36,26 @@ local DBOTTOM, VBOTTOM = K.DBOTTOM, K.VBOTTOM
 local hitp = G.hitp
 
 -- C: makeplayer() and pick_char(). class is an entry of ns.Classes.
+-- Optional (the Races setting, not in Ularn): the race of the WoW character adds to the stats.
+-- { strength, intelligence, wisdom, constitution, dexterity, charisma }
+local RACES = {
+   Human = { 0, 0, 1, 0, 0, 2 }, Dwarf = { 1, 0, 0, 2, 0, 0 }, NightElf = { 0, 0, 1, 0, 2, 0 },
+   Gnome = { 0, 2, 0, 0, 1, 0 }, Draenei = { 0, 0, 2, 0, 0, 1 }, Worgen = { 1, 0, 0, 0, 2, 0 },
+   Pandaren = { 0, 0, 1, 2, 0, 0 }, Orc = { 2, 0, 0, 1, 0, 0 }, Scourge = { 0, 1, 1, 1, 0, 0 },
+   Tauren = { 2, 0, 0, 1, 0, 0 }, Troll = { 0, 0, 0, 2, 1, 0 }, BloodElf = { 0, 2, 0, 0, 0, 1 },
+   Goblin = { 0, 2, 0, 0, 0, 1 },
+}
+
+-- Adds the bonuses of the race of the player; returns its name, or nil.
+local function ApplyRace()
+   if not ns.mod.db.profile.races or not UnitRace then return nil end
+   local name, token = UnitRace("player")
+   local bonus = RACES[token]
+   if not bonus then return nil end
+   for i = 1, 6 do c[K.STRENGTH + i - 1] = c[K.STRENGTH + i - 1] + bonus[i] end
+   return name
+end
+
 function Create.makePlayer(class)
    c[K.HARDGAME] = ns.mod.db.profile.difficulty or 0  -- (the setting at the start of the game)
    c[K.LEVEL] = 1
@@ -46,6 +66,7 @@ function Create.makePlayer(class)
    for i = 1, 6 do
       c[K.STRENGTH + i - 1] = class.stats[i]
    end
+   G.race = ApplyRace()
    c[K.HPMAX], c[K.HP] = class.hp, class.hp
    c[K.SPELLMAX], c[K.SPELLS] = class.spellmax, class.spellcount
    for _, spell in ipairs(class.spells) do
