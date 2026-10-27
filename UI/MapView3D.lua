@@ -26,15 +26,17 @@ local V = ns.Visuals
 -- map (UI/MapView.lua), which switches between the two.
 --
 -- Space: a tile is TILE units wide.  x grows to the east and y to the south; the camera is
--- CAMERA_BACK units south of the player and CAMERA_HEIGHT above the floor, looking north,
--- so "ahead" is how far north of the camera something is.
+-- CAMERA_BACK units south of the player and CAMERA_HEIGHT above the floor (CAMERA_DISTANCE
+-- away whatever the angle), pitched down at the player, so "ahead" is the distance along the
+-- line of sight.
 local map3d = {}
 ns.map3d = map3d
 
 local TILE, WALL_HEIGHT = 64, 64
-local CAMERA_BACK = 360
+local CAMERA_DISTANCE = 640  -- from the camera to the player, whatever the angle
 local TILE_PIXELS = 55  -- how wide the tile of the player is on the screen
-local CAMERA_HEIGHT, FOCAL  -- from the camera angle, see map3d:Draw
+local CAMERA_BACK, CAMERA_HEIGHT, FOCAL  -- from the camera angle, see map3d:Draw
+local SIN, COS = 0, 1  -- of the angle
 local PLAYER_AT = 0.62  -- how far down the view the player stands
 local NEAR_ROWS, FAR_ROWS, SIDE_COLUMNS = 4, 13, 14
 local ROWS = NEAR_ROWS + FAR_ROWS + 1
@@ -179,10 +181,11 @@ local camera = {}
 -- Where a point appears in the view: x, y (down), the scale of one unit there and how far
 -- ahead it is.  Nil if it is too close to the camera or behind it.
 local function Project(wx, wy, wz)
-   local ahead = camera.y - wy
+   local back, up = camera.y - wy, wz - CAMERA_HEIGHT
+   local ahead = back * COS - up * SIN  -- along the line of sight
    if ahead < MIN_AHEAD then return nil end
    local scale = FOCAL / ahead
-   return camera.centerX + (wx - camera.x) * scale, camera.horizon + (CAMERA_HEIGHT - wz) * scale, scale, ahead
+   return camera.centerX + (wx - camera.x) * scale, camera.centerY - (back * SIN + up * COS) * scale, scale, ahead
 end
 
 -- Things far away are darker.
@@ -302,10 +305,11 @@ function map3d:Draw()
    local width, height = view:GetWidth(), view:GetHeight()
    -- the camera angle (degrees above the floor): steeper looks more like the flat map
    local angle = ns.mod.db.profile.cameraAngle or 55
-   CAMERA_HEIGHT = CAMERA_BACK * math.tan(math.rad(angle))
-   FOCAL = CAMERA_BACK * TILE_PIXELS / TILE
+   SIN, COS = math.sin(math.rad(angle)), math.cos(math.rad(angle))
+   CAMERA_BACK, CAMERA_HEIGHT = CAMERA_DISTANCE * COS, CAMERA_DISTANCE * SIN
+   FOCAL = CAMERA_DISTANCE * TILE_PIXELS / TILE
    camera.centerX = width / 2
-   camera.horizon = height * PLAYER_AT - CAMERA_HEIGHT * FOCAL / CAMERA_BACK
+   camera.centerY = height * PLAYER_AT
    camera.x = (G.playerx - 0.5) * TILE
    camera.y = (G.playery - 0.5) * TILE + CAMERA_BACK
    local ground = V.Ground(G.level)
