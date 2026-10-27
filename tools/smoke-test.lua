@@ -43,7 +43,7 @@ LibStub = function() return {
    GetLocale = function() return setmetatable({}, { __index = function(_, k) return k end }) end,
 } end
 
-local ns = { mod = { db = { profile = { scale = 1, fast = false, window = { point = "CENTER", x = 0, y = 0 } } } } }
+local ns = { mod = { db = { profile = { scale = 1, fast = false, window = { point = "CENTER", x = 0, y = 0 } }, global = { scores = { winners = {}, dead = {} }, taxes = {} } } } }
 local toc = io.open(root .. "/WoWLarn.toc"):read("*a")
 for file in toc:gmatch("\n([%w_\\/]+%.lua)") do
    if file ~= "WoWLarn.lua" and file ~= "Options.lua" then
@@ -912,5 +912,29 @@ do
    check(table.concat(ns.Equipment.summary(), "\n"):find("Artifacts:"), "artifact line")
    ns.inventory:Open(); ns.inventory:Update()
    ns.inventory:Close()
+end
+-- death, life protection, scoreboards
+do
+   G.Reset(); ns.Create.makePlayer(ns.Classes[1]); ns.Create.newCaveLevel(0)
+   G.name = "Tester"
+   G.c[K.LIFEPROT] = 1; G.c[K.HP] = 0
+   ns.Player.died(5)
+   check(not G.dead and G.c[K.HP] == 1 and G.c[K.LIFEPROT] == 0, "life protection saves")
+   ns.Player.died(263)
+   check(G.dead == 263, "a win is not saved")
+   G.dead = false
+   G.c[K.LIFEPROT] = 1
+   ns.Player.died(256)
+   check(G.dead == 256, "quitting is not saved")
+   G.c[K.GOLD] = 1000; G.c[K.BANKACCOUNT] = 500
+   local entry = ns.Scores.record(5)
+   check(entry and entry.score == 1500 and #ns.Scores.dead() == 1, "death scored with the bank")
+   check(ns.Scores.deathLine(5):find("killed by"), ns.Scores.deathLine(5))
+   G.c[K.GOLD] = 2000
+   entry = ns.Scores.record(ns.Scores.WIN)
+   check(#ns.Scores.dead() == 0 and #ns.Scores.winners() == 1, "win replaces the deaths")
+   check(ns.Scores.taxes() == 100, "tax on a win: " .. ns.Scores.taxes())
+   check(ns.Scores.payTaxes(60) == 60 and ns.Scores.taxes() == 40, "paying taxes")
+   ns.scoreboard:Show(entry)
 end
 print("ALL OK")

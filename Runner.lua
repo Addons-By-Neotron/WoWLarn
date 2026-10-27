@@ -52,6 +52,7 @@ function ui:IsActive()
 end
 
 function ui:NewGame()
+   ns.scoreboard:Hide()
    self.co = coroutine.create(ns.Game.Run)
    self.wait = nil
    ns.prompt:Clear()

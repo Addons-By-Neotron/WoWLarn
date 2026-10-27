@@ -37,6 +37,10 @@ mod.defaults = {
       fast = false,  -- skip the delays (naps) between game steps
       window = { point = "CENTER", x = 0, y = 0 },
    },
+   global = {
+      scores = { winners = {}, dead = {} },  -- the scoreboards, see Scores.lua
+      taxes = {},  -- what each winner owes the LRS
+   },
 }
 
 ----------------------------------------------------------------

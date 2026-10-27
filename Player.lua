@@ -346,7 +346,18 @@ function Player.stealSomething(x, y)
 end
 
 -- C: died(). The full scoreboard and tombstone arrive in milestone 9.
+-- C: died(). Ends the game, unless life protection saves the player (the only case where it
+-- returns normally). Callers must check G.dead afterwards.
 function Player.died(cause)
+   if c[K.LIFEPROT] > 0 and ns.Scores.canBeSaved(cause) then
+      c[K.LIFEPROT] = c[K.LIFEPROT] - 1
+      c[K.HP] = 1
+      c[K.CONSTITUTION] = c[K.CONSTITUTION] - 1
+      ns.ui:Message(L["You feel wiiieeeeerrrrrd all over!"])
+      ns.ui:Nap(4000)
+      ns.ui:Refresh("stats")
+      return
+   end
    G.dead = cause or true
 end
 

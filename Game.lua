@@ -93,7 +93,7 @@ local function Parse()
       ui.repcount = 0
       G.nomove = true
       if ui:YesNo(L["Do you really want to quit?"]) == "y" then
-         ui:Log("system", L["Game over. Press any key to start again."])
+         G.dead = ns.Scores.QUIT
          return true
       end
    elseif key == "w" then
@@ -175,10 +175,22 @@ local function DefaultClass()
    return 1
 end
 
+-- C: died(), once the game is over: keeps the score and shows how it ended.
+local function Finish()
+   local cause = G.dead
+   if type(cause) ~= "number" then cause = 284 end
+   local entry = ns.Scores.record(cause)
+   ui:Log("damage", "%s %s", G.name, ns.Scores.deathLine(cause))
+   ui:Log("system", L["Score: %d   Difficulty: %d"], c[K.GOLD], c[K.HARDGAME])
+   if entry and cause ~= ns.Scores.QUIT then ns.scoreboard:Show(entry) end
+   ui:Log("system", L["Game over. Press any key to start again."])
+end
+
 function Game.Run()
    G.Reset()
    G.name = UnitName("player")
    G.sex = UnitSex("player") == 3 and 0 or 1  -- C: 1 is a man, 0 a woman
+   G.taxes = ns.Scores.taxes()  -- what the LRS wants from an earlier win
 
    local class = ui:PickClass(ns.Classes, DefaultClass())
    ns.Create.makePlayer(class)
@@ -210,7 +222,10 @@ function Game.Run()
 
       while G.nomove do  -- get commands and make moves
          G.nomove = false
-         if Parse() then return end
+         if Parse() then
+            Finish()
+            return
+         end
          if G.dead then break end
       end
 
@@ -224,5 +239,5 @@ function Game.Run()
          end
       end
    end
-   ui:Log("system", L["Game over. Press any key to start again."])
+   Finish()
 end

@@ -484,9 +484,7 @@ end
 -- C: paytaxes(). Pays up to x gold of the taxes; returns what was paid.
 local function PayTaxes(x)
    if x <= 0 then return 0 end
-   local amount = math.min(x, G.taxes)
-   G.taxes = G.taxes - amount
-   return amount
+   return ns.Scores.payTaxes(x)
 end
 
 -- C: olrs().

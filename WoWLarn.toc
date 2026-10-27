@@ -27,6 +27,7 @@ Data\Fortunes.lua
 Data\Visuals.lua
 Runner.lua
 Player.lua
+Scores.lua
 Equipment.lua
 ItemInfo.lua
 Create.lua
@@ -51,6 +52,7 @@ UI\MapView.lua
 UI\Inventory.lua
 UI\Spellbook.lua
 UI\Store.lua
+UI\Scoreboard.lua
 UI\ClassPicker.lua
 UI\MainFrame.lua
 Game.lua

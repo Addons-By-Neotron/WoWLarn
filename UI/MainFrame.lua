@@ -93,6 +93,7 @@ function main:Create()
    ns.inventory:Create(map)
    ns.spellbook:Create(map)
    ns.store:Create(map)
+   ns.scoreboard:Create(frame)
 
    local side = ns.side:Create(frame)
    side:SetWidth(SIDE_W)
