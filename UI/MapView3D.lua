@@ -37,6 +37,7 @@ local PLAYER_AT = 0.62  -- how far down the view the player stands
 local NEAR_ROWS, FAR_ROWS, SIDE_COLUMNS = 4, 13, 14
 local ROWS = NEAR_ROWS + FAR_ROWS + 1
 local MIN_AHEAD = 24
+local SEE_THROUGH = 0.3  -- how solid a wall in front of the player is
 local FOG_REACH = 1700  -- ahead at which things are at their darkest
 local floor, max, min = math.floor, math.max, math.min
 local MAXX, MAXY = K.MAXX, K.MAXY
@@ -78,7 +79,7 @@ local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy)
       quad:SetSize(1, 1)
       layer.quads[layer.usedQuads] = quad
    end
-   quad:SetColorTexture(color[1], color[2], color[3], 1)
+   quad:SetColorTexture(color[1], color[2], color[3], color[4] or 1)
    quad:SetVertexOffset(1, ax, -ay)
    quad:SetVertexOffset(2, dx, 1 - dy)
    quad:SetVertexOffset(3, bx - 1, -by)
@@ -133,10 +134,10 @@ local function Project(wx, wy, wz)
 end
 
 -- Things far away are darker.
-local function Shade(color, ahead, factor)
+local function Shade(color, ahead, factor, alpha)
    local fog = 1 - 0.55 * min(1, ahead / FOG_REACH)
    fog = fog * (factor or 1)
-   return { color[1] * fog, color[2] * fog, color[3] * fog }
+   return { color[1] * fog, color[2] * fog, color[3] * fog, alpha }
 end
 
 ----------------------------------------------------------------
@@ -181,19 +182,21 @@ local function DrawTile(layers, x, y, ground)
    if IsWall(x, y) then
       local color = V.WALL
       local wh = WALL_HEIGHT
+      -- a wall between the camera and the player lets the player show through
+      local alpha = (y > G.playery and math.abs(x - G.playerx) <= 1) and SEE_THROUGH or 1
       local tx0, ty0 = Project(x0, y0, wh)
       local tx1, ty1 = Project(x1, y0, wh)
       local tx2, ty2 = Project(x1, y1, wh)
       local tx3, ty3 = Project(x0, y1, wh)
       if tx0 and tx1 and tx2 and tx3 then
-         Quad(layers[WALL], Shade(color, ahead), tx0, ty0, tx1, ty1, tx2, ty2, tx3, ty3)
+         Quad(layers[WALL], Shade(color, ahead, 1, alpha), tx0, ty0, tx1, ty1, tx2, ty2, tx3, ty3)
          if not IsWall(x, y + 1) then  -- the face towards the camera
-            Quad(layers[WALL], Shade(color, ahead, 0.72), tx3, ty3, tx2, ty2, cx, cy, dx, dy)
+            Quad(layers[WALL], Shade(color, ahead, 0.72, alpha), tx3, ty3, tx2, ty2, cx, cy, dx, dy)
          end
          if camera.x > x1 and not IsWall(x + 1, y) then  -- the east face
-            Quad(layers[WALL], Shade(color, ahead, 0.55), tx1, ty1, tx2, ty2, cx, cy, bx, by)
+            Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx1, ty1, tx2, ty2, cx, cy, bx, by)
          elseif camera.x < x0 and not IsWall(x - 1, y) then  -- the west face
-            Quad(layers[WALL], Shade(color, ahead, 0.55), tx0, ty0, tx3, ty3, dx, dy, ax, ay)
+            Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx0, ty0, tx3, ty3, dx, dy, ax, ay)
          end
       end
       return
