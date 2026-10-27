@@ -32,6 +32,7 @@ ns.side = side
 local GAP = 4
 local CELL = 3  -- minimap pixels per tile
 local EFFECT_SIZE, EFFECT_COLUMNS = 24, 8
+local STAT_W, STAT_H = 68, 15
 local MINIMAP_H, PORTRAIT_H, STATS_H = K.MAXY * CELL + 22, 112, 196
 
 local function Section(parent, height, title)
@@ -66,6 +67,39 @@ local function Bar(parent, r, g, b)
    bar.text:SetPoint("CENTER")
    return bar
 end
+
+-- What is shown under the bars, and what each thing does (from the way the game uses it).
+local function C(index) return G.c[index] end
+local function Strength() return C(K.STRENGTH) + C(K.STREXTRA) end
+local function Number(label, value) return format("%s %d", label, value) end
+local STAT_CELLS = {
+   { text = function() return Number(L["STR"], Strength()) end, title = function() return L["Strength"] end,
+     tip = L["Strength adds to the damage of every hit you make, together with your weapon class."] },
+   { text = function() return Number(L["INT"], C(K.INTELLIGENCE)) end, title = function() return L["Intelligence"] end,
+     tip = L["Intelligence makes spells work: a spell can fail unless a roll of 1 to 18 is at most your intelligence."] },
+   { text = function() return Number(L["WIS"], C(K.WISDOM)) end, title = function() return L["Wisdom"] end,
+     tip = L["Wisdom decides whether the strongest spells, like phantasmal forces and finger of death, take hold."] },
+   { text = function() return Number(L["CON"], C(K.CONSTITUTION)) end, title = function() return L["Constitution"] end,
+     tip = L["Constitution decides how many hit points you gain with each level."] },
+   { text = function() return Number(L["DEX"], C(K.DEXTERITY)) end, title = function() return L["Dexterity"] end,
+     tip = L["Dexterity helps you hit monsters, and keeps you out of pits and trap doors."] },
+   { text = function() return Number(L["CHA"], C(K.CHARISMA)) end, title = function() return L["Charisma"] end,
+     tip = L["Charisma can awe a monster so that it does not attack, and makes the charm monster spell last longer."] },
+   { text = function() return Number(L["AC"], C(K.AC)) end, title = function() return L["Armor class"] end,
+     tip = L["The higher your armor class, the less damage monsters do to you, and the more often they miss."],
+     extra = function() return table.concat(ns.Equipment.summary(), "\n", 1, 1) end },
+   { text = function() return Number(L["WC"], C(K.WCLASS)) end, title = function() return L["Weapon class"] end,
+     tip = L["Your weapon class adds to your chance to hit and to the damage you do."],
+     extra = function() return table.concat(ns.Equipment.summary(), "\n", 2, 2) end },
+   { text = function() return Number(L["Level"], C(K.LEVEL)) end, title = function() return L["Level"] end,
+     tip = L["Your level goes up with experience.  Each level gives hit points and spell points, and opens a pack slot every second level."] },
+   { text = function() return Number(L["Gold"], C(K.GOLD)) end, title = function() return L["Gold"] end,
+     tip = L["Gold buys things in the town.  The bank keeps it safe, and what you have when the game ends is your score."],
+     extra = function() return format(L["In the bank: %d"], C(K.BANKACCOUNT)) end },
+   { wide = true, text = function() return format(L["%d mobuls left"], math.floor((K.TIMELIMIT - G.gtime) / 100)) end,
+     title = function() return L["Time left"] end,
+     tip = L["Your daughter's illness will not wait.  Bring the potion of cure dianthroritis home before the time runs out."] },
+}
 
 function side:Create(parent)
    local frame = CreateFrame("Frame", nil, parent)
@@ -120,10 +154,31 @@ function side:Create(parent)
    self.exp = Bar(stats, 0.75, 0.6, 0.1)
    self.exp:SetPoint("TOPLEFT", self.spells, "BOTTOMLEFT", 0, -3)
    self.exp:SetPoint("TOPRIGHT", self.spells, "BOTTOMRIGHT", 0, -3)
-   self.statsText = stats:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-   self.statsText:SetPoint("TOPLEFT", self.exp, "BOTTOMLEFT", 0, -6)
-   self.statsText:SetJustifyH("LEFT")
-   self.statsText:SetSpacing(2)
+   -- the numbers under the bars: a cell for each, so each can explain itself
+   self.cells = {}
+   for index, cell in ipairs(STAT_CELLS) do
+      local frame = CreateFrame("Frame", nil, stats)
+      local column, row = (index - 1) % 3, math.floor((index - 1) / 3)
+      frame:SetSize(cell.wide and STAT_W * 2 or STAT_W, STAT_H)
+      frame:SetPoint("TOPLEFT", self.exp, "BOTTOMLEFT", column * STAT_W, -6 - row * STAT_H)
+      frame:EnableMouse(true)
+      frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+      frame.text:SetPoint("LEFT")
+      frame.text:SetJustifyH("LEFT")
+      frame.cell = cell
+      frame:SetScript("OnEnter", function(self)
+         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+         GameTooltip:SetText(self.cell.title(), 1, 1, 1)
+         GameTooltip:AddLine(self.cell.tip, nil, nil, nil, true)
+         if self.cell.extra then
+            local extra = self.cell.extra()
+            if extra then GameTooltip:AddLine(extra, 0.6, 0.9, 0.6, true) end
+         end
+         GameTooltip:Show()
+      end)
+      frame:SetScript("OnLeave", GameTooltip_Hide)
+      self.cells[index] = frame
+   end
 
    local effects = Section(frame, 40, L["Effects"])
    effects:SetPoint("TOPLEFT", stats, "BOTTOMLEFT", 0, -GAP)
@@ -177,7 +232,7 @@ end
 -- C: bot_linex() and botside().
 function side:UpdateStats()
    local c = G.c
-   if not self.statsText or c[K.LEVEL] == 0 then return end
+   if not self.cells or c[K.LEVEL] == 0 then return end
    local level = c[K.LEVEL]
    local T = ns.Tables
    self.title:SetText(format("%s - %s", G.name, T.class[level]))
@@ -197,14 +252,9 @@ function side:UpdateStats()
 
    self:UpdateEffects()
 
-   local strength = c[K.STRENGTH] + c[K.STREXTRA]
-   local left = math.floor((K.TIMELIMIT - G.gtime) / 100)
-   self.statsText:SetText(format(
-      "%s %d   %s %d   %s %d\n%s %d   %s %d   %s %d\n%s %d   %s %d   %s %d\n%s %d   %s",
-      L["STR"], strength, L["INT"], c[K.INTELLIGENCE], L["WIS"], c[K.WISDOM],
-      L["CON"], c[K.CONSTITUTION], L["DEX"], c[K.DEXTERITY], L["CHA"], c[K.CHARISMA],
-      L["AC"], c[K.AC], L["WC"], c[K.WCLASS], L["Level"], level,
-      L["Gold"], c[K.GOLD], format(L["%d mobuls left"], left)))
+   for _, frame in ipairs(self.cells) do
+      frame.text:SetText(frame.cell.text())
+   end
 end
 
 -- Minimap colors: [kind] = { r, g, b }.
