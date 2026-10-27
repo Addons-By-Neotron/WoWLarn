@@ -24,7 +24,7 @@ journey into these caverns.
 
 
     Good Luck!  (You're going to need it.)]],
-   [[
+   [=[
 		    ^[[7mHelp File for The Caverns of Ularn^[[m
 
 h  move to the left	   H  run left			.  stay here
@@ -47,8 +47,8 @@ Ularn -r            restore checkpointed game
 Ularn -<number>     specify difficulty level
 Ularn -o <optsfile> specify the .Ularnopts file to be used
 Ularn -c            create new scoreboard (requires wizard password)
-Ularn -h            print out all the command line options]],
-   [[
+Ularn -h            print out all the command line options]=],
+   [=[
 			    ^[[7mSpecial Notes^[[m
 
 When dropping gold, if you type '*' as your amount, all your gold gets dropped.
@@ -62,8 +62,8 @@ the first letter of your spell.  The available list of spells will be shown,
 after which you may enter the spell code.  This only works on the 1st letter
 of the spell you are casting.  You may also type '^[[7mD^[[m' at any time - this will
 show all the spells you know, as well as all the potions and scrolls you have
-encountered and identified so far.]],
-   [[
+encountered and identified so far.]=],
+   [=[
 		    ^[[7mHow to use the .Ularnopts option file^[[m
 
 The file ".Ularnopts", if used, should be in your home directory (see -o).
@@ -85,8 +85,8 @@ Your name and monster names must be enclosed in double quotation marks and may
 be up to 34 characters long.  Longer names are truncated.  Anything enclosed in
 quotation marks is considered one word, and must be separated from other words
 by whitespace. A space must follow a colon, for example: "character: klingon".
-	             ^[[7mExample .Ularnopts file^[[m]],
-   [[
+	             ^[[7mExample .Ularnopts file^[[m]=],
+   [=[
 character: klingon
 enable-checkpointing
 no-introduction
@@ -108,7 +108,7 @@ monster: "gack"
 
 
 
-	       ^[[7mExplanation of the Ularn scoreboard facility^[[m]],
+	       ^[[7mExplanation of the Ularn scoreboard facility^[[m]=],
    [[
     Ularn supports TWO scoreboards, one for winners, and one for deceased
 characters.  Each player is allowed one slot on each scoreboard, if the score

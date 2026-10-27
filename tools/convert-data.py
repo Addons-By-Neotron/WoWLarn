@@ -186,8 +186,9 @@ def help_pages():
 
 
 def lua_long_string(text):
+    # Lua 5.1 rejects a nested opening bracket of the same level as well as a closing one.
     level = 0
-    while "]" + "=" * level + "]" in text:
+    while ("]" + "=" * level + "]") in text or ("[" + "=" * level + "[") in text:
         level += 1
     return "[" + "=" * level + "[\n" + text + "]" + "=" * level + "]"
 

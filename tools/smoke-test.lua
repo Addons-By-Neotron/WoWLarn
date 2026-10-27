@@ -64,6 +64,20 @@ check(K.PTREASURE == 20 and K.STRENGTH == 1 and K.OENTRANCE == 54, "shifted cons
 check(ns.Tables.objectname[K.ODNDSTORE] == "the DND store", "object names")
 check(ns.Tables.class[1] == "novice explorer", "class titles")
 check(#ns.HelpPages == 6, "help pages")
+-- Lua 5.1 (unlike LuaJIT and 5.4) rejects a nested opening bracket inside a long string.
+do
+   local source = io.open(root .. "/Data/Help.lua"):read("*a")
+   local position = 1
+   while true do
+      local from, to, equals = source:find("%[(=*)%[\n", position)
+      if not from then break end
+      local closer = "]" .. equals .. "]"
+      local stop = source:find(closer, to, true)
+      check(stop, "unterminated long string")
+      check(not source:sub(to, stop):find("[" .. equals .. "[", 1, true), "nested long string bracket in Help.lua")
+      position = stop + #closer
+   end
+end
 
 ---------------------------------------------------------------- input requests (own coroutine)
 ns.main:Create()
