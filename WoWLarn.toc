@@ -27,6 +27,7 @@ Data\Fortunes.lua
 Data\Visuals.lua
 Runner.lua
 Player.lua
+Equipment.lua
 Create.lua
 Regen.lua
 Display.lua

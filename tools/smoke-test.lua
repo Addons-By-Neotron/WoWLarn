@@ -895,4 +895,19 @@ G.c[K.HASTESELF] = 5; ns.side:UpdateStats()
 for _, b in ipairs(ns.side.effectIcons) do if b.effect[1] == K.HASTESELF then check(b.scripts and b.scripts.OnEnter, "effect tooltip"); b.scripts.OnEnter(b) end end
  G.c[K.HASTESELF] = 0; ns.side:UpdateStats()
 G.Reset(); ns.Create.makePlayer(ns.Classes[1]); ns.Create.newCaveLevel(0); ns.Create.newCaveLevel(3); ns.Display.showcell(G.playerx,G.playery); ns.map:Layout(); ns.map:Draw()
+-- equipment summary: stacked rings all count
+do
+   G.Reset(); ns.Create.makePlayer(ns.Classes[1])
+   for _ = 1, 3 do ns.Player.take(K.OPROTRING, 2) end
+   ns.Player.take(K.OREGENRING, 0)
+   ns.Player.recalc()
+   local sum = table.concat(ns.Equipment.summary(), "\n")
+   check(sum:find("rings 9"), "summary counts three protection rings: " .. sum)
+   check(sum:find("Regeneration 2"), "summary regen: " .. sum)
+   local slot
+   for i = 1, K.IVENSIZE do if G.iven[i] == K.OPROTRING then slot = i break end end
+   check(ns.Equipment.short(slot) == "+3 armor class", "ring tag")
+   ns.inventory:Open(); ns.inventory:Update()
+   ns.inventory:Close()
+end
 print("ALL OK")

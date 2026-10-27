@@ -33,7 +33,7 @@ ns.inventory = inventory
 
 local COLUMNS, ROWS = 2, 13
 local ROW_H, ROW_W = 26, 270
-local HEADER_H, FOOTER_H = 24, 24
+local HEADER_H, FOOTER_H = 24, 24 + 4 * 14  -- (room for the summary of the effects)
 
 local function Letter(slot)
    return string.char(96 + slot)
@@ -53,6 +53,11 @@ function inventory:Create(parent)
    self.title:SetPoint("TOPLEFT", 8, -6)
    self.weight = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
    self.weight:SetPoint("BOTTOMLEFT", 8, 6)
+   self.summary = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+   self.summary:SetPoint("BOTTOMLEFT", 8, 24)
+   self.summary:SetPoint("BOTTOMRIGHT", -8, 24)
+   self.summary:SetJustifyH("LEFT")
+   self.summary:SetJustifyV("BOTTOM")
 
    self.rows = {}
    for slot = 1, K.IVENSIZE do
@@ -68,9 +73,22 @@ function inventory:Create(parent)
       button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
       button.text = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
       button.text:SetPoint("LEFT", button.icon, "RIGHT", 4, 0)
-      button.text:SetPoint("RIGHT", -2, 0)
+      button.effect = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+      button.effect:SetPoint("RIGHT", -4, 0)
+      button.effect:SetJustifyH("RIGHT")
+      button.text:SetPoint("RIGHT", button.effect, "LEFT", -4, 0)
       button.text:SetJustifyH("LEFT")
+      button.text:SetWordWrap(false)
       button.slot = slot
+      button:SetScript("OnEnter", function(self)
+         local lines = G.iven[self.slot] ~= 0 and ns.Equipment.lines(self.slot) or {}
+         if #lines == 0 then return end
+         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+         GameTooltip:SetText(ns.Player.itemName(self.slot))
+         for _, line in ipairs(lines) do GameTooltip:AddLine(line, 1, 1, 1, true) end
+         GameTooltip:Show()
+      end)
+      button:SetScript("OnLeave", GameTooltip_Hide)
       button:SetScript("OnClick", function()
          ns.main:SetFocus(true)
          ns.ui:InjectKey(Letter(slot))
@@ -106,6 +124,7 @@ function inventory:Update()
    for slot, button in ipairs(self.rows) do
       local id = G.iven[slot]
       if id ~= 0 then used = used + 1 end
+      button.effect:SetText("")
       if slot > limit and id == 0 then
          -- a slot that opens up with the level: say when
          button.icon:Hide()
@@ -124,8 +143,10 @@ function inventory:Update()
          local valid = not filter or filter(id)
          local color = valid and "|cffffffff" or "|cff777777"
          button.text:SetText(color .. Letter(slot) .. ")|r " .. color .. ns.Player.itemName(slot) .. "|r")
+         button.effect:SetText(ns.Equipment.short(slot) or "")
       end
    end
+   self.summary:SetText(table.concat(ns.Equipment.summary(), "\n"))
    local pounds = ns.Player.packWeight()
    self.weight:SetText(format(L["Items %d of %d"], used, limit) .. "   "
       .. format(pounds == 1 and L["Carrying %d pound"] or L["Carrying %d pounds"], pounds))

@@ -454,7 +454,7 @@ Each milestone is playable or testable in game.
    - The 2.5D model view (§6.1) is the goal, with a **fixed north-up tilted camera**. A rotating camera would make the 8 movement directions confusing.
    - Build the **flat tile renderer first** (milestones 2–5), then add 2.5D as milestone 10. Both sit behind the `MapView` interface.
 5. ~~Tile art source~~ **Decided:** use **WoW textures/fileIDs** first, with the flat-color fallback. Revisit a bundled texture set later if WoW art doesn't work well or isn't available on all clients.
-6. **Equippable items (idea, not decided):** make accessories work more like WoW instead of "carry it and it works".
+6. **Equippable items (idea, not decided; stacking kept for now):** limiting rings would make the game harder than the original, so the original rules stay. `Equipment.lua` instead shows what is in effect: the inventory rows carry a tag (+N armor class, regeneration, ...), tooltips explain each item, and the footer sums armor class, weapon class, regeneration, energy, stat bonuses and artifacts. make accessories work more like WoW instead of "carry it and it works".
    - **The original:**
      - Rings, belts, the amulet and the artifacts take effect just by being in the pack; there is no equip step.
      - There is **no limit on the number of rings**. The pack is the only limit, so ten rings of protection all stack (`Player.recalc` adds `ivenarg + 1` for every `OPROTRING`, `ODAMRING`, `OREGENRING`, `OENERGYRING` and `OBELT` it finds). The stat rings (`ODEXRING`, `OSTRRING`, `OCLEVERRING`) apply once when they are picked up (`take`) and are undone when they are dropped (`dropobj`).

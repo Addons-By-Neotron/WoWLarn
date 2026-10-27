@@ -41,6 +41,7 @@ local ARMOR_AC = {
    [K.OSHIELD] = 2, [K.OLEATHER] = 2, [K.OSTUDLEATHER] = 3, [K.ORING] = 5, [K.OCHAIN] = 6,
    [K.OSPLINT] = 7, [K.OPLATE] = 9, [K.OPLATEARMOR] = 10, [K.OSSPLATE] = 12, [K.OELVENCHAIN] = 15,
 }
+Player.ARMOR_AC = ARMOR_AC  -- (Equipment.lua explains the totals)
 
 -- Weapon class before the enchantment. Anything not listed has weapon class 0.
 local WEAPON_WC = {
@@ -48,6 +49,7 @@ local WEAPON_WC = {
    [K.OFLAIL] = 14, [K.OBATTLEAXE] = 17, [K.OLANCE] = 20, [K.OLONGSWORD] = 22, [K.OVORPAL] = 22,
    [K.O2SWORD] = 26, [K.OSWORDofSLASHING] = 30, [K.OSLAYER] = 30, [K.OSWORD] = 32, [K.OHAMMER] = 35,
 }
+Player.WEAPON_WC = WEAPON_WC
 
 -- C: recalc(). Armor class, weapon class and the ring-based regeneration values.
 function Player.recalc()
