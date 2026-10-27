@@ -741,3 +741,7 @@ L["Gold buys things in the town.  The bank keeps it safe, and what you have when
 L["In the bank: %d"] = true
 L["Time left"] = true
 L["Your daughter's illness will not wait.  Bring the potion of cure dianthroritis home before the time runs out."] = true
+L["Map view"] = true
+L["The flat tiles, or the 2.5D view from behind the player."] = true
+L["Flat tiles"] = true
+L["2.5D"] = true

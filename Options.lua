@@ -57,6 +57,17 @@ local function BuildOptions()
                   ns.main:ApplyScale()
                end,
             },
+            view = {
+               type = "select",
+               name = L["Map view"],
+               desc = L["The flat tiles, or the 2.5D view from behind the player."],
+               order = 15,
+               values = { flat = L["Flat tiles"], ["3d"] = L["2.5D"] },
+               set = function(_, value)
+                  mod.db.profile.view = value
+                  ns.ui:Refresh("map")
+               end,
+            },
             fast = {
                type = "toggle",
                name = L["Fast mode"],

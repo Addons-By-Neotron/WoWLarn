@@ -405,7 +405,8 @@ Each milestone is playable or testable in game.
    - left to milestone 8: the town buildings (school, banks, DND store, trading post, home, pad and LRS), which print "(Not implemented yet.)" until then
 8. **Town buildings (done, not yet checked in the client):** `Town.lua` and `UI/Store.lua`; item tooltips and `[Item]` links (`ItemInfo.lua`); store windows for DND store, school, bank and 5th branch, trading post, LRS taxes, home, and the goblin alchemist.
 9. **Endgame + persistence (mostly done):** `Scores.lua` + `UI/Scoreboard.lua` (winners and dead lists in `WoWLarn.global`, life protection in `Player.died`, taxes per character, LRS pays them), `Save.lua` (the game goes to `WoWLarn.char.game` at logout and when the window hides; resumed when a new session starts; death, a win or quitting clears it). Still to do: the tax letters (`bill.c`), a slash command to view the scoreboard, saving the equipped-slot idea of open decision 6.
-10. **2.5D view:**
+10. **2.5D view (first slice done, untested in the client):** `UI/MapView3D.lua` draws the floor and walls as perspective quads (`/larn view` or the Map view option switches it); items, monsters and the player are still icons and glyphs standing on the floor.
+   Still to do:
     - projection, perspective floor quads, wall panels
     - pooled `PlayerModel` actors with display lookup, per-monster tune, the depth fix (`Seat` technique) and animations
     - move tweens, spell effects, lighting/fog for remembered cells

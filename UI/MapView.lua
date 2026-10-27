@@ -68,6 +68,7 @@ function map:Create(parent)
    if frame.SetClipsChildren then frame:SetClipsChildren(true) end
    self.frame = frame
    self.cells = {}
+   ns.map3d:Create(frame)
    frame:SetScript("OnSizeChanged", function() self:Layout() end)
    return frame
 end
@@ -98,6 +99,7 @@ function map:Layout()
       end
    end
    self.cols, self.rows = cols, rows
+   self.flatHidden = false  -- (the cells were shown again above)
    self:Draw()
 end
 
@@ -186,8 +188,40 @@ end
 --@end-debug@
 
 -- Draws the part of the level around the player.
+-- True if the 2.5D view is the one to show (a setting).
+function map:Is3D()
+   return ns.mod.db.profile.view == "3d"
+end
+
+-- Shows or hides the flat tiles.
+local function ShowFlat(self, shown)
+   for _, cells in pairs(self.cells) do
+      for col, cell in pairs(cells) do
+         if shown then
+            cell.bg:Show()
+         else
+            cell.bg:Hide()
+            HideCell(cell)
+         end
+      end
+   end
+end
+
 function map:Draw()
    if not self.cols or not G.class then return end
+   if self:Is3D() then
+      if not self.flatHidden then
+         ShowFlat(self, false)
+         self.flatHidden = true
+      end
+      ns.map3d:Draw()
+      return
+   end
+   if self.flatHidden then
+      self.flatHidden = false
+      ns.map3d:Hide()
+      ShowFlat(self, true)
+   end
    local cols, rows = self.cols, self.rows
    local camX = max(1, min(G.playerx - floor(cols / 2), MAXX - cols + 1))
    local camY = max(1, min(G.playery - floor(rows / 2), MAXY - rows + 1))

@@ -34,6 +34,7 @@ ns.mod = mod
 mod.defaults = {
    profile = {
       scale = 1,
+      view = "flat",  -- "flat" tiles or the "3d" view
       fast = false,  -- skip the delays (naps) between game steps
       window = { point = "CENTER", x = 0, y = 0 },
    },
@@ -93,6 +94,9 @@ function mod:ChatCommand(input)
       ns.main:Toggle()
    elseif cmd == "config" then
       self:OpenConfig()
+   elseif cmd == "view" or cmd == "3d" then
+      self.db.profile.view = self.db.profile.view == "3d" and "flat" or "3d"
+      ns.ui:Refresh("map")
    elseif cmd == "reset" then
       ns.main:ResetPosition()
    elseif cmd == "help" then

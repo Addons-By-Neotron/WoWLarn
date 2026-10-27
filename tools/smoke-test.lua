@@ -964,4 +964,16 @@ end
 for _, cell in ipairs(ns.side.cells) do
    if cell.scripts and cell.scripts.OnEnter then cell.scripts.OnEnter(cell) end
 end
+-- the 2.5D view
+do
+   G.Reset(); ns.Create.makePlayer(ns.Classes[1]); ns.Create.newCaveLevel(2)
+   ns.Display.showcell(G.playerx, G.playery)
+   for x = 1, K.MAXX do for y = 1, K.MAXY do G.know[x][y] = 1 end end
+   ns.mod.db.profile.view = "3d"
+   ns.map:Layout(); ns.map:Draw()
+   check(ns.map3d.shown, "3d view drawn")
+   ns.mod.db.profile.view = "flat"
+   ns.map:Draw()
+   check(not ns.map3d.shown, "flat view again")
+end
 print("ALL OK")
