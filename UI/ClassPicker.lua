@@ -54,7 +54,7 @@ end
 
 function picker:Create(parent)
    local frame = ns.CreatePanel(parent, nil, { 0.04, 0.04, 0.06, 0.97 })
-   frame:SetFrameLevel(parent:GetFrameLevel() + 20)
+   frame:SetFrameLevel(parent:GetFrameLevel() + 120)
    frame:SetSize(WIDTH, 60 + #ns.Classes * ROW_H)
    frame:SetPoint("CENTER")
    frame:EnableMouse(true)

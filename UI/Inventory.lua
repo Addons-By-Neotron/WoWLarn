@@ -42,7 +42,7 @@ end
 function inventory:Create(parent)
    local frame = ns.CreatePanel(parent)
    frame:SetFrameStrata("DIALOG")
-   frame:SetFrameLevel(parent:GetFrameLevel() + 20)
+   frame:SetFrameLevel(parent:GetFrameLevel() + 120)
    frame:SetSize(COLUMNS * ROW_W + 16, ROWS * ROW_H + HEADER_H + FOOTER_H + 8)
    frame:SetPoint("CENTER")
    frame:EnableMouse(true)
