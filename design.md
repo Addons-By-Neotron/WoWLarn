@@ -385,11 +385,14 @@ Each milestone is playable or testable in game.
    - difficulty: `Monster.init` scales the monsters by `c[HARDGAME]` (C: `sethard`); no option sets the difficulty yet, so it is always 0
    - left out on purpose: the spheres of annihilation (`movsphere`, `rmsphere`, the `OANNIHILATION` branch of `mmove`) wait for the spells in milestone 6; `annihilate` and `genmonst` belong to scrolls and spells (5 and 6)
    - still to do from this list: monster icons or portraits on the tiles and the target model with animations (they need the models of milestone 10; the glyphs are the fallback), the death screen and scoreboard (milestone 9)
-5. **Items:**
-   - `makeobject` and pickup (`lookforobject`)
-   - inventory window, `PickItem`, wield/wear/take off, drop
-   - all potions and scrolls; gold, gems, chests, books and cookies
-   - traps, pits, trapdoors, teleporters and elevators; effects row
+5. **Items** (done):
+   - `Object.lua` `lookForObject`: gold, potions, scrolls, books, cookies, gems, orbs and wands (via `FindItem`), pits, stairs, elevators, chests, teleporter, door, arrow, dart and trapdoor traps, shafts, mushrooms and drugs, the annihilation sphere
+   - `Player`: `itemName`, `take`, `dropObject`, enchant helpers; `Magic.lua`: `quaffPotion`, `readScroll`, `readBook`, `teleport`, `removeCurse`, `adjustTime`; `Action.lua`: wield, wear, take off, drop (items and gold), read, quaff, eat, fortune, close door, find traps
+   - `UI/Inventory.lua`: the 26-slot window; `ui:PickItem`, `ui:ShowInventory`, `ui:Choose`; clicking a slot injects its letter
+   - effects row: `V.EFFECTS` lists the timers, `side:UpdateEffects` shows an icon with a tooltip (name and turns left) for each running one; the item icons in `V.object` are placeholders to curate
+   - left to milestones 7 and 8: altars, thrones, fountains, statues, mirrors, the brass lamp (milestone 7); the school, banks, DND store, trading post, home, pad and LRS (milestone 8); they print "(Not implemented yet.)"
+   - left to milestone 6: the scroll of pulverization is a message stub until the ray spells exist
+   - still to do: the `D` discoveries command (`seemagic`)
 6. **Spells:** spellbook, `PickSpell`/`PickDirection`, all 39 spells, `spelweird`, projectile/area animations, spheres of annihilation.
 7. **Features + artifacts:** altars, thrones, fountains, statues, mirrors, the brass lamp genie, and all unique artifact effects.
 8. **Town buildings:** store windows for DND store, school, bank and 5th branch, trading post, LRS taxes, home, and the goblin alchemist.

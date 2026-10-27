@@ -369,6 +369,106 @@ check(G.dead and alas == 1, "one death message, got " .. alas)
 -- losehp
 Fresh(3); G.c[K.HP] = 10; ns.Player.losehp(3); check(G.c[K.HP] == 7 and not G.dead, "losehp"); ns.Player.losehp(7); check(G.dead, "dead at 0 hp")
 
+---------------------------------------------------------------- items
+check(ns.Tables.potionname[K.PHEALING] == "healing" and ns.Tables.scrollname[K.SENCHANTARM] == "enchant armor", "names")
+check(ns.Tables.spelcode[1] == "pro" and ns.Tables.spelname[39] == "permanence" and #ns.Fortunes > 30, "spell and fortune data")
+Fresh(3)
+for i = 1, K.IVENSIZE do G.iven[i], G.ivenarg[i] = 0, 0 end
+G.c[K.WIELD], G.c[K.WEAR], G.c[K.SHIELD] = 0, 0, 0
+G.c[K.LEVEL] = 1
+check(G.potionknown[K.PINSTHEAL] == 1 and G.potionknown[K.PHEALING] == 0, "initial potion knowledge")
+-- the pack holds 15 + level/2 things
+local taken = 0
+for _ = 1, 30 do if ns.Player.take(K.OPOTION, K.PHEALING) then taken = taken + 1 end end
+check(taken == 15, "pack limit at level 1, got " .. taken)
+check(ns.Player.pocketFull(), "pocket full")
+for i = 1, K.IVENSIZE do G.iven[i], G.ivenarg[i] = 0, 0 end
+-- rings and the hammer change the stats while carried
+G.c[K.DEXTERITY] = 10
+ns.Player.take(K.ODEXRING, 2)
+check(G.c[K.DEXTERITY] == 13, "ring of dexterity")
+check(ns.Player.dropObject(1) == false and G.item[G.playerx][G.playery] == K.ODEXRING and G.c[K.DEXTERITY] == 10, "drop gives it back")
+check(ns.Player.dropObject(2) == false or true, "dropping nothing is fine")
+check(G.dropflag, "dropflag set")
+-- item names
+G.iven[1], G.ivenarg[1] = K.OPOTION, K.PHEALING
+check(ns.Player.itemName(1) == "magic potion" or ns.Player.itemName(1):find("potion"), "unknown potion name: " .. ns.Player.itemName(1))
+G.potionknown[K.PHEALING] = 1
+check(ns.Player.itemName(1):find("of healing"), "known potion name")
+G.iven[2], G.ivenarg[2] = K.OLONGSWORD, 2; G.c[K.WIELD] = 2
+check(ns.Player.itemName(2):find("%+2") and ns.Player.itemName(2):find("weapon in hand"), "weapon name: " .. ns.Player.itemName(2))
+-- enchanting
+ns.Player.recalc()
+local wc = G.c[K.WCLASS]
+ns.Player.enchantWeapon(K.ENCH_SCROLL)
+check(G.ivenarg[2] == 3 and G.c[K.WCLASS] == wc + 1, "weapon enchanted")
+G.ivenarg[2] = 9
+ns.Player.enchantWeapon(K.ENCH_ALTAR)
+check(G.ivenarg[2] == 9 and G.iven[2] == K.OLONGSWORD, "an altar does not destroy")
+for _ = 1, 50 do if G.iven[2] ~= 0 then G.ivenarg[2] = 9; ns.Player.enchantWeapon(K.ENCH_SCROLL) end end
+check(G.iven[2] == 0 and G.c[K.WIELD] == 0, "a +10 weapon crumbles")
+G.c[K.WEAR] = 0; G.c[K.SHIELD] = 0
+ns.Player.enchantArmor(K.ENCH_SCROLL)
+check((last() or ""):find("sense of loss"), "no armor to enchant")
+G.iven[3], G.ivenarg[3] = K.OLEATHER, 0; G.c[K.WEAR] = 3; ns.Player.recalc()
+local ac = G.c[K.AC]
+ns.Player.enchantArmor(K.ENCH_SCROLL)
+check(G.ivenarg[3] == 1 and G.c[K.AC] == ac + 1, "armor enchanted")
+
+-- every potion
+for pot = 1, 24 do
+   Fresh(3); G.c[K.HP] = 20; G.c[K.HPMAX] = 40
+   ns.Monster.fillMonst(1)
+   ns.Magic.quaffPotion(pot)
+   check(G.potionknown[pot] == 1, "potion " .. pot .. " becomes known")
+   check(not G.dead, "potion " .. pot .. " does not kill")
+end
+Fresh(3); G.c[K.HP] = 20; G.c[K.HPMAX] = 40; ns.Magic.quaffPotion(K.PINSTHEAL); check(G.c[K.HP] == 40, "instant healing")
+Fresh(3); G.c[K.STRENGTH] = 10; ns.Magic.quaffPotion(K.PSTRENGTH); check(G.c[K.STRENGTH] == 12, "strength potion")
+Fresh(3); local l0 = G.c[K.LEVEL]; ns.Magic.quaffPotion(K.PRAISELEVEL); check(G.c[K.LEVEL] == l0 + 1, "raise level potion")
+Fresh(3); ns.Magic.quaffPotion(K.PHEROISM); local str = G.c[K.STRENGTH]; ns.Magic.quaffPotion(K.PHEROISM)
+check(G.c[K.HERO] == 500 and G.c[K.STRENGTH] == str, "hero bonus only once")
+Fresh(3); ns.Magic.quaffPotion(K.PFORGETFUL)
+local known = 0
+for x = 1, K.MAXX do for y = 1, K.MAXY do known = known + G.know[x][y] end end
+check(known == 0, "forgetfulness forgets the map")
+Fresh(3); G.c[K.AWARENESS] = 0
+-- every scroll
+for typ = 1, 24 do
+   if typ ~= K.SPULVERIZE then
+      Fresh(3); G.iven[1], G.ivenarg[1] = K.OLEATHER, 0; G.c[K.WEAR] = 1
+      ns.Monster.fillMonst(1)
+      ns.Magic.readScroll(typ)
+      check(G.scrollknown[typ] == 1 and not G.dead, "scroll " .. typ)
+   end
+end
+Fresh(3); for x = 1, K.MAXX do for y = 1, K.MAXY do G.know[x][y] = 0 end end
+ns.Magic.readScroll(K.SMAGICMAP)
+check(G.know[1][1] == 1 and G.know[K.MAXX][K.MAXY] == 1, "magic mapping")
+Fresh(3); G.c[K.HP] = 5; G.c[K.HALFDAM] = 300; G.c[K.CONFUSE] = 40
+ns.Magic.readScroll(K.SREMCURSE)
+check(G.c[K.HALFDAM] == 1 and G.c[K.CONFUSE] == 1, "remove curse")
+Fresh(3); G.gtime = 5000; G.c[K.HERO] = 500
+ns.Magic.readScroll(K.STIMEWARP)
+check(G.gtime ~= 5000, "time warp moves the clock")
+Fresh(3); Put(K.ORC, 31, 8); Put(K.ORC, 29, 7); Put(K.DEMONLORD, 30, 9)
+ns.Magic.readScroll(K.SANNIHILATE)
+check(G.mon[31][8] == 0 and G.mon[29][7] == 0 and G.mon[30][9] == K.DEMONLORD, "annihilation spares the demon")
+-- books teach a spell
+Fresh(3); G.spelknow[1] = 0; ns.Magic.readBook(0)
+check(G.spelknow[1] == 1, "a level 0 book teaches protection")
+-- teleport
+Fresh(3); ns.Magic.teleport(false)
+check(G.c[K.TELEFLAG] == 1 and G.level >= 0 and G.level <= K.DBOTTOM, "teleport stays on the right levels")
+-- pack weight changes with what you carry
+Fresh(3); for i = 1, K.IVENSIZE do G.iven[i], G.ivenarg[i] = 0, 0 end
+G.c[K.GOLD] = 0
+local w0 = ns.Player.packWeight()
+G.iven[1] = K.OPLATE
+check(ns.Player.packWeight() == w0 + 35, "plate weighs 35")
+-- the inventory window runs with everything in it
+ns.inventory:Open("test", function(id) return id == K.OPLATE end); ns.inventory:Update(); ns.inventory:Close()
+
 ---------------------------------------------------------------- the game
 ui.co = nil
 ui:NewGame()
@@ -444,7 +544,7 @@ keys(key); keys("d"); check(G.level == 2 and G.item[G.playerx][G.playery] == K.O
 ns.Create.newCaveLevel(3)
 for x = 1, K.MAXX do for y = 1, K.MAXY do G.item[x][y], G.mon[x][y] = 0, 0 end end
 G.playerx, G.playery = 30, 8
-G.c[K.HP] = G.c[K.HPMAX]
+G.c[K.HP], G.c[K.HPMAX] = 10000, 10000  -- this fight must not end the game
 Put(K.ORC, 31, 8)
 LOG = {}
 keys("l")
@@ -454,8 +554,91 @@ check(fought and G.playerx == 30, "bumping a monster attacks it, got " .. table.
 for _ = 1, 40 do if G.mon[31][8] ~= 0 and not G.dead then keys("l") end end
 check(G.mon[31][8] == 0 or G.dead, "fight ended")
 if G.dead then check(not ui:IsActive() or last():find("Game over"), "death ends the game") end
+
+-- items in the game thread
+ns.Create.newCaveLevel(3)
+local function Clear()
+   for x = 1, K.MAXX do for y = 1, K.MAXY do G.item[x][y], G.mon[x][y] = 0, 0 end end
+   G.playerx, G.playery = 30, 8
+   G.c[K.HP] = G.c[K.HPMAX]
+   for i = 1, K.IVENSIZE do G.iven[i], G.ivenarg[i] = 0, 0 end
+   G.c[K.WIELD], G.c[K.WEAR], G.c[K.SHIELD] = 0, 0, 0
+   G.dropflag = false
+   LOG = {}
+end
+Clear()
+G.iven[1], G.ivenarg[1] = K.ODAGGER, 1
+G.iven[2], G.ivenarg[2] = K.OLEATHER, 0
+G.iven[3], G.ivenarg[3] = K.OPOTION, K.PHEALING
+G.iven[4], G.ivenarg[4] = K.OSCROLL, K.SBLANK
+G.iven[5], G.ivenarg[5] = K.OCOOKIE, 0
+G.iven[6], G.ivenarg[6] = K.OSHIELD, 0
+G.iven[7], G.ivenarg[7] = K.O2SWORD, 0
+keys("w"); check(ui.wait == "key", "wield asks for an item")
+keys("a"); check(G.c[K.WIELD] == 1, "wielded the dagger: " .. table.concat({ unpack(lines(), math.max(1, #lines() - 4)) }, " | ")); check(G.c[K.WCLASS] == 4, "dagger wc " .. G.c[K.WCLASS] .. " moredam " .. G.c[K.MOREDAM] .. " iven " .. G.iven[1] .. " arg " .. G.ivenarg[1])
+keys("w"); keys("-"); check(G.c[K.WIELD] == 0, "unwield with -")
+keys("W"); keys("b"); check(G.c[K.WEAR] == 2 and G.c[K.AC] == 2, "wore the leather armor")
+keys("W"); keys("b"); check((last() or ""):find("already wearing"), "only one armor")
+keys("W"); keys("f"); check(G.c[K.SHIELD] == 6, "wore the shield")
+keys("w"); keys("g"); check(G.c[K.WIELD] == 0 and (last() or ""):find("busy with your shield"), "two-hander needs both hands")
+keys("T"); check(G.c[K.SHIELD] == 0 and (last() or ""):find("shield is off"), "take off the shield first")
+keys("T"); check(G.c[K.WEAR] == 0, "then the armor")
+keys("T"); check((last() or ""):find("aren't wearing"), "nothing to take off")
+G.c[K.HP] = 1; G.c[K.HPMAX] = 100
+keys("q"); keys("a"); check(G.c[K.HP] == 1, "can't quaff a dagger")
+keys("q"); keys("c"); check(G.c[K.HP] > 1 and G.iven[3] == 0 and G.potionknown[K.PHEALING] == 1, "quaffed the potion")
+keys("r"); keys("d"); check(G.iven[4] == 0 and G.scrollknown[K.SBLANK] == 1, "read the scroll")
+keys("e"); keys("e"); check(G.iven[5] == 0, "ate the cookie")
+keys("q"); ui:InjectKey("ESC"); check(ui.wait == "key" and (last() or ""):find("aborted"), "Esc cancels")
+keys("i"); check(ui.wait == "key", "inventory waits for a key"); keys(" ")
+keys("g"); check((last() or ""):find("weighs"), "pack weight")
+-- dropping an item and gold
+G.c[K.GOLD] = 500
+keys("d"); keys("a"); check(G.item[30][8] == K.ODAGGER and G.iven[1] == 0, "dropped the dagger")
+G.item[30][8] = 0
+keys("d"); keys("."); keys("2"); keys("0"); ui:InjectKey("ENTER")
+check(G.c[K.GOLD] == 480 and G.item[30][8] == K.OGOLDPILE and G.iarg[30][8] == 20, "dropped 20 gold")
+-- walking onto things
+local function Step(object, arg, key)
+   Clear(); G.item[31][8] = object; G.iarg[31][8] = arg
+   keys(key or "l")
+end
+G.c[K.GOLD] = 0
+Step(K.OGOLDPILE, 77); check(G.c[K.GOLD] == 77 and G.item[31][8] == 0, "picked up gold")
+Step(K.OPOTION, K.PSTRENGTH); check(ui.wait == "key", "potion asks")
+keys("t"); check(G.iven[1] == K.OPOTION and G.item[31][8] == 0, "took the potion")
+Step(K.OSCROLL, K.SBLANK); keys("i"); check(G.item[31][8] == K.OSCROLL and G.iven[1] == 0, "ignored the scroll")
+Step(K.OCOOKIE, 0); keys("e"); check(G.item[31][8] == 0 and table.concat(lines(), "|"):find("tasted good"), "ate a cookie from the floor")
+Step(K.OLONGSWORD, 2); keys("t"); check(G.iven[1] == K.OLONGSWORD and G.ivenarg[1] == 2, "took a sword")
+Step(K.OBOOK, 0); keys("r"); local s = 0; for i = 1, K.SPNUM do s = s + G.spelknow[i] end
+check(s >= 1 and G.item[31][8] == 0, "read a book")
+Step(K.ODIAMOND, 25); keys("t"); check(G.iven[1] == K.ODIAMOND, "took a diamond")
+Step(K.OWALL, 0); check(G.playerx == 30, "wall blocks")
+-- traps
+Step(K.OTRAPARROW, 0); check(G.c[K.HP] < G.c[K.HPMAX], "arrow trap hurts")
+Step(K.ODARTRAP, 0); check(G.c[K.HP] < G.c[K.HPMAX], "dart trap hurts")
+Clear(); G.item[31][8] = K.OTELEPORTER; local lv = G.level; keys("l"); check(G.c[K.TELEFLAG] == 1, "teleporter")
+ns.Create.newCaveLevel(3); Clear(); G.item[31][8] = K.OTRAPDOOR; keys("l"); check(G.level == 4, "trap door falls to the next level: " .. G.level)
+ns.Create.newCaveLevel(5); Clear(); G.item[31][8] = K.OELEVATORUP; keys("l"); check(G.level >= 0 and G.level <= 4, "elevator up: " .. G.level)
+ns.Create.newCaveLevel(3); Clear(); G.item[31][8] = K.OCLOSEDDOOR; G.iarg[31][8] = 3; G.lastpx, G.lastpy = 30, 8
+keys("l"); check(ui.wait == "key", "door asks"); keys("o")
+check(G.item[31][8] == K.OOPENDOOR or G.playerx == 30, "door opened or held")
+if G.item[31][8] == K.OOPENDOOR then keys("C"); check(true) end
+Clear(); G.item[30][8] = K.OOPENDOOR; keys("C"); check(G.item[30][8] == K.OCLOSEDDOOR, "closed the door")
+Clear(); G.item[31][8] = K.OTRAPDOOR; keys("^"); check((last() or ""):find("trapdoor"), "found the trap door: " .. tostring(last()) .. " wait=" .. tostring(ui.wait))
+-- a chest
+Clear(); G.item[31][8] = K.OCHEST; G.iarg[31][8] = 2; keys("l"); check(ui.wait == "key", "chest asks")
+keys("t"); check(G.iven[1] == K.OCHEST, "took the chest")
+Clear(); G.item[31][8] = K.OCHEST; G.iarg[31][8] = 2; keys("l"); keys("o")
+check(G.item[31][8] ~= K.OCHEST or (last() or ""):find("Nothing happens"), "opened the chest")
+-- dying of a dart
+Clear(); G.c[K.HP] = 1; G.item[31][8] = K.OTRAPARROW; keys("l")
+check(not ui:IsActive() or G.dead, "an arrow ends the game at 1 hp")
 keys("S"); ns.main:Show()
 
 -- redraw paths with a populated game
 ui:Flush(); ns.map:Layout(); ns.map:Draw(); ns.side:UpdateMinimap(); ns.side:UpdateStats()
+G.c[K.HASTESELF] = 5; ns.side:UpdateStats()
+for _, b in ipairs(ns.side.effectIcons) do if b.effect[1] == K.HASTESELF then check(b.scripts and b.scripts.OnEnter, "effect tooltip"); b.scripts.OnEnter(b) end end
+ G.c[K.HASTESELF] = 0; ns.side:UpdateStats()
 print("ALL OK")

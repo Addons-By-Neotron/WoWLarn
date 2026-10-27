@@ -1,6 +1,6 @@
 --[[
 **********************************************************************
-WoWLarn - Standing on objects (object.c). Stairs, entrance and shafts so far.
+WoWLarn - Standing on objects (object.c). items, traps, stairs, entrance and shafts so far.
 **********************************************************************
 Copyright (C) 2026 NeoTron
 
@@ -74,69 +74,522 @@ local function Stairs(dir)
    end
 end
 
--- C: lookforobject(). Everything you can step on does something; the town buildings and
--- the dungeon features arrive in later milestones.
+-- C: nearbymonst(). True if a monster is next to the player.
+local function NearbyMonster()
+   for x = G.playerx - 1, G.playerx + 1 do
+      for y = G.playery - 1, G.playery + 1 do
+         if x >= 1 and x <= MAXX and y >= 1 and y <= MAXY and G.mon[x][y] ~= 0 then
+            return true
+         end
+      end
+   end
+   return false
+end
+Object.nearbyMonster = NearbyMonster
+
+-- C: forget(). Destroys the object at the player's location.
+local function Forget()
+   G.item[G.playerx][G.playery] = 0
+   G.know[G.playerx][G.playery] = 0
+end
+
+local function Msg(fmt, ...)
+   ns.ui:Message(fmt, ...)
+end
+
+-- C: finditem(). Says what was found and asks if the player wants to take it.
+local NO_ARG = {
+   [K.ODIAMOND] = true, [K.ORUBY] = true, [K.OEMERALD] = true, [K.OSAPPHIRE] = true, [K.OSPIRITSCARAB] = true,
+   [K.OORBOFDRAGON] = true, [K.OORB] = true, [K.OHANDofFEAR] = true, [K.OWWAND] = true,
+   [K.OCUBEofUNDEAD] = true, [K.ONOTHEFT] = true,
+}
+local function FindItem(itm)
+   local arg = G.iarg[G.playerx][G.playery]
+   local text = ns.Tables.objectname[itm]
+   if not NO_ARG[itm] then
+      if arg > 0 then
+         text = text .. " + " .. arg
+      elseif arg < 0 then
+         text = text .. " " .. arg
+      end
+   end
+   Msg(L["You find %s"], text)
+   if ns.ui:Choose(L["Do you want to (t) take it, or (i) ignore it?"], "t") == "t" then
+      if ns.Player.take(itm, arg) then Forget() end
+   end
+end
+
+-- C: ogold(). Picks up gold; the piles are worth 10, 100 or 1000 times their argument.
+local function PickUpGold(kind)
+   local amount = G.iarg[G.playerx][G.playery]
+   if kind == K.ODGOLD then
+      amount = amount * 10
+   elseif kind == K.OMAXGOLD then
+      amount = amount * 100
+   elseif kind == K.OKGOLD then
+      amount = amount * 1000
+   end
+   Msg(amount == 1 and L["You find %d gold piece."] or L["You find %d gold pieces."], amount)
+   G.c[K.GOLD] = G.c[K.GOLD] + amount
+   Forget()
+   ns.ui:Refresh("stats")
+end
+
+-- Drugs: eat, snort or smoke it, take it, or ignore it.
+local function Drug(found, prompt, useKey, id, effect)
+   local ui = ns.ui
+   Msg(found)
+   local choice = ui:Choose(prompt, useKey .. "t")
+   if choice == useKey then
+      effect()
+      Forget()
+      ui:Refresh("all")
+   elseif choice == "t" then
+      if ns.Player.take(id, 0) then Forget() end
+   end
+end
+
+local function AtLeast3(index, amount)
+   local c = G.c
+   c[index] = c[index] - amount
+   if c[index] < 3 then c[index] = 3 end
+end
+
+-- C: opit().
+local function Pit()
+   local c = G.c
+   if ns.rnd(101) > 81 then return end
+   if ns.rnd(70) > 9 * c[K.DEXTERITY] - ns.Player.packWeight() or ns.rnd(101) < 5 then
+      for i = 1, K.IVENSIZE do
+         if G.iven[i] == K.OWWAND then
+            Msg(L["You float right over the pit."])
+            return
+         end
+      end
+      if G.level == DBOTTOM or G.level == VBOTTOM then
+         Msg(L["You fell into a pit leading straight to HELL!"])
+         ns.ui:Nap(3000)
+         ns.Player.died(262)
+         return
+      end
+      local damage
+      if ns.rnd(101) < 20 then
+         damage = 0
+         Msg(L["You fell into a pit!  A poor monster cushions your fall!"])
+      else
+         damage = ns.rnd(G.level * 3 + 3)
+         if damage > c[K.HP] then damage = c[K.HP] end
+         Msg(damage == 1 and L["You fell into a pit!  You suffer %d hit point damage."]
+            or L["You fell into a pit!  You suffer %d hit points damage."], damage)
+         G.lastnum = 261
+      end
+      ns.Player.losehp(damage)
+      if G.dead then return end
+      ns.ui:Nap(2000)
+      Create.newCaveLevel(G.level + 1)
+      ns.ui:Refresh("all")
+   end
+end
+
+-- C: oelevator(). dir 1 goes up, -1 goes down.
+local function Elevator(dir)
+   local ui = ns.ui
+   if dir == 1 then
+      if G.level == 0 then
+         Msg(L["Unfortunately, it is out of order."])
+         return
+      end
+      G.playerx, G.playery = ns.rnd(MAXX - 2) + 1, ns.rnd(MAXY - 2) + 1
+      ui:Nap(2000)
+      Create.newCaveLevel(ns.rund(G.level))
+   else
+      if G.level == DBOTTOM or G.level == VBOTTOM then
+         ui:Nap(2000)
+         Msg(L["And it leads straight to HELL!"])
+         ui:Nap(3000)
+         ns.Player.died(287)
+         return
+      end
+      G.playerx, G.playery = ns.rnd(MAXX - 2) + 1, ns.rnd(MAXY - 2) + 1
+      ui:Nap(2000)
+      Create.newCaveLevel(G.level + ns.rnd(math.max(DBOTTOM - G.level, 1)))
+   end
+   ns.Player.positionPlayer()
+   ui:Refresh("all")
+end
+
+-- C: ochest().
+local function Chest()
+   local ui, c = ns.ui, G.c
+   local x, y = G.playerx, G.playery
+   local choice = ui:Choose(L["Do you (t) take it, (o) try to open it, or (i) ignore it?"], "to")
+   if choice == "o" then
+      if ns.rnd(101) < 40 then
+         Msg(L["The chest explodes as you open it."])
+         local damage = ns.rnd(10)
+         if damage > c[K.HP] then damage = c[K.HP] end
+         G.lastnum = 281  -- in case he dies
+         Msg(damage == 1 and L["You suffer %d hit point damage!"] or L["You suffer %d hit points damage!"], damage)
+         if damage > 0 then ns.Player.losehp(damage) end
+         if G.dead then return end
+         local roll = ns.rnd(10)
+         if roll == 1 then
+            c[K.ITCHING] = c[K.ITCHING] + ns.rnd(1000) + 100
+            Msg(L["You feel an irritation spread over your skin!"])
+         elseif roll == 2 then
+            c[K.CLUMSINESS] = c[K.CLUMSINESS] + ns.rnd(1600) + 200
+            Msg(L["You begin to lose hand-eye co-ordination!"])
+         elseif roll == 3 then
+            c[K.HALFDAM] = c[K.HALFDAM] + ns.rnd(1600) + 200
+            Msg(L["You suddenly feel sick and BARF all over your shoes!"])
+         end
+         local level = G.iarg[x][y]
+         G.item[x][y], G.know[x][y] = 0, 0
+         if ns.rnd(100) < 69 then ns.Item.createGem() end  -- gems from the chest
+         ns.Item.dropGold(ns.rnd(110 * level + 200))
+         -- the C re-rolls the limit on every pass
+         local i = 0
+         while i < ns.rnd(4) do
+            ns.Item.something(x, y, level + 2)
+            i = i + 1
+         end
+      else
+         Msg(L["Nothing happens."])
+      end
+   elseif choice == "t" then
+      if ns.Player.take(K.OCHEST, G.iarg[x][y]) then Forget() end
+   end
+end
+
+-- Objects that arrive later: the features (milestone 7) and the town buildings (8).
+local LATER = {}
+for _, id in ipairs({ K.OALTAR, K.OTHRONE, K.OTHRONE2, K.ODEADTHRONE, K.OBRASSLAMP, K.OFOUNTAIN,
+   K.OSTATUE, K.OMIRROR, K.ODEADFOUNTAIN, K.OSCHOOL, K.OBANK, K.OBANK2, K.ODNDSTORE,
+   K.OTRADEPOST, K.OHOME, K.OPAD, K.OLRS }) do
+   LATER[id] = true
+end
+
+-- C: lookforobject(). Everything you can step on does something.
 function Object.lookForObject()
-   if G.c[K.TIMESTOP] ~= 0 then return end  -- can't find objects if time is stopped
-   local id = G.item[G.playerx][G.playery]
+   local c = G.c
+   if c[K.TIMESTOP] ~= 0 then return end  -- can't find objects if time is stopped
+   local x, y = G.playerx, G.playery
+   local id = G.item[x][y]
    if id == 0 then return end
 
    local ui = ns.ui
-   ns.Display.showcell(G.playerx, G.playery)
+   ns.Display.showcell(x, y)
    ui.repcount = 0
    local name = ns.Tables.objectname[id]
 
-   if id == K.OENTRANCE then
-      ui:Message(L["You have found %s"], name)
+   if id == K.OGOLDPILE or id == K.OMAXGOLD or id == K.OKGOLD or id == K.ODGOLD then
+      PickUpGold(id)
+
+   elseif id == K.OPOTION then
+      local arg = G.iarg[x][y]
+      local T = ns.Tables
+      if G.potionknown[arg] ~= 0 then
+         Msg(L["You find a magic potion of %s."], T.potionname[arg])
+      else
+         Msg(L["You find a magic potion."])
+      end
+      local choice = ui:Choose(L["Do you (d) drink it, (t) take it, or (i) ignore it?"], "dt")
+      if choice == "d" then
+         Forget()  -- destroy the potion
+         ns.Magic.quaffPotion(arg)
+      elseif choice == "t" then
+         if ns.Player.take(K.OPOTION, arg) then Forget() end
+      end
+
+   elseif id == K.OSCROLL then
+      local arg = G.iarg[x][y]
+      local T = ns.Tables
+      if G.scrollknown[arg] ~= 0 then
+         Msg(L["You find a magic scroll of %s."], T.scrollname[arg])
+      else
+         Msg(L["You find a magic scroll."])
+      end
+      local choice
+      if c[K.BLINDCOUNT] == 0 then
+         choice = ui:Choose(L["Do you (r) read it, (t) take it, or (i) ignore it?"], "rt")
+      else
+         choice = ui:Choose(L["Do you (t) take it, or (i) ignore it?"], "t")
+      end
+      if choice == "r" then
+         Forget()  -- destroy it
+         ns.Magic.readScroll(arg)
+      elseif choice == "t" then
+         if ns.Player.take(K.OSCROLL, arg) then Forget() end
+      end
+
+   elseif id == K.OBOOK then
+      Msg(L["You find a book."])
+      local arg = G.iarg[x][y]
+      local choice
+      if c[K.BLINDCOUNT] == 0 then
+         choice = ui:Choose(L["Do you (r) read it, (t) take it, or (i) ignore it?"], "rt")
+      else
+         choice = ui:Choose(L["Do you (t) take it, or (i) ignore it?"], "t")
+      end
+      if choice == "r" then
+         ns.Magic.readBook(arg)
+         Forget()  -- no more book
+      elseif choice == "t" then
+         if ns.Player.take(K.OBOOK, arg) then Forget() end
+      end
+
+   elseif id == K.OCOOKIE then
+      Msg(L["You find a fortune cookie."])
+      local choice = ui:Choose(L["Do you (e) eat it, (t) take it, or (i) ignore it?"], "et")
+      if choice == "e" then
+         Msg(L["The cookie tasted good."])
+         Forget()  -- no more cookie
+         if c[K.BLINDCOUNT] == 0 then
+            Msg(L["A message inside the cookie reads:"])
+            Msg("%s", ns.Action.fortune())
+         end
+      elseif choice == "t" then
+         if ns.Player.take(K.OCOOKIE, 0) then Forget() end
+      end
+
+   elseif id == K.OORB or id == K.OWWAND or id == K.OHANDofFEAR then
+      if NearbyMonster() then return end
+      FindItem(id)
+
+   elseif id == K.OPIT then
+      Msg(L["You're standing at the top of a pit."])
+      Pit()
+
+   elseif id == K.OSTAIRSUP then
+      Msg(L["There is a circular staircase here."])
+      Stairs(1)
+
+   elseif id == K.OSTAIRSDOWN then
+      Msg(L["There is a circular staircase here."])
+      Stairs(-1)
+
+   elseif id == K.OELEVATORUP then
+      Msg(L["You have found an express elevator going up."])
+      Elevator(1)
+
+   elseif id == K.OELEVATORDOWN then
+      Msg(L["You have found an express elevator going down."])
+      Elevator(-1)
+
+   elseif id == K.OCHEST then
+      Msg(L["There is a chest here."])
+      Chest()
+
+   elseif id == K.OIVTELETRAP or id == K.OTELEPORTER then
+      if id == K.OIVTELETRAP then
+         if ns.rnd(11) < 6 then return end
+         G.item[x][y] = K.OTELEPORTER
+         G.know[x][y] = 1
+      end
+      Msg(L["Zaaaappp!  You've been teleported!"])
+      ui:Nap(3000)
+      ns.Magic.teleport(false)
+
+   elseif id == K.OOPENDOOR then
+      Msg(L["There is an open door here."])
+
+   elseif id == K.OCLOSEDDOOR then
+      if G.dropflag then return end
+      Msg(L["You find %s"], name)
+      if ui:Choose(L["Do you (o) try to open it, or (i) ignore it?"], "o") ~= "o" then
+         G.playerx, G.playery = G.lastpx, G.lastpy
+         return
+      end
+      if ns.rnd(11) < 7 then
+         local trap = G.iarg[x][y]
+         if trap == 6 then
+            c[K.AGGRAVATE] = c[K.AGGRAVATE] + ns.rnd(400)
+         elseif trap == 7 or trap == 8 then
+            Msg(L["You are jolted by an electric shock!"])
+            G.lastnum = 274
+            ns.Player.losehp(ns.rnd(20))
+            if G.dead then return end
+         elseif trap == 9 then
+            Msg(L["You suddenly feel weaker!"])
+            if c[K.STRENGTH] > 3 then c[K.STRENGTH] = c[K.STRENGTH] - 1 end
+         end
+         G.playerx, G.playery = G.lastpx, G.lastpy
+      else
+         Forget()
+         G.item[x][y] = K.OOPENDOOR
+      end
+      ui:Refresh("all")
+
+   elseif id == K.OTRAPARROWIV or id == K.OTRAPARROW then
+      if id == K.OTRAPARROWIV then
+         if ns.rnd(17) < 13 then return end
+         G.item[x][y] = K.OTRAPARROW
+         G.know[x][y] = 0
+      end
+      Msg(L["You are hit by an arrow!"])
+      G.lastnum = 259
+      ns.Player.losehp(ns.rnd(10) + G.level)
+
+   elseif id == K.OIVDARTRAP or id == K.ODARTRAP then
+      if id == K.OIVDARTRAP then
+         if ns.rnd(17) < 13 then return end
+         G.item[x][y] = K.ODARTRAP
+         G.know[x][y] = 0
+      end
+      Msg(L["You are hit by a dart!"])
+      G.lastnum = 260
+      ns.Player.losehp(ns.rnd(5))
+      if G.dead then return end
+      c[K.STRENGTH] = c[K.STRENGTH] - 1
+      if c[K.STRENGTH] < 3 then c[K.STRENGTH] = 3 end
+      ui:Refresh("stats")
+
+   elseif id == K.OIVTRAPDOOR or id == K.OTRAPDOOR then
+      if id == K.OIVTRAPDOOR then
+         if ns.rnd(17) < 13 then return end
+         G.item[x][y] = K.OTRAPDOOR
+         G.know[x][y] = 1
+      end
+      G.lastnum = 272  -- a trap door
+      for i = 1, K.IVENSIZE do
+         if G.iven[i] == K.OWWAND then
+            Msg(L["You escape a trap door."])
+            return
+         end
+      end
+      if G.level == DBOTTOM or G.level == VBOTTOM then
+         Msg(L["You fall through a trap door leading straight to HELL!"])
+         ui:Nap(3000)
+         ns.Player.died(271)
+         return
+      end
+      Msg(L["You fall through a trap door!"])
+      ns.Player.losehp(ns.rnd(5 + G.level))
+      if G.dead then return end
+      ui:Nap(2000)
+      Create.newCaveLevel(G.level + 1)
+      ui:Refresh("all")
+
+   elseif id == K.OENTRANCE then
+      Msg(L["You have found %s"], name)
       if ui:Choose(L["Do you (g) go inside, or (i) ignore it?"], "g") == "g" then
          Create.newCaveLevel(1)
          G.playerx, G.playery = 34, MAXY - 1
          G.item[34][MAXY], G.know[34][MAXY], G.mon[34][MAXY] = 0, 0, 0
          ui:Refresh("all")
       end
+
    elseif id == K.OVOLDOWN then
-      ui:Message(L["You have found %s"], name)
+      Msg(L["You have found %s"], name)
       if ui:Choose(L["Do you (c) climb down, or (i) ignore it?"], "c") == "i" then return end
       if G.level ~= 0 then
-         ui:Message(L["The shaft only extends 5 feet downward!"])
+         Msg(L["The shaft only extends 5 feet downward!"])
          return
       end
-      if ns.Player.packWeight() > 45 + 3 * (G.c[K.STRENGTH] + G.c[K.STREXTRA]) then
-         ui:Message(L["You slip and fall down the shaft."])
+      if ns.Player.packWeight() > 45 + 3 * (c[K.STRENGTH] + c[K.STREXTRA]) then
+         Msg(L["You slip and fall down the shaft."])
          G.lastnum = 275
          ns.Player.losehp(30 + ns.rnd(20))
          if G.dead then return end
       else
-         ui:Message(L["You climb down."])
+         Msg(L["You climb down."])
       end
       ui:Nap(3000)
       Create.newCaveLevel(DBOTTOM + 1)  -- down to V1
       G.playerx, G.playery = ns.rnd(MAXX - 2) + 1, ns.rnd(MAXY - 2) + 1
       ns.Player.positionPlayer()
       ui:Refresh("all")
+
    elseif id == K.OVOLUP then
-      ui:Message(L["You have found %s"], name)
+      Msg(L["You have found %s"], name)
       if ui:Choose(L["Do you (c) climb up, or (i) ignore it?"], "c") == "i" then return end
-      local c = G.c
       if ns.Player.packWeight() > 40 + 5 * (c[K.DEXTERITY] + c[K.STRENGTH] + c[K.STREXTRA]) then
-         ui:Message(L["You slip and fall down the shaft."])
+         Msg(L["You slip and fall down the shaft."])
          G.lastnum = 275
          ns.Player.losehp(15 + ns.rnd(20))
          return
       end
-      ui:Message(L["You climb up."])
+      Msg(L["You climb up."])
       ui:Nap(3000)
       Create.newCaveLevel(0)
       MoveToObject(K.OVOLDOWN)  -- put the player near the volcano shaft
       ns.Player.positionPlayer()
       ui:Refresh("all")
-   elseif id == K.OSTAIRSUP then
-      ui:Message(L["There is a circular staircase here."])
-      Stairs(1)
-   elseif id == K.OSTAIRSDOWN then
-      ui:Message(L["There is a circular staircase here."])
-      Stairs(-1)
-   elseif name then
+
+   elseif id == K.OSPEED then
+      Drug(L["You find some speed."], L["Do you (s) snort it, (t) take it, or (i) ignore it?"], "s", id, function()
+         Msg(L["Ohwowmanlikethingstotallyseemtoslowdown!"])
+         c[K.HASTESELF] = c[K.HASTESELF] + 200 + c[K.LEVEL]
+         c[K.HALFDAM] = c[K.HALFDAM] + 300 + ns.rnd(200)
+         AtLeast3(K.INTELLIGENCE, 2)
+         AtLeast3(K.WISDOM, 2)
+         AtLeast3(K.CONSTITUTION, 2)
+         AtLeast3(K.DEXTERITY, 2)
+         AtLeast3(K.STRENGTH, 2)
+      end)
+
+   elseif id == K.OSHROOMS then
+      Drug(L["You find some magic mushrooms."], L["Do you (e) eat them, (t) take them, or (i) ignore them?"], "e", id, function()
+         Msg(L["Things start to get real spacey..."])
+         c[K.HASTEMONST] = c[K.HASTEMONST] + ns.rnd(75) + 25
+         c[K.CONFUSE] = c[K.CONFUSE] + 30 + ns.rnd(10)
+         c[K.WISDOM] = c[K.WISDOM] + 2
+         c[K.CHARISMA] = c[K.CHARISMA] + 2
+      end)
+
+   elseif id == K.OACID then
+      Drug(L["You find some LSD."], L["Do you (e) eat it, (t) take it, or (i) ignore it?"], "e", id, function()
+         Msg(L["You are now frying your ass off!"])
+         c[K.CONFUSE] = c[K.CONFUSE] + 30 + ns.rnd(10)
+         c[K.WISDOM] = c[K.WISDOM] + 2
+         c[K.INTELLIGENCE] = c[K.INTELLIGENCE] + 2
+         c[K.AWARENESS] = c[K.AWARENESS] + 1500
+         c[K.AGGRAVATE] = c[K.AGGRAVATE] + 1500
+         for mx = 1, MAXX do  -- heal the monsters
+            for my = 1, MAXY do
+               if G.mon[mx][my] ~= 0 then G.hitp[mx][my] = G.monster[G.mon[mx][my]].hitpoints end
+            end
+         end
+      end)
+
+   elseif id == K.OHASH then
+      Drug(L["You find some hashish."], L["Do you (s) smoke it, (t) take it, or (i) ignore it?"], "s", id, function()
+         Msg(L["WOW! You feel stooooooned..."])
+         c[K.HASTEMONST] = c[K.HASTEMONST] + ns.rnd(75) + 25
+         c[K.INTELLIGENCE] = c[K.INTELLIGENCE] + 2
+         c[K.WISDOM] = c[K.WISDOM] + 2
+         AtLeast3(K.CONSTITUTION, 2)
+         AtLeast3(K.DEXTERITY, 2)
+         c[K.HALFDAM] = c[K.HALFDAM] + 300 + ns.rnd(200)
+         c[K.CLUMSINESS] = c[K.CLUMSINESS] + ns.rnd(1800) + 200
+      end)
+
+   elseif id == K.OCOKE then
+      Drug(L["You find some cocaine."], L["Do you want to (s) snort it, (t) take it, or (i) ignore it?"], "s", id, function()
+         Msg(L["Your nose begins to bleed!"])
+         AtLeast3(K.DEXTERITY, 2)
+         AtLeast3(K.CONSTITUTION, 2)
+         c[K.CHARISMA] = c[K.CHARISMA] + 3
+         for i = K.STRENGTH, K.STRENGTH + 5 do c[i] = c[i] + 33 end
+         c[K.COKED] = c[K.COKED] + 10
+      end)
+
+   elseif id == K.OWALL then
+      return
+
+   elseif id == K.OANNIHILATION then
+      for i = 1, K.IVENSIZE do
+         if G.iven[i] == K.OSPHTALISMAN then
+            Msg(L["The Talisman of the Sphere protects you from annihilation!"])
+            return
+         end
+      end
+      ns.Player.died(283)  -- annihilated by a sphere of annihilation
+
+   elseif LATER[id] then
       ui:Message(L["There is %s here. (Not implemented yet.)"], name)
+
+   else
+      FindItem(id)
    end
 end

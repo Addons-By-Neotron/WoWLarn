@@ -633,3 +633,27 @@ function Monster.hitplayer(x, y)
       Msg(L["The %s missed."], name)
    end
 end
+
+-- C: annihilate(). Kills the monsters around the player (not the demons) and gives the
+-- experience, but no dropped objects.
+function Monster.annihilate()
+   local k = 0
+   for x = G.playerx - 1, G.playerx + 1 do
+      for y = G.playery - 1, G.playery + 1 do
+         if x >= 1 and x <= MAXX and y >= 1 and y <= MAXY and mon[x][y] ~= 0 then
+            local id = mon[x][y]
+            if id < DEMONLORD then
+               k = k + G.monster[id].experience
+               mon[x][y], know[x][y] = 0, 0
+            else
+               Msg(L["The %s barely escapes being annihilated!"], G.monster[id].name)
+               hitp[x][y] = math.floor(hitp[x][y] / 2) + 1  -- lose half the hit points
+            end
+         end
+      end
+   end
+   if k > 0 then
+      Msg(L["You hear loud screams of agony!"])
+      ns.Player.raiseExperience(k)
+   end
+end

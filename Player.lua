@@ -347,7 +347,225 @@ function Player.died(cause)
    G.dead = cause or true
 end
 
--- C: drop_object(). Arrives with the inventory in milestone 5.
-function Player.dropObject(slot)
-   error("Player.dropObject is not implemented yet (milestone 5)")
+-- Objects whose argument is not shown in their name (C: show3).
+local PLAIN = {
+   [K.OLARNEYE] = true, [K.OBOOK] = true, [K.OSPIRITSCARAB] = true, [K.ODIAMOND] = true, [K.ORUBY] = true,
+   [K.OCUBEofUNDEAD] = true, [K.OEMERALD] = true, [K.OCHEST] = true, [K.OCOOKIE] = true,
+   [K.OSAPPHIRE] = true, [K.OORB] = true, [K.OHANDofFEAR] = true, [K.OBRASSLAMP] = true,
+   [K.OURN] = true, [K.OWWAND] = true, [K.OSPHTALISMAN] = true, [K.ONOTHEFT] = true,
+}
+
+-- The name of an inventory slot as shown in the inventory (C: show3 without the letter).
+-- Potions and scrolls only show what they are once the player has found out.
+function Player.itemName(slot)
+   local id, arg = iven[slot], ivenarg[slot]
+   local T = ns.Tables
+   local name = T.objectname[id] or "?"
+   if id == K.OPOTION then
+      local kind = T.potionname[arg]
+      if kind and kind ~= "" and G.potionknown[arg] ~= 0 then name = name .. " of " .. kind end
+   elseif id == K.OSCROLL then
+      local kind = T.scrollname[arg]
+      if kind and kind ~= "" and G.scrollknown[arg] ~= 0 then name = name .. " of " .. kind end
+   elseif not PLAIN[id] then
+      if arg > 0 or G.wizard then
+         name = name .. " +" .. arg
+      elseif arg < 0 then
+         name = name .. " " .. arg
+      end
+   end
+   if c[K.WIELD] == slot then name = name .. L[" (weapon in hand)"] end
+   if c[K.WEAR] == slot or c[K.SHIELD] == slot then name = name .. L[" (being worn)"] end
+   return name
+end
+
+-- C: pocketfull(). True if the player can't carry one more thing.
+function Player.pocketFull()
+   local limit = math.min(15 + ns.idiv(c[K.LEVEL], 2), IVENSIZE)
+   for i = 1, limit do
+      if iven[i] == 0 then return false end
+   end
+   return true
+end
+
+-- C: take(). Puts something in the inventory; returns true on success (C: 0).
+function Player.take(itm, arg)
+   local ui = ns.ui
+   local limit = math.min(15 + ns.idiv(c[K.LEVEL], 2), IVENSIZE)
+   for i = 1, limit do
+      if iven[i] == 0 then
+         iven[i], ivenarg[i] = itm, arg
+         local stats, eyeflag = false, false
+         if itm == K.OPROTRING or itm == K.ODAMRING or itm == K.OBELT then
+            stats = true
+         elseif itm == K.ODEXRING then
+            c[K.DEXTERITY] = c[K.DEXTERITY] + arg + 1
+            stats = true
+         elseif itm == K.OSTRRING then
+            c[K.STREXTRA] = c[K.STREXTRA] + arg + 1
+            stats = true
+         elseif itm == K.OCLEVERRING then
+            c[K.INTELLIGENCE] = c[K.INTELLIGENCE] + arg + 1
+            stats = true
+         elseif itm == K.OHAMMER then
+            c[K.DEXTERITY] = c[K.DEXTERITY] + 10
+            c[K.STREXTRA] = c[K.STREXTRA] + 10
+            c[K.TMP2] = c[K.INTELLIGENCE]
+            c[K.INTELLIGENCE] = (c[K.TMP2] - 10 <= 0) and 1 or c[K.TMP2] - 10
+            stats = true
+         elseif itm == K.OORB then
+            c[K.ORB] = c[K.ORB] + 1
+            c[K.AWARENESS] = c[K.AWARENESS] + 1
+         elseif itm == K.OORBOFDRAGON then
+            c[K.SLAYING] = c[K.SLAYING] + 1
+         elseif itm == K.OSPIRITSCARAB then
+            c[K.NEGATESPIRIT] = c[K.NEGATESPIRIT] + 1
+         elseif itm == K.OCUBEofUNDEAD then
+            c[K.CUBEofUNDEAD] = c[K.CUBEofUNDEAD] + 1
+         elseif itm == K.ONOTHEFT then
+            c[K.NOTHEFT] = c[K.NOTHEFT] + 1
+         elseif itm == K.OSWORDofSLASHING then
+            c[K.DEXTERITY] = c[K.DEXTERITY] + 5
+            stats = true
+         elseif itm == K.OSLAYER then
+            c[K.INTELLIGENCE] = c[K.INTELLIGENCE] + 10
+         elseif itm == K.OPSTAFF then
+            c[K.WISDOM] = c[K.WISDOM] + 10
+         elseif itm == K.OLARNEYE then
+            c[K.EYEOFLARN] = 1
+            eyeflag = true
+         end
+
+         ui:Message(L["You pick up: %s"], Player.itemName(i))
+         ui:Refresh("inv")
+         if stats then Player.recalc() end
+         ui:Refresh("stats")
+         if c[K.BLINDCOUNT] == 0 and eyeflag then
+            ui:Message(L["Your sight fades for a moment..."])
+            ui:Nap(2000)
+            ui:Message(L["Your sight returns, and everything looks crystal-clear!"])
+            ui:Refresh("all")
+         end
+         return true
+      end
+   end
+   ui:Message(L["You can't carry anything else."])
+   return false
+end
+
+-- C: drop_object(). Drops inventory slot k on the player's tile. Returns true if something
+-- was in the way (C: 1).
+function Player.dropObject(k)
+   local ui = ns.ui
+   if k < 1 or k > IVENSIZE then return false end
+   local itm = iven[k]
+   if itm == 0 then
+      ui:Message(L["You don't have item %s!"], string.char(96 + k))
+      return true
+   end
+   local pitflag = false
+   local here = item[G.playerx][G.playery]
+   if here == K.OPIT then
+      pitflag = true
+   elseif here ~= 0 then
+      ui:Message(L["There's something here already."])
+      return true
+   end
+   if G.playery == MAXY and G.playerx == 34 then return true end  -- not in the entrance
+
+   if not pitflag then
+      item[G.playerx][G.playery] = itm
+      G.iarg[G.playerx][G.playery] = ivenarg[k]
+   end
+   if c[K.WIELD] == k then c[K.WIELD] = 0 end
+   if c[K.WEAR] == k then c[K.WEAR] = 0 end
+   if c[K.SHIELD] == k then c[K.SHIELD] = 0 end
+   Player.adjustCValues(itm, ivenarg[k])
+   ui:Message(L["You drop: %s"], Player.itemName(k))
+   if pitflag then
+      ui:Message(L["It disappears down the pit."])
+   end
+   G.know[G.playerx][G.playery] = 0
+   iven[k] = 0
+   G.dropflag = true  -- so we won't be asked to pick it up right away
+   Player.recalc()
+   ui:Refresh("all")
+   return false
+end
+
+-- C: raiselevel().
+function Player.raiseLevel()
+   if c[K.LEVEL] < K.MAXPLEVEL then
+      Player.raiseExperience(ns.Tables.skill[c[K.LEVEL] + 1] - c[K.EXPERIENCE])
+   end
+end
+
+-- C: enchantarmor(). how is K.ENCH_SCROLL or K.ENCH_ALTAR.
+function Player.enchantArmor(how)
+   local ui = ns.ui
+   -- bomb out if we're not wearing anything
+   if c[K.WEAR] == 0 and c[K.SHIELD] == 0 then
+      ui:Message(L["You feel a sense of loss."])
+      return
+   end
+   -- choose what to enchant
+   local which = ns.rund(100) < 50 and K.SHIELD or K.WEAR
+   if c[which] == 0 then
+      which = which == K.SHIELD and K.WEAR or K.SHIELD
+   end
+   -- enchant it and check for destruction at +10
+   local slot = c[which]
+   ivenarg[slot] = ivenarg[slot] + 1
+   if ivenarg[slot] >= 10 then
+      if how == K.ENCH_ALTAR then
+         ivenarg[slot] = ivenarg[slot] - 1
+         ui:Message(L["Your %s glows briefly."], ns.Tables.objectname[iven[slot]])
+         return
+      elseif ns.rnd(10) <= 9 then
+         ui:Message(L["Your %s vibrates violently and crumbles into dust!"], ns.Tables.objectname[iven[slot]])
+         iven[slot], ivenarg[slot] = 0, 0
+         c[which] = 0
+         Player.recalc()
+         ui:Refresh("all")
+         return
+      end
+   end
+   ui:Message(L["Your %s glows for a moment."], ns.Tables.objectname[iven[slot]])
+   Player.recalc()
+   ui:Refresh("all")
+end
+
+-- C: enchweapon().
+function Player.enchantWeapon(how)
+   local ui = ns.ui
+   local slot = c[K.WIELD]
+   if slot == 0 then
+      ui:Message(L["You feel depressed."])
+      return
+   end
+   local tmp = iven[slot]
+   if tmp ~= K.OSCROLL and tmp ~= K.OPOTION then
+      ivenarg[slot] = ivenarg[slot] + 1
+      if tmp == K.OCLEVERRING then
+         c[K.INTELLIGENCE] = c[K.INTELLIGENCE] + 1
+      elseif tmp == K.OSTRRING then
+         c[K.STREXTRA] = c[K.STREXTRA] + 1
+      elseif tmp == K.ODEXRING then
+         c[K.DEXTERITY] = c[K.DEXTERITY] + 1
+      end
+      if ivenarg[slot] >= 10 and ns.rnd(10) <= 9 then
+         if how == K.ENCH_ALTAR then
+            ivenarg[slot] = ivenarg[slot] - 1
+            ui:Message(L["Your weapon glows a little."])
+         else
+            ui:Message(L["Your weapon vibrates violently and crumbles into dust!"])
+            iven[slot], ivenarg[slot] = 0, 0
+            c[K.WIELD] = 0
+         end
+      else
+         ui:Message(L["Your weapon glows for a moment."])
+      end
+      Player.recalc()
+      ui:Refresh("all")
+   end
 end

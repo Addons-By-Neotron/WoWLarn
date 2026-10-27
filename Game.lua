@@ -34,6 +34,14 @@ local Display, Monster, Regen = ns.Display, ns.Monster, ns.Regen
 
 local RUN_DELAY = 30  -- milliseconds between the steps of a run
 
+-- C: parse2(). The monsters and the clock move on without the player acting.
+function Game.parse2()
+   if c[K.HASTEMONST] ~= 0 then Monster.movemonst() end
+   Monster.movemonst()
+   Monster.randMonst()
+   ns.Regen.regen()
+end
+
 -- C: main.c:parse(). Movement keys; the capital letter runs.
 local MOVE = { j = 1, l = 2, k = 3, h = 4, u = 5, y = 6, n = 7, b = 8 }
 local RUN = { J = 1, L = 2, K = 3, H = 4, U = 5, Y = 6, N = 7, B = 8 }
@@ -88,6 +96,48 @@ local function Parse()
          ui:Log("system", L["Game over. Press any key to start again."])
          return true
       end
+   elseif key == "w" then
+      ui.repcount = 0
+      ns.Action.wield()
+   elseif key == "W" then
+      ui.repcount = 0
+      ns.Action.wear()
+   elseif key == "T" then
+      ui.repcount = 0
+      ns.Action.takeOff()
+   elseif key == "r" then
+      ui.repcount = 0
+      if c[K.BLINDCOUNT] ~= 0 then
+         ui:Message(L["You can't read anything when you're blind!"])
+      elseif c[K.TIMESTOP] == 0 then
+         ns.Action.read()
+      end
+   elseif key == "q" then
+      ui.repcount = 0
+      if c[K.TIMESTOP] == 0 then ns.Action.quaff() end
+   elseif key == "d" then
+      ui.repcount = 0
+      if c[K.TIMESTOP] == 0 then ns.Action.drop() end
+   elseif key == "e" then
+      ui.repcount = 0
+      if c[K.TIMESTOP] == 0 then ns.Action.eat() end
+   elseif key == "C" then
+      ui.repcount = 0
+      ns.Action.closeDoor()
+   elseif key == "i" then
+      ui.repcount = 0
+      G.nomove = true
+      ui:ShowInventory()
+   elseif key == "g" then
+      ui.repcount = 0
+      G.nomove = true
+      ns.Action.packWeight()
+   elseif key == "^" then
+      ui.repcount = 0
+      ns.Action.findTraps()
+   elseif key == "Z" then
+      ui.repcount = 0
+      ns.Action.teleport()
    elseif key == "v" then
       ui.repcount = 0
       G.nomove = true

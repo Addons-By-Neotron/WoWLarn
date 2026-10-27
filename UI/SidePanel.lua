@@ -31,6 +31,7 @@ ns.side = side
 
 local GAP = 4
 local CELL = 3  -- minimap pixels per tile
+local EFFECT_SIZE, EFFECT_COLUMNS = 24, 8
 local MINIMAP_H, PORTRAIT_H, STATS_H = K.MAXY * CELL + 22, 112, 196
 
 local function Section(parent, height, title)
@@ -127,9 +128,50 @@ function side:Create(parent)
    local effects = Section(frame, 40, L["Effects"])
    effects:SetPoint("TOPLEFT", stats, "BOTTOMLEFT", 0, -GAP)
    effects:SetPoint("BOTTOMRIGHT")
+   -- One icon per effect in V.EFFECTS, shown while its counter is running.
+   self.effectIcons = {}
+   for index, effect in ipairs(V.EFFECTS) do
+      local button = CreateFrame("Frame", nil, effects)
+      button:SetSize(EFFECT_SIZE, EFFECT_SIZE)
+      button.texture = button:CreateTexture(nil, "ARTWORK")
+      button.texture:SetAllPoints()
+      button.texture:SetTexture("Interface\\Icons\\" .. effect[3])
+      button.texture:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+      button.effect = effect
+      button:EnableMouse(true)
+      button:SetScript("OnEnter", function(self)
+         GameTooltip:SetOwner(self, "ANCHOR_TOP")
+         GameTooltip:SetText(self.effect[2])
+         local turns = G.c[self.effect[1]]
+         if turns > 1 then
+            GameTooltip:AddLine(format(L["%d turns left"], turns), 0.7, 0.7, 0.7)
+         end
+         GameTooltip:Show()
+      end)
+      button:SetScript("OnLeave", GameTooltip_Hide)
+      button:Hide()
+      self.effectIcons[index] = button
+   end
+   self.effectsFrame = effects
 
    self.frame = frame
    return frame
+end
+
+-- C: botside(). Lays out the icons of the effects that are running.
+function side:UpdateEffects()
+   if not self.effectIcons then return end
+   local shown = 0
+   for index, button in ipairs(self.effectIcons) do
+      local on = G.c[button.effect[1]] ~= 0
+      button:SetShown(on)
+      if on then
+         button:ClearAllPoints()
+         button:SetPoint("TOPLEFT", self.effectsFrame, "TOPLEFT", 6 + (shown % EFFECT_COLUMNS) * (EFFECT_SIZE + 2),
+            -16 - math.floor(shown / EFFECT_COLUMNS) * (EFFECT_SIZE + 2))
+         shown = shown + 1
+      end
+   end
 end
 
 -- C: bot_linex() and botside().
@@ -152,6 +194,8 @@ function side:UpdateStats()
    self.exp:SetMinMaxValues(low, math.max(low + 1, high))
    self.exp:SetValue(c[K.EXPERIENCE])
    self.exp.text:SetText(format("%s %d / %d", L["Exp"], c[K.EXPERIENCE], high))
+
+   self:UpdateEffects()
 
    local strength = c[K.STRENGTH] + c[K.STREXTRA]
    local left = math.floor((K.TIMELIMIT - G.gtime) / 100)

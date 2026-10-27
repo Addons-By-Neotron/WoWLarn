@@ -90,6 +90,7 @@ function main:Create()
    map:SetPoint("BOTTOMRIGHT", -(SIDE_W + 2 * PAD), BOTTOM_H + 2 * PAD)
 
    ns.picker:Create(map)
+   ns.inventory:Create(map)
 
    local side = ns.side:Create(frame)
    side:SetWidth(SIDE_W)

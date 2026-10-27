@@ -97,6 +97,7 @@ function G.Reset()
    FillArray(G.spelknow, K.SPNUM, 0)
    FillArray(G.scrollknown, K.MAXSCROLL, 0)
    FillArray(G.potionknown, K.MAXPOTION, 0)
+   G.potionknown[K.PINSTHEAL] = 1  -- the only potion known from the start
    for _, name in ipairs(LEVEL_GRIDS) do
       FillGrid(G[name], 0)
    end

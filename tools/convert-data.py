@@ -134,6 +134,25 @@ def tables():
     nums = re.findall(r"\d+", body[body.index("{"):])
     out.append("-- Highest monster id that can be created, per tier (C: monstlevel[]).")
     out.append("T.monstlevel = {" + ", ".join(nums) + "}\n")
+    # Scroll, potion and spell names. C index i becomes i + 1; the leading space of the
+    # potion and scroll names is dropped and the unused entries are empty.
+    for var, lua, count in (("scrollname", "scrollname", 28), ("potionname", "potionname", 35)):
+        body = section(data, f"char *{var}[MAX", "};")
+        names = [n.strip() for n in re.findall(r'"([^"]*)"', body)]
+        assert len(names) == count, (var, len(names))
+        out.append(f"-- T.{lua}[id]: empty for the unused ids.")
+        out.append(f"T.{lua} = {{" + ", ".join(lua_string(n) for n in names) + "}\n")
+    code = re.findall(r'"(\w+)"', section(data, "char *spelcode[]", "};"))
+    names = re.findall(r'"([^"]*)"', re.sub(r"/\*.*?\*/", "", section(data, "char *spelname[]", "};")))
+    desc = re.findall(r'"([^"]*)"', re.sub(r"/\*.*?\*/", "", section(data, "char *speldescript[]", "};")))
+    assert len(code) == 39 and len(names) == 40 and len(desc) == 40, (len(code), len(names), len(desc))
+    out.append("-- Spells 1..39 (C: 0..38): three letter code, name and description.")
+    out.append("T.spelcode = {" + ", ".join(lua_string(n) for n in code) + "}")
+    out.append("T.spelname = {" + ", ".join(lua_string(n) for n in names[:39]) + "}")
+    out.append("T.speldescript = {" + ", ".join(lua_string(n) for n in desc[:39]) + "}")
+    nums = re.findall(r"\d+", section(data, "char splev[]", "};")[10:])
+    out.append("-- T.splev[book level + 1]: the highest spell (C index + 1) a book of that level can teach.")
+    out.append("T.splev = {" + ", ".join(nums) + "}\n")
     out.append("return T")
     (OUT / "Data" / "Tables.lua").write_text("\n".join(out) + "\n")
 
@@ -183,6 +202,15 @@ def help_pages():
         out.append("   " + lua_long_string(text) + ",")
     out.append("}")
     (OUT / "Data" / "Help.lua").write_text("\n".join(out) + "\n")
+
+
+def fortunes():
+    lines = [l.rstrip() for l in (ULARN.parent / "data" / "Ufortune").read_text(errors="replace").split("\n")]
+    lines = [l for l in lines if l]
+    out = [HEADER, "local _, ns = ...\n", "-- The fortune cookie messages (C: data/Ufortune).", "ns.Fortunes = {"]
+    out += ["   " + lua_string(l) + "," for l in lines]
+    out.append("}")
+    (OUT / "Data" / "Fortunes.lua").write_text("\n".join(out) + "\n")
 
 
 def lua_long_string(text):
@@ -266,4 +294,5 @@ tables()
 help_pages()
 item_tables()
 maps()
+fortunes()
 print("ok")

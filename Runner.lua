@@ -108,7 +108,7 @@ end
 -- batched and happen when the game thread next waits.
 function ui:Refresh(what)
    if what == "all" then
-      self.dirty.map, self.dirty.stats = true, true
+      self.dirty.map, self.dirty.stats, self.dirty.inv = true, true, true
    else
       self.dirty[what] = true
    end
@@ -124,6 +124,10 @@ function ui:Flush()
    if dirty.stats then
       dirty.stats = nil
       ns.side:UpdateStats()
+   end
+   if dirty.inv then
+      dirty.inv = nil
+      ns.inventory:Update()
    end
 end
 
@@ -298,6 +302,45 @@ function ui:PickClass(classes, selected)
 end
 
 -- Not needed until later milestones; fail loudly if something calls them early.
-function ui:PickItem() error("ui:PickItem is not implemented yet (milestone 5)") end
+-- C: whatitem(). Opens the inventory with the valid items marked and waits for a slot.
+-- Returns the slot (1..26), "gold" for '.' and "none" for '-' when opts allows them, or
+-- nil if the player cancelled.
+function ui:PickItem(verb, filter, opts)
+   opts = opts or {}
+   local extra = (opts.gold and L[", . for gold"] or "") .. (opts.none and L[", - for none"] or "")
+   ns.inventory:Open(format(L["What do you want to %s?"], verb), filter)
+   ns.prompt:Set(format(L["What do you want to %s? [a-z, * for all%s]"], verb, extra))
+   local result
+   while result == nil do
+      local key = self:GetKey()
+      if key == ESC or key == " " or key == "ENTER" then
+         result = false
+      elseif #key == 1 and key >= "a" and key <= "z" then
+         result = key:byte() - 96
+      elseif key == "*" then
+         ns.inventory:Open(format(L["What do you want to %s?"], verb), nil)
+      elseif key == "." and opts.gold then
+         result = "gold"
+      elseif key == "-" and opts.none then
+         result = "none"
+      end
+   end
+   ns.prompt:Clear()
+   ns.inventory:Close()
+   if result == false then
+      self:Log("prompt", L["%s aborted."], verb)
+      return nil
+   end
+   return result
+end
+
+-- C: showstr(). Shows the inventory until a key is pressed.
+function ui:ShowInventory()
+   ns.inventory:Open(L["Inventory"], nil)
+   ns.prompt:Set(L["Press any key to close the inventory"])
+   self:GetKey()
+   ns.prompt:Clear()
+   ns.inventory:Close()
+end
 function ui:PickSpell() error("ui:PickSpell is not implemented yet (milestone 6)") end
 function ui:Store() error("ui:Store is not implemented yet (milestone 8)") end
