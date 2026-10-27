@@ -135,21 +135,29 @@ end
 V.MONSTER_COLOR = { 1, 0.35, 0.3 }
 V.PLAYER_COLOR = { 0.3, 1, 0.3 }
 
--- The creature display each monster is shown as in the 2.5D view.  V.DISPLAY is the list that
--- goes with the addon; what the player picked in the model viewer (/larn models) is kept in
--- the saved variables and wins.
-local function Range(first, last)
+-- A list of displays from single numbers and { first, last } ranges.
+local function Displays(...)
    local list = {}
-   for display = first, last do list[#list + 1] = display end
+   for _, part in ipairs({ ... }) do
+      if type(part) == "table" then
+         for display = part[1], part[2] do list[#list + 1] = display end
+      else
+         list[#list + 1] = part
+      end
+   end
    return list
 end
 
+-- The creature display each monster is shown as in the 2.5D view.  V.DISPLAY is the list that
+-- goes with the addon; what the player picked in the model viewer (/larn models) is kept in
+-- the saved variables and wins.
 -- A monster has a display or a list of displays, one of which each monster gets by chance.
 V.DISPLAY = {
    -- [monster id] = displayID, or a list of them
    [K.LEMMING] = 31,  -- a murloc
-   [K.GNOME] = Range(6920, 6931),
-   [K.HOBGOBLIN] = { 30244, 30261, 30262, 30263, 30264, 30265, 30266, 30267 },
+   [K.GNOME] = Displays({ 6920, 6931 }),
+   [K.KOBOLD] = Displays({ 114157, 114160 }, { 114709, 114718 }),
+   [K.HOBGOBLIN] = Displays(30244, { 30261, 30267 }),
 }
 
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
