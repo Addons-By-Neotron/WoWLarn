@@ -13,7 +13,7 @@ read_globals = {
 
     -- Frames / widgets
     "CreateFrame", "UIParent", "GameTooltip", "GameTooltip_Hide", "UISpecialFrames", "BackdropTemplateMixin",
-    "ChatFontNormal", "GameFontNormal", "IsShiftKeyDown", "MouseIsOver", "geterrorhandler",
+    "ChatFontNormal", "UnitClass", "UnitName", "UnitSex", "LOCALIZED_CLASS_NAMES_MALE", "GameFontNormal", "IsShiftKeyDown", "MouseIsOver", "geterrorhandler",
 
     -- Functions
     "InCombatLockdown", "C_Timer", "GetBuildInfo", "hooksecurefunc", "issecretvalue",

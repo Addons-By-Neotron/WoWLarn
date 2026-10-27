@@ -69,7 +69,10 @@ Game-logic modules mirror the C files so each one can be ported and checked agai
 | `store.c`, `bill.c` | town building logic, tax letters | `Town.lua` (logic) + `UI/Store.lua` (window) |
 | `sphere.c` | spheres of annihilation | `Sphere.lua` |
 | `regen.c` | per-turn timers | `Regen.lua` |
-| `display.c` | map/status drawing | `UI/MapView.lua`, `UI/SidePanel.lua` |
+| `display.c` | map/status drawing | `UI/MapView.lua`, `UI/SidePanel.lua` (drawing); `Display.lua` (`showcell` visibility, `moveplayer`) |
+| `data.c` globals (`c[]`, `item[][]`, `know[][]`, `iven[]`, `level`, `playerx`, ...) | game state | `State.lua` (`ns.G`) |
+| `header.h` macros (`rnd`, `rund`) | random numbers, C integer math | `Util.lua` |
+| `store.c:pick_char` | class definitions | `Data/Classes.lua` (+ `Create.makePlayer`, `UI/ClassPicker.lua`) |
 | `show.c` | inventory and discovery lists | `UI/Inventory.lua`, `UI/Discoveries.lua` |
 | `io.c` (`lprintf` etc.) | message output, prompts | `UI/MessageLog.lua`, `UI/Prompt.lua` |
 | `tok.c` | keyboard tokens, options, difficulty | `UI/Input.lua`, `sethard` in `Create.lua` |
@@ -86,7 +89,11 @@ Game-logic modules mirror the C files so each one can be ported and checked agai
 
 WoW addons cannot read files at runtime, so all data files become Lua tables.
 
-- `tools/convert-data.lua` (or Python; not shipped) reads `/opt/workspace/ularn/data/*` and writes `Data/Maps.lua`, `Data/Help.lua` and `Data/Fortunes.lua`. Commit the generated files.
+- `tools/convert-data.py` (not shipped) reads the Ularn sources and writes the generated files, which are committed:
+  - done: `Constants.lua` (`ns.K`, from the three headers, with the index shifts applied), `Data/Tables.lua` (experience table, level titles, level names, glyph strings, object names), `Data/Monsters.lua` (the 65 monsters), `Data/Help.lua` (story and help pages)
+  - to come: `Data/Maps.lua` (milestone 3), `Data/Fortunes.lua`, and the spell, scroll, potion and probability tables with their milestones (5 and 6)
+  - Modules import the constants they use as locals (`local HP, AC = K.HP, K.AC`), because a file may only have 200 locals.
+  - Run `tools/convert-data.py` after changing it; never edit the generated files.
   - `Umaps`: 21 maps × 17 rows × 67 chars, separated by blank lines. Store as an array of 17 strings per map. Decode glyphs to object ids at level creation, as `create.c:cannedlevel` does, using `row:sub(x, x)` with 1-based x.
   - `Uhelp`: pages split on the leading page-count line and form feeds. Strip the `^[[7m` / `^[[m` escapes and turn them into highlight markup. The key list becomes the in-game help and the button tooltips.
 - Transcribe the `data.c` tables to Lua by hand or with a script, keeping the column order and comments. **Shift every 0-based table to 1-based** per §5:
@@ -147,12 +154,13 @@ These are where most porting bugs will come from. Follow them everywhere.
 2. **Integer division:** C `a / b` on ints → `math.floor(a / b)` for non-negative values. For possibly negative operands, C truncates toward zero, so use a `idiv(a, b)` helper that truncates.
 3. **Modulo:** C `%` truncates; Lua `%` floors. `rand() % x` is safe (non-negative). Audit any other `%` with possibly negative operands and use a `cmod` helper.
 4. **Bit ops:** `&`, `|`, `<<`, `>>` → `bit.band`, `bit.bor`, `bit.lshift`, `bit.rshift` (WoW's `bit` library). Add `bit` to `.luacheckrc`. Example: `(c[HASTESELF]&1)==0`.
-5. **Named constants:** every `#define` becomes a local or `ns` constant with the same name (`HP`, `OWALL`, `DEMONLORD`, ...), so `c[HP]` reads the same as in the C.
-6. **Integer widths:** C `char`/`short` fields clamp or overflow. Port explicit clamps (like those in `sethard`) exactly. Where C silently relied on `char` overflow, note it with a `-- C: char overflow` comment and clamp.
-7. **RNG:** keep `rnd(x) = random(1..x)`, `rund(x) = random(0..x-1)`. Use WoW's `math.random` / `fastrandom`. Replayable games aren't a goal.
-8. **Messages:** `lprintf` formats → `ui:Message` with `string.format`. Watch for `%d` with non-integers, which errors in Lua; floor first. Drop cursor positioning, padding and screen-clearing; the UI handles layout.
-9. **Bugs in the original:** port faithfully by default. Fix only clear crashes or memory-corruption bugs, and mark each fix `-- FIX:` with the reason. Gameplay quirks, such as the odd Slayer damage formula in `hitplayer` (`dam=(int)(1 - (0.1*rnd(5))*dam)`), stay as-is unless noted in §12.
-10. **Globals:** none, other than the SavedVariables (`WoWLarnDB`) and the frame names needed for `UISpecialFrames`.
+5. **Game state:** the C globals live in one table, `ns.G` (`State.lua`). Its arrays are allocated once and reset in place, so modules may cache `G.c`, `G.item` and so on. The 2D grids are `[x][y]`. `mitem[x][y].mon` becomes `G.mon[x][y]` (a monster id); the stolen-item list of `mitem` will be a sparse table when theft arrives with the monsters. A saved level is a snapshot copied in and out (`G.SaveLevel`/`G.GetLevel`).
+6. **Named constants:** every `#define` becomes a local or `ns` constant with the same name (`HP`, `OWALL`, `DEMONLORD`, ...), so `c[HP]` reads the same as in the C.
+7. **Integer widths:** C `char`/`short` fields clamp or overflow. Port explicit clamps (like those in `sethard`) exactly. Where C silently relied on `char` overflow, note it with a `-- C: char overflow` comment and clamp.
+8. **RNG:** keep `rnd(x) = random(1..x)`, `rund(x) = random(0..x-1)`. Use WoW's `math.random` / `fastrandom`. Replayable games aren't a goal.
+9. **Messages:** `lprintf` formats → `ui:Message` with `string.format`. Watch for `%d` with non-integers, which errors in Lua; floor first. Drop cursor positioning, padding and screen-clearing; the UI handles layout.
+10. **Bugs in the original:** port faithfully by default. Fix only clear crashes or memory-corruption bugs, and mark each fix `-- FIX:` with the reason. Gameplay quirks, such as the odd Slayer damage formula in `hitplayer` (`dam=(int)(1 - (0.1*rnd(5))*dam)`), stay as-is unless noted in §12.
+11. **Globals:** none, other than the SavedVariables (`WoWLarnDB`) and the frame names needed for `UISpecialFrames`.
 
 ---
 
@@ -356,11 +364,12 @@ The 8 Ularn classes are re-themed as WoW classes. **Mechanics are unchanged:** s
 
 Each milestone is playable or testable in game.
 
-1. **Frame + plumbing:** main frame with the three regions, coroutine runner, UI API stubs, input/focus, message log, `/larn` to open. Test: echo key presses to the log.
-2. **Data + town:**
+1. **Frame + plumbing** (done): main frame with the three regions, coroutine runner, UI API stubs, input/focus, message log, `/larn` to open. Test: echo key presses to the log.
+2. **Data + town** (done, flat tile renderer):
    - constants (1-based) and data tables, `Data/Visuals.lua` with fallbacks
    - character creation (§9), level 0 rendered with tiles
    - movement and run, minimap, stats panel, player model
+   - still to do from this list: icon names in `Data/Visuals.lua` are placeholders to check in game; tile hover tooltips and click-to-move; the spell, scroll and potion tables (milestones 5 and 6); standing on a building does nothing yet (milestone 8)
 3. **Dungeon:** `Data/Maps.lua`, `makemaze`/`cannedlevel`/`treasureroom`, stairs, `newcavelevel` with persistence of visited levels, entrance/exit, volcano entrance, depth-themed ground.
 4. **Monsters + combat:**
    - monster creation (`makemonst`/`fillmonst`) and `movemonst` (all AI)

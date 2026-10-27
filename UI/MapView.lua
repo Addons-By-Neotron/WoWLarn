@@ -1,6 +1,6 @@
 --[[
 **********************************************************************
-WoWLarn - Map view region.
+WoWLarn - Map view: the flat tile renderer.
 **********************************************************************
 Copyright (C) 2026 NeoTron
 
@@ -20,24 +20,134 @@ along with WoWLarn.  If not, see <https://www.gnu.org/licenses/old-licenses/gpl-
 
 **********************************************************************
 ]]
-local L = LibStub("AceLocale-3.0"):GetLocale("WoWLarn")
 local _, ns = ...
+local K = ns.K
+local G = ns.G
+local V = ns.Visuals
 
 local map = {}
 ns.map = map
 
+local TILE = 32
+local floor, max, min = math.floor, math.max, math.min
+local MAXX, MAXY = K.MAXX, K.MAXY
+
+local function Fill(texture, color)
+   if texture.SetColorTexture then
+      texture:SetColorTexture(color[1], color[2], color[3], color[4] or 1)
+   else
+      texture:SetTexture(color[1], color[2], color[3], color[4] or 1)
+   end
+end
+
+local function NewCell(frame)
+   local cell = {}
+   cell.bg = frame:CreateTexture(nil, "BACKGROUND")
+   cell.bg:SetSize(TILE, TILE)
+   cell.icon = frame:CreateTexture(nil, "ARTWORK")
+   cell.icon:SetPoint("TOPLEFT", cell.bg, "TOPLEFT", 3, -3)
+   cell.icon:SetPoint("BOTTOMRIGHT", cell.bg, "BOTTOMRIGHT", -3, 3)
+   cell.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+   cell.glyph = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+   cell.glyph:SetPoint("CENTER", cell.bg, "CENTER")
+   cell.actor = frame:CreateTexture(nil, "OVERLAY")
+   cell.actor:SetPoint("TOPLEFT", cell.bg, "TOPLEFT", 2, -2)
+   cell.actor:SetPoint("BOTTOMRIGHT", cell.bg, "BOTTOMRIGHT", -2, 2)
+   cell.actor:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+   return cell
+end
+
+local function HideCell(cell)
+   cell.icon:Hide()
+   cell.glyph:Hide()
+   cell.actor:Hide()
+end
+
 function map:Create(parent)
-   local frame = ns.CreatePanel(parent)
-   local text = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-   text:SetPoint("CENTER", 0, 20)
-   text:SetText(L["Map view"])
-   local debug = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-   debug:SetPoint("TOP", text, "BOTTOM", 0, -12)
-   self.debug = debug
+   local frame = ns.CreatePanel(parent, nil, { 0, 0, 0, 1 })
+   if frame.SetClipsChildren then frame:SetClipsChildren(true) end
    self.frame = frame
+   self.cells = {}
+   frame:SetScript("OnSizeChanged", function() self:Layout() end)
    return frame
 end
 
-function map:SetDebugText(message)
-   if self.debug then self.debug:SetText(message or "") end
+-- Builds the grid of tiles that fits the frame.
+function map:Layout()
+   local width, height = self.frame:GetWidth(), self.frame:GetHeight()
+   local cols, rows = floor(width / TILE), floor(height / TILE)
+   if cols < 1 or rows < 1 then return end
+   local offsetX, offsetY = floor((width - cols * TILE) / 2), floor((height - rows * TILE) / 2)
+   for row = 1, rows do
+      self.cells[row] = self.cells[row] or {}
+      for col = 1, cols do
+         local cell = self.cells[row][col] or NewCell(self.frame)
+         self.cells[row][col] = cell
+         cell.bg:ClearAllPoints()
+         cell.bg:SetPoint("TOPLEFT", self.frame, "TOPLEFT", offsetX + (col - 1) * TILE, -(offsetY + (row - 1) * TILE))
+         cell.bg:Show()
+      end
+   end
+   -- Hide cells left over from a larger size.
+   for row, cells in pairs(self.cells) do
+      for col, cell in pairs(cells) do
+         if row > rows or col > cols then
+            cell.bg:Hide()
+            HideCell(cell)
+         end
+      end
+   end
+   self.cols, self.rows = cols, rows
+   self:Draw()
+end
+
+local function DrawTile(cell, x, y, ground)
+   if x > MAXX or y > MAXY or G.know[x][y] == 0 then
+      Fill(cell.bg, { 0, 0, 0, 1 })
+      HideCell(cell)
+      return
+   end
+   local object = G.item[x][y]
+   if object == K.OWALL then
+      Fill(cell.bg, V.WALL)
+      HideCell(cell)
+      return
+   end
+   Fill(cell.bg, ground)
+   cell.actor:Hide()
+   local icon = object ~= 0 and V.ObjectIcon(object)
+   if icon then
+      cell.icon:SetTexture(icon)
+      cell.icon:Show()
+      cell.glyph:Hide()
+   elseif object ~= 0 then
+      cell.icon:Hide()
+      cell.glyph:SetText(V.ObjectGlyph(object))
+      cell.glyph:Show()
+   else
+      cell.icon:Hide()
+      cell.glyph:Hide()
+   end
+end
+
+-- Draws the part of the level around the player.
+function map:Draw()
+   if not self.cols or G.c[K.LEVEL] == 0 then return end
+   local cols, rows = self.cols, self.rows
+   local camX = max(1, min(G.playerx - floor(cols / 2), MAXX - cols + 1))
+   local camY = max(1, min(G.playery - floor(rows / 2), MAXY - rows + 1))
+   local ground = V.Ground(G.level)
+   for row = 1, rows do
+      for col = 1, cols do
+         DrawTile(self.cells[row][col], camX + col - 1, camY + row - 1, ground)
+      end
+   end
+   -- The player.
+   local col, row = G.playerx - camX + 1, G.playery - camY + 1
+   local cell = self.cells[row] and self.cells[row][col]
+   if cell and G.class then
+      cell.actor:SetTexture(V.ClassIcon(G.class))
+      cell.actor:Show()
+      cell.glyph:Hide()
+   end
 end

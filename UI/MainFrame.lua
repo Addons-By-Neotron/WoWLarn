@@ -89,6 +89,8 @@ function main:Create()
    map:SetPoint("TOPLEFT", PAD, -(TITLE_H + PAD))
    map:SetPoint("BOTTOMRIGHT", -(SIDE_W + 2 * PAD), BOTTOM_H + 2 * PAD)
 
+   ns.picker:Create(map)
+
    local side = ns.side:Create(frame)
    side:SetWidth(SIDE_W)
    side:SetPoint("TOPRIGHT", -PAD, -(TITLE_H + PAD))

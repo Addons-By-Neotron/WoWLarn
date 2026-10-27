@@ -32,6 +32,8 @@ ns.ESC = ESC
 
 local ui = {}
 ns.ui = ui
+ui.repcount = 0  -- C: yrepcount, a repeat count typed before a command
+ui.dirty = {}
 
 -- C: main.c:parse. Direction numbers match the C (1 south, 2 east, 3 north, 4 west,
 -- 5 northeast, 6 northwest, 7 southeast, 8 southwest).
@@ -84,6 +86,7 @@ function ui:InjectKey(key)
 end
 
 local function Wait(self, kind)
+   self:Flush()
    self.wait = kind
    return coroutine.yield()
 end
@@ -101,8 +104,27 @@ function ui:Message(fmt, ...)
    self:Log("info", fmt, ...)
 end
 
--- C: bottomline(), showcell(), draws(). Nothing to redraw until the map exists.
+-- C: bottomline(), showcell(), draws(). what is "map", "stats" or "all". Redraws are
+-- batched and happen when the game thread next waits.
 function ui:Refresh(what)
+   if what == "all" then
+      self.dirty.map, self.dirty.stats = true, true
+   else
+      self.dirty[what] = true
+   end
+end
+
+function ui:Flush()
+   local dirty = self.dirty
+   if dirty.map then
+      dirty.map = nil
+      ns.map:Draw()
+      ns.side:UpdateMinimap()
+   end
+   if dirty.stats then
+      dirty.stats = nil
+      ns.side:UpdateStats()
+   end
 end
 
 -- C: model animations for attacks, wounds, spells (milestone 4+).
@@ -129,16 +151,39 @@ function ui:GetKey()
    return Wait(self, "key")
 end
 
--- C: yylex()/parse(). Returns the command character; Esc releases the keyboard.
+-- C: yylex(). Returns the command character. Digits typed first set a repeat count, the
+-- command then repeats; game code sets ui.repcount = 0 to cancel (a hit, a wall).
+-- Esc releases the keyboard.
 function ui:GetCommand()
+   local G = ns.G
+   if G.hit2flag then
+      G.hit2flag = false
+      self.repcount = 0
+      return " "
+   end
+   if self.repcount > 0 then
+      self.repcount = self.repcount - 1
+      return self.lastok
+   end
+   self.repcount = 0
+
    while true do
       local key = self:GetKey()
       if key == ESC then
          ns.main:SetFocus(false)
-      elseif ARROW_COMMAND[key] then
-         return ARROW_COMMAND[key]
-      elseif #key == 1 then
-         return key
+      else
+         key = ARROW_COMMAND[key] or key
+         if #key == 1 then
+            if key:match("^%d$") then
+               self.repcount = self.repcount * 10 + tonumber(key)
+            else
+               if self.repcount > 0 then
+                  self.repcount = self.repcount - 1
+               end
+               self.lastok = key
+               return key
+            end
+         end
       end
    end
 end
@@ -206,6 +251,32 @@ function ui:PickDirection(message)
    end
    ns.prompt:Clear()
    return direction
+end
+
+-- C: pick_char(). Returns the chosen entry of classes (keyed by its letter, or Enter for
+-- the highlighted one; the arrow keys move the highlight).
+function ui:PickClass(classes, selected)
+   ns.picker:Show(classes, selected)
+   local result
+   while not result do
+      local key = self:GetKey()
+      for index, class in ipairs(classes) do
+         if key == class.letter then
+            result = class
+         end
+      end
+      if key == "ENTER" then
+         result = classes[selected]
+      elseif key == "UP" then
+         selected = selected > 1 and selected - 1 or #classes
+         ns.picker:Select(selected)
+      elseif key == "DOWN" then
+         selected = selected < #classes and selected + 1 or 1
+         ns.picker:Select(selected)
+      end
+   end
+   ns.picker:Hide()
+   return result
 end
 
 -- Not needed until later milestones; fail loudly if something calls them early.

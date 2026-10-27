@@ -1,6 +1,6 @@
 --[[
 **********************************************************************
-WoWLarn - Game loop (milestone 1 stand-in).
+WoWLarn - The game loop and command dispatch (main.c).
 **********************************************************************
 Copyright (C) 2026 NeoTron
 
@@ -22,43 +22,145 @@ along with WoWLarn.  If not, see <https://www.gnu.org/licenses/old-licenses/gpl-
 ]]
 local L = LibStub("AceLocale-3.0"):GetLocale("WoWLarn")
 local _, ns = ...
+local K = ns.K
+local G = ns.G
 
 local Game = {}
 ns.Game = Game
 
 local ui = ns.ui
+local c = G.c
+local Display, Monster, Regen = ns.Display, ns.Monster, ns.Regen
 
--- Placeholder game: exercises every input request. Replaced by the ported
--- main.c loop in milestone 2.
+local RUN_DELAY = 30  -- milliseconds between the steps of a run
+
+-- C: main.c:parse(). Movement keys; the capital letter runs.
+local MOVE = { j = 1, l = 2, k = 3, h = 4, u = 5, y = 6, n = 7, b = 8 }
+local RUN = { J = 1, L = 2, K = 3, H = 4, U = 5, Y = 6, N = 7, B = 8 }
+
+-- C: run().
+local function Run(dir)
+   local moved = 1
+   while moved ~= 0 do
+      moved = Display.moveplayer(dir)
+      if moved > 0 then
+         if c[K.HASTEMONST] ~= 0 then Monster.movemonst() end
+         Monster.movemonst()
+         Monster.randmonst()
+         Regen.regen()
+      end
+      if G.hitflag then moved = 0 end
+      if moved ~= 0 then
+         Display.showcell(G.playerx, G.playery)
+         ui:Nap(RUN_DELAY)
+      end
+   end
+end
+
+-- Logs a page of text one line at a time.
+local function LogPage(page)
+   for line in (page .. "\n"):gmatch("(.-)\n") do
+      ui:Log("system", "%s", line)
+   end
+end
+
+-- C: parse(). Gets and executes one command. Returns true if the game is over.
+local function Parse()
+   local key = ui:GetCommand()
+
+   if MOVE[key] then
+      Display.moveplayer(MOVE[key])
+   elseif RUN[key] then
+      Run(RUN[key])
+   elseif key == "." then  -- stay here
+      if ui.repcount > 0 then G.viewflag = true end
+   elseif key == " " then
+      ui.repcount = 0
+      G.nomove = true
+   elseif key == "S" then  -- the game stays where it is while the window is closed
+      ui.repcount = 0
+      G.nomove = true
+      ns.main:Hide()
+   elseif key == "Q" then
+      ui.repcount = 0
+      G.nomove = true
+      if ui:YesNo(L["Do you really want to quit?"]) == "y" then
+         ui:Log("system", L["Game over. Press any key to start again."])
+         return true
+      end
+   elseif key == "v" then
+      ui.repcount = 0
+      G.nomove = true
+      ui:Message(L["WoWLarn - a port of Ularn 1.5 (the Addiction of Ularn)."])
+   elseif key == "?" then
+      ui.repcount = 0
+      G.nomove = true
+      LogPage(ns.HelpPages[2])
+   else
+      ui.repcount = 0
+      G.nomove = true
+      ui:Message(L["That command is not implemented yet."])
+   end
+   return false
+end
+
+-- C: welcome().
+local function Welcome()
+   LogPage(ns.HelpPages[1])
+   ui:More()
+end
+
+local function DefaultClass()
+   local _, token = UnitClass("player")
+   for index, class in ipairs(ns.Classes) do
+      if class.token == token then return index end
+   end
+   return 1
+end
+
 function Game.Run()
-   ui:Log("system", L["Welcome to WoWLarn."])
-   ui:Log("system", L["Milestone 1: keys are echoed. Q quit, N number, M more, P pause, D direction, S save and close."])
+   G.Reset()
+   G.name = UnitName("player")
+   G.sex = UnitSex("player") == 3 and 0 or 1  -- C: 1 is a man, 0 a woman
+
+   local class = ui:PickClass(ns.Classes, DefaultClass())
+   ns.Create.makePlayer(class)
+   ns.Create.newCaveLevel(0)
+   ui:Refresh("all")
+   Welcome()
+   ui:Log("system", L["You set out as %s."], LOCALIZED_CLASS_NAMES_MALE[class.token] or class.token)
+
    while true do
-      local command = ui:GetCommand()
-      ns.map:SetDebugText(format(L["Last key: %s"], command))
-      if command == "Q" then
-         if ui:YesNo(L["Really quit?"]) == "y" then
-            ui:Log("system", L["Game over. Press any key to start again."])
-            return
-         end
-      elseif command == "N" then
-         local amount = ui:GetNumber(L["How many?"], 1000)
-         ui:Message(L["Number: %d"], amount)
-      elseif command == "M" then
-         ui:Message(L["Some text first."])
-         ui:More()
-         ui:Message(L["And then some more."])
-      elseif command == "P" then
-         ui:Message(L["Pausing for two seconds..."])
-         ui:Nap(2000)
-         ui:Message(L["Done."])
-      elseif command == "D" then
-         local direction = ui:PickDirection(L["Which way?"])
-         ui:Message(L["Direction: %s"], tostring(direction))
-      elseif command == "S" then
-         ns.main:Hide()
+      if not G.dropflag then
+         ns.Object.lookForObject()  -- see if there is an object here
       else
-         ui:Message(L["Key: %s"], command)
+         G.dropflag = false  -- don't show what was just dropped
+      end
+      if not G.hitflag then
+         if c[K.HASTEMONST] ~= 0 then Monster.movemonst() end
+         Monster.movemonst()
+      end
+      if not G.viewflag then
+         Display.showcell(G.playerx, G.playery)
+      else
+         G.viewflag = false
+      end
+      G.hitflag, G.hit3flag = false, false
+      G.nomove = true
+      ui:Refresh("all")
+
+      while G.nomove do  -- get commands and make moves
+         G.nomove = false
+         if Parse() then return end
+      end
+
+      Regen.regen()
+      if c[K.TIMESTOP] == 0 then
+         G.rmst = G.rmst - 1
+         if G.rmst <= 0 then
+            G.rmst = 120 - G.level * 4
+            Monster.spawnRandom()
+         end
       end
    end
 end
