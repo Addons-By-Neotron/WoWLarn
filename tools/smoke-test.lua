@@ -813,6 +813,61 @@ do
    for i = 1, K.SPNUM do G.spelknow[i] = savedspells[i] end
    ns.Monster.init()
 end
+-- altars, thrones, fountains, the brass lamp and the objects that do nothing
+do
+   local oldfast = ns.mod.db.profile.fast
+   ns.mod.db.profile.fast = true
+   local function Idle() return ui:IsActive() and debug.traceback(ui.co):find("GetCommand") end
+   local function Run(sequence)
+      for _, token in ipairs(sequence) do ui:InjectKey(token) end
+      for _ = 1, 3 do if not Idle() then ui:InjectKey("ESC") end end
+   end
+   local function Visit(object, arg, sequence)
+      ns.Create.newCaveLevel(3); Clear()
+      G.c[K.HP], G.c[K.HPMAX], G.c[K.GOLD], G.c[K.LEVEL] = 5000, 5000, 1000, 60
+      G.item[31][8], G.iarg[31][8] = object, arg or 0
+      keys("l")
+      Run(sequence)
+      check(Idle() and not G.dead, "back at the command prompt after " .. object .. " " .. table.concat(sequence, ","))
+   end
+   local altar = { { "p", "j" }, { "p", "m", "1", "0", "0", "ENTER" }, { "p", "m", "5", "ENTER" }, { "p", "m", "ENTER" },
+      { "p", "m", "ESC", "i" }, { "p", "m", "9", "9", "9", "9", "ENTER", "i" }, { "d" }, { "i" } }
+   for i = 1, 160 do Visit(K.OALTAR, 0, altar[i % #altar + 1]) end
+   local thrones = { { "p" }, { "s" }, { "i" } }
+   for i = 1, 90 do Visit(i % 2 == 0 and K.OTHRONE or K.OTHRONE2, 0, thrones[i % 3 + 1]) end
+   for i = 1, 30 do Visit(K.ODEADTHRONE, 0, i % 2 == 0 and { "s" } or { "i" }) end
+   local fountain = { { "d" }, { "w" }, { "i" } }
+   for i = 1, 60 do Visit(K.OFOUNTAIN, 0, fountain[i % 3 + 1]) end
+   -- the lamp: a genie may teach the spell asked for
+   for i = 1, K.SPNUM do G.spelknow[i] = 0 end
+   local learned
+   for i = 1, 80 do
+      ns.Create.newCaveLevel(3); Clear()
+      G.c[K.HP], G.c[K.HPMAX], G.c[K.LEVEL] = 5000, 5000, 60
+      G.item[31][8] = K.OBRASSLAMP
+      keys("l"); keys("r")
+      if debug.traceback(ui.co):find("PickSpell") then
+         check(ns.spellbook:IsShown(), "the genie shows all the spells")
+         keys("bal")
+      end
+      for _ = 1, 3 do if not Idle() then ui:InjectKey("ESC") end end
+      check(Idle() and not G.dead, "back at the command prompt after the lamp")
+      if G.spelknow[K.SP_FIREBALL] == 1 then learned = true break end
+   end
+   check(learned, "a genie taught fireball")
+   Visit(K.OBRASSLAMP, 0, { "t" }); check(G.iven[1] == K.OBRASSLAMP, "took the lamp")
+   Visit(K.OSTATUE, 0, {}); check(table.concat(lines(), "|"):find("statue"), "a statue")
+   Visit(K.OMIRROR, 0, {}); check(table.concat(lines(), "|"):find("mirror"), "a mirror")
+   Visit(K.ODEADFOUNTAIN, 0, {}); check(table.concat(lines(), "|"):find("dead fountain"), "a dead fountain")
+   -- the altar blesses
+   local blessed
+   for _ = 1, 200 do
+      Visit(K.OALTAR, 0, { "p", "j" })
+      if G.c[K.ALTPRO] > 0 then blessed = true break end
+   end
+   check(blessed, "an altar gave protection")
+   ns.mod.db.profile.fast = oldfast
+end
 -- dying of a dart
 Clear(); G.c[K.HP] = 1; G.item[31][8] = K.OTRAPARROW; keys("l")
 check(not ui:IsActive() or G.dead, "an arrow ends the game at 1 hp ")

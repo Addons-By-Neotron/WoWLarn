@@ -261,11 +261,9 @@ local function Chest()
    end
 end
 
--- Objects that arrive later: the features (milestone 7) and the town buildings (8).
+-- Objects that arrive later: the town buildings (milestone 8).
 local LATER = {}
-for _, id in ipairs({ K.OALTAR, K.OTHRONE, K.OTHRONE2, K.ODEADTHRONE, K.OBRASSLAMP, K.OFOUNTAIN,
-   K.OSTATUE, K.OMIRROR, K.ODEADFOUNTAIN, K.OSCHOOL, K.OBANK, K.OBANK2, K.ODNDSTORE,
-   K.OTRADEPOST, K.OHOME, K.OPAD, K.OLRS }) do
+for _, id in ipairs({ K.OSCHOOL, K.OBANK, K.OBANK2, K.ODNDSTORE, K.OTRADEPOST, K.OHOME, K.OPAD, K.OLRS }) do
    LATER[id] = true
 end
 
@@ -585,6 +583,40 @@ function Object.lookForObject()
          end
       end
       ns.Player.died(283)  -- annihilated by a sphere of annihilation
+
+   elseif id == K.OALTAR then
+      if NearbyMonster() then return end
+      Msg(L["There is a holy altar here."])
+      ns.Features.altar()
+
+   elseif id == K.OTHRONE or id == K.OTHRONE2 then
+      if NearbyMonster() then return end
+      Msg(L["There is %s here."], name)
+      ns.Features.throne(id == K.OTHRONE2 and 1 or 0)
+
+   elseif id == K.ODEADTHRONE then
+      Msg(L["There is %s here."], name)
+      ns.Features.deadThrone()
+
+   elseif id == K.OBRASSLAMP then
+      ns.Features.lamp()
+
+   elseif id == K.OFOUNTAIN then
+      if NearbyMonster() then return end
+      Msg(L["There is a fountain here."])
+      ns.Features.fountain()
+
+   elseif id == K.OSTATUE then  -- nothing happens when you move on a statue
+      if NearbyMonster() then return end
+      Msg(L["You stand before a statue."])
+
+   elseif id == K.OMIRROR then  -- nothing happens when you move on a mirror
+      if NearbyMonster() then return end
+      Msg(L["There is a mirror here."])
+
+   elseif id == K.ODEADFOUNTAIN then
+      if NearbyMonster() then return end
+      Msg(L["There is a dead fountain here."])
 
    elseif LATER[id] then
       ui:Message(L["There is %s here. (Not implemented yet.)"], name)

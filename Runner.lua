@@ -345,12 +345,12 @@ end
 
 -- C: cast() asking for the spell. The spellbook opens beside the prompt; a spell is the
 -- three letter code, typed or clicked. Returns the code, or nil if the player cancelled.
-function ui:PickSpell()
-   ns.spellbook:Open(true)
+function ui:PickSpell(message, all)
+   ns.spellbook:Open(all)
    local code = ""
    local cancelled
    while #code < 3 and not cancelled do
-      ns.prompt:Set(L["Enter your spell:"] .. " " .. code)
+      ns.prompt:Set((message or L["Enter your spell:"]) .. " " .. code)
       local key = self:GetKey()
       if key == ESC then
          cancelled = true

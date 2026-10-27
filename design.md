@@ -398,7 +398,11 @@ Each milestone is playable or testable in game.
    - UI: `UI/Spellbook.lua` lists the known spells while casting (type the three letters or click one; hover for the description) and the discoveries list (`D`); `ui:PickSpell`, `ui:Missile` (a glyph travels along the ray, drawn by `map:SetOverlay`), `ui:ShowDiscoveries`
    - changed from the C: Esc cancels the direction question (the C cannot be cancelled), the spell point stays spent; the scroll of pulverization now fires its ray
    - the spell animations with models wait for milestone 10; the glyph on the tile is the fallback
-7. **Features + artifacts:** altars, thrones, fountains, statues, mirrors, the brass lamp genie, and all unique artifact effects.
+7. **Features + artifacts** (done):
+   - `Features.lua`: `altar` (pray, give money, desecrate, ignore), `throne` and `deadThrone`, `fountain` with `fntchange`, `lamp` (the genie; `ui:PickSpell(message, true)` lists all 39 spells); `lookForObject` also handles the statue, mirror and dead fountain, which do nothing in the C
+   - the unique artifacts were already finished by the earlier milestones (`Player.take`/`adjustCValues` for the stat changes, `Regen`, `hitm`, `movemonst`, `spattack` and `Magic` for the rest); an audit of every `O*` object used by the C against the Lua found no gap
+   - changed from the C: Esc at the "give money or just pray" question goes back to the first altar question (the C ignores Esc there)
+   - left to milestone 8: the town buildings (school, banks, DND store, trading post, home, pad and LRS), which print "(Not implemented yet.)" until then
 8. **Town buildings:** store windows for DND store, school, bank and 5th branch, trading post, LRS taxes, home, and the goblin alchemist.
 9. **Endgame + persistence:** save/resume in SVs, win at home, time limit, scoreboards (winners/dead with inventory), tax letters.
 10. **2.5D view:**

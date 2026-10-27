@@ -95,15 +95,16 @@ function spellbook:Close()
    if self.frame then self.frame:Hide() end
 end
 
--- Shows the spells that are known, to pick one by clicking it.
-function spellbook:Open()
+-- Shows the spells that are known (all of them if all is set, as for the genie), to pick
+-- one by clicking it.
+function spellbook:Open(all)
    if not self.frame then return end
    local T = ns.Tables
-   self.title:SetText(L["Your spells"])
+   self.title:SetText(all and L["All spells"] or L["Your spells"])
    for _, text in ipairs(self.columns) do text:Hide() end
    local shown = 0
    for index, button in ipairs(self.buttons) do
-      if G.spelknow[index] ~= 0 then
+      if all or G.spelknow[index] ~= 0 then
          button:ClearAllPoints()
          button:SetPoint("TOPLEFT", 8 + (shown % COLUMNS) * COLUMN_W, -(HEADER_H + math.floor(shown / COLUMNS) * ROW_H))
          button.text:SetText("|cffffd100" .. T.spelcode[index] .. "|r  " .. T.spelname[index])
