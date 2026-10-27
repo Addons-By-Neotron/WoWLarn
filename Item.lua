@@ -35,9 +35,10 @@ local DIROFFX, DIROFFY = ns.Display.DIROFFX, ns.Display.DIROFFY
 local MAXX, MAXY, VBOTTOM = K.MAXX, K.MAXY, K.VBOTTOM
 
 -- C: scprob[rund(82)] and potprob[rund(42)] roll one past the end of their tables. The C
--- reads whatever follows in memory; here the last entry is used so the id stays valid.
+-- reads the first byte of the next array in data.c, a zero, which is the first scroll or
+-- potion here.
 local function Pick(tab, count)
-   return tab[rund(count) + 1] or tab[#tab]
+   return tab[rund(count) + 1] or tab[1]
 end
 
 -- The armor and weapon tables are also rolled past their end in places; the C reads a zero.

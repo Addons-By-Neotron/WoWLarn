@@ -375,7 +375,7 @@ Each milestone is playable or testable in game.
    - `Object.lua`: dungeon entrance, stairs up and down, volcano shafts; `newCaveLevel` keeps visited levels; `ui:Choose` is the "(g) go inside, or (i) ignore it?" prompt
    - depth-themed ground colours in `Visuals.Ground`
    - the monster hooks `Monster.makeMonst` and `Monster.createMonster` are stubs until milestone 4, so levels have no monsters yet; Dealer McDope's pad (`OPAD`) is the goblin alchemist's
-   - deviations from the C, all deliberate: `scprob` and `potprob` are rolled one past their end in the C (it reads the next array); the last entry is used instead. A door in a treasure room may sit in a corner, so tests treat diagonal steps as connected. Canned maps have no level-1 exit; entering the dungeon opens it, as in the C. The `rnd(n)` loop limits in `makeObject` are re-rolled on every pass, as in the C.
+   - deviations from the C, all deliberate: `scprob` and `potprob` are rolled one past their end in the C (it reads the next array); the C most likely reads a 0 from the array that follows, so the first entry is used instead. A door in a treasure room may sit in a corner, so tests treat diagonal steps as connected. Canned maps have no level-1 exit; entering the dungeon opens it, as in the C. The `rnd(n)` loop limits in `makeObject` are re-rolled on every pass, as in the C.
    - still to do from this list: pits, trapdoors, elevators and the rest of the features (milestone 7)
 4. **Monsters + combat:**
    - monster creation (`makemonst`/`fillmonst`) and `movemonst` (all AI)

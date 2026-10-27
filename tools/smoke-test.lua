@@ -189,6 +189,18 @@ end
 print(("stairs unreachable: %d of %d"):format(unreachable, total))
 check(unreachable == 0, "stairs are connected")
 
+-- a fresh level is unexplored: nothing is known until the player looks around
+G.Reset(); ns.Create.makePlayer(ns.Classes[1]); ns.Create.newCaveLevel(0); ns.Create.newCaveLevel(5)
+check(count(0) >= 0, "count helper")
+do
+   local known = 0
+   for x = 1, K.MAXX do for y = 1, K.MAXY do known = known + G.know[x][y] end end
+   check(known == 0, "fresh dungeon level is unknown, " .. known .. " tiles known")
+   ns.Display.showcell(G.playerx, G.playery)
+   for x = 1, K.MAXX do for y = 1, K.MAXY do known = known + G.know[x][y] end end
+   check(known > 0 and known <= 9, "showcell reveals the neighbourhood, " .. known)
+end
+
 -- visited levels are restored as they were
 G.Reset(); ns.Create.makePlayer(ns.Classes[1]); ns.Create.newCaveLevel(0); ns.Create.newCaveLevel(3)
 G.item[2][2] = K.OALTAR; G.iarg[2][2] = 77
