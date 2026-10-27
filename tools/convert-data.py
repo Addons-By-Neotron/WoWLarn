@@ -78,6 +78,11 @@ def constants():
     lines.append("\n   -- Monster ids and flags (monst.h). Ids unchanged: 0 is no monster.")
     for name, value, comment in defines(monst):
         lines.append(f"   {name} = {value},")
+    lines.append("\n   -- Spell ids, shifted +1 (the C has none: it uses the index into spelname[]).")
+    data = (ULARN / "data.c").read_text()
+    names = re.findall(r'"([^"]*)"', re.sub(r"/\*.*?\*/", "", section(data, "char *spelname[]", "};")))[:39]
+    for index, name in enumerate(names):
+        lines.append(f"   SP_{re.sub('[^A-Z]+', '_', name.upper())} = {index + 1},")
     lines.append("}\n")
     (OUT / "Constants.lua").write_text("\n".join(lines))
 

@@ -48,9 +48,9 @@ local function IsConfused()
 end
 
 -- C: nospell(). True (with a message) if the spell can't affect the monster.
-local function NoSpell(spnum, monst)
-   if spnum > SPNUM or spnum < 1 or monst > K.MAXMONST + 8 or monst < 1 then return false end
-   local reaction = ns.Tables.spelweird[monst][spnum]
+local function NoSpell(spell, monst)
+   if spell > SPNUM or spell < 1 or monst > K.MAXMONST + 8 or monst < 1 then return false end
+   local reaction = ns.Tables.spelweird[monst][spell]
    if reaction == 0 then return false end
    Msg(ns.Tables.spelmes[reaction], G.monster[monst].name)
    return true
@@ -81,15 +81,15 @@ end
 
 -- C: direct(). Asks for a direction and hits the monster there. str takes the monster name
 -- and then arg.
-local function Direct(spnum, dam, str, arg)
-   if spnum < 1 or spnum > SPNUM then return end
+local function Direct(spell, dam, str, arg)
+   if spell < 1 or spell > SPNUM then return end
    if IsConfused() then return end
    local x, y = DirSub()
    if not x then return end
    local m = mon[x][y]
    if item[x][y] == K.OMIRROR then
-      if spnum == 4 or spnum == 7 then  -- sleep and web
-         if spnum == 4 then
+      if spell == K.SP_SLEEP or spell == K.SP_WEB then
+         if spell == K.SP_SLEEP then
             Msg(L["You fall asleep!"])
          else
             Msg(L["You get stuck in your own web!"])
@@ -111,7 +111,7 @@ local function Direct(spnum, dam, str, arg)
       return
    end
    IfBlind(x, y)
-   if NoSpell(spnum, m) then
+   if NoSpell(spell, m) then
       G.lasthx, G.lasthy = x, y
       return
    end
@@ -122,10 +122,10 @@ Spells.direct = Direct
 
 -- C: godirect(). A missile that keeps on going in the direction until its power is spent.
 -- cshow is the glyph drawn on the way, delay the milliseconds spent on each tile.
-local function GoDirect(spnum, dam, str, delay, cshow)
+local function GoDirect(spell, dam, str, delay, cshow)
    local monster = G.monster
    local ui = ns.ui
-   if spnum < 1 or spnum > SPNUM then return end
+   if spell < 1 or spell > SPNUM then return end
    if IsConfused() then return end
 
    local tx, ty = DirSub()
@@ -155,7 +155,7 @@ local function GoDirect(spnum, dam, str, delay, cshow)
             dx, dy = -dx, -dy
             Msg(L["The %s returns your puny missile!"], monster[m].name)
          else
-            if NoSpell(spnum, m) then
+            if NoSpell(spell, m) then
                G.lasthx, G.lasthy = x, y
                return
             end
@@ -219,14 +219,14 @@ end
 Spells.godirect = GoDirect
 
 -- C: omnidirect(). Hits every monster next to the player.
-local function OmniDirect(spnum, dam, str)
-   if spnum < 1 or spnum > SPNUM then return end
+local function OmniDirect(spell, dam, str)
+   if spell < 1 or spell > SPNUM then return end
    for x = G.playerx - 1, G.playerx + 1 do
       for y = G.playery - 1, G.playery + 1 do
          if x >= 1 and x <= MAXX and y >= 1 and y <= MAXY then
             local m = mon[x][y]
             if m ~= 0 then
-               if not NoSpell(spnum, m) then
+               if not NoSpell(spell, m) then
                   IfBlind(x, y)
                   Msg(str, G.lastmonst)
                   ns.Monster.hitm(x, y, dam)
@@ -242,8 +242,8 @@ local function OmniDirect(spnum, dam, str)
 end
 
 -- C: tdirect(). Teleports a monster away.
-local function TDirect(spnum)
-   if spnum < 1 or spnum > SPNUM then return end
+local function TDirect(spell)
+   if spell < 1 or spell > SPNUM then return end
    if IsConfused() then return end
    local x, y = DirSub()
    if not x then return end
@@ -253,7 +253,7 @@ local function TDirect(spnum)
       return
    end
    IfBlind(x, y)
-   if NoSpell(spnum, m) then
+   if NoSpell(spell, m) then
       G.lasthx, G.lasthy = x, y
       return
    end
@@ -262,8 +262,8 @@ local function TDirect(spnum)
 end
 
 -- C: makewall().
-local function MakeWall(spnum)
-   if spnum < 1 or spnum > SPNUM then return end
+local function MakeWall(spell)
+   if spell < 1 or spell > SPNUM then return end
    if IsConfused() then return end
    local x, y = DirSub()
    if not x then return end
@@ -283,8 +283,8 @@ local function MakeWall(spnum)
 end
 
 -- C: dirpoly(). Polymorphs a monster.
-local function DirPoly(spnum)
-   if spnum < 1 or spnum > SPNUM then return end
+local function DirPoly(spell)
+   if spell < 1 or spell > SPNUM then return end
    if IsConfused() then return end  -- if he is confused, he can't aim his magic
    local x, y = DirSub()
    if not x then return end
@@ -293,7 +293,7 @@ local function DirPoly(spnum)
       return
    end
    IfBlind(x, y)
-   if NoSpell(spnum, mon[x][y]) then
+   if NoSpell(spell, mon[x][y]) then
       G.lasthx, G.lasthy = x, y
       return
    end
@@ -421,15 +421,239 @@ local function AlterReality()
       end
    end
    LoseInt()
-   if not G.wizard then G.spelknow[38] = 0 end
+   if not G.wizard then G.spelknow[K.SP_ALTER_REALITY] = 0 end
    ns.Player.positionPlayer()
    ns.ui:Refresh("all")
 end
 
--- C: speldamage(). Performs the spell the player cast; x is the spell number.
-function Spells.speldamage(x)
-   local ui = ns.ui
-   if x > SPNUM then return end  -- no such spell
+-- What each spell does (C: the switch of speldamage()). Each function gets the level of
+-- the caster and returns nothing; the spell number shifts to the K.SP_ ids.
+local CAST = {}
+
+CAST[K.SP_PROTECTION] = function()
+   if c[K.PROTECTIONTIME] == 0 then c[K.MOREDEFENSES] = c[K.MOREDEFENSES] + 2 end  -- protection field +2
+   c[K.PROTECTIONTIME] = c[K.PROTECTIONTIME] + 250
+end
+
+CAST[K.SP_MAGIC_MISSILE] = function(clev)
+   local damage = rnd((clev + 1) * 2) + clev + 3
+   GoDirect(K.SP_MAGIC_MISSILE, damage, clev >= 2 and L["Your missiles hit the %s."] or L["Your missile hit the %s."], 100, "+")
+end
+
+CAST[K.SP_DEXTERITY] = function()
+   if c[K.DEXCOUNT] == 0 then c[K.DEXTERITY] = c[K.DEXTERITY] + 3 end
+   c[K.DEXCOUNT] = c[K.DEXCOUNT] + 400
+end
+
+CAST[K.SP_SLEEP] = function()
+   local hits = rnd(3) + 1
+   Direct(K.SP_SLEEP, ns.Monster.fullHit(hits), L["While the %s slept, you smashed it %d times."], hits)
+end
+
+CAST[K.SP_CHARM_MONSTER] = function()
+   c[K.CHARMCOUNT] = c[K.CHARMCOUNT] + c[K.CHARISMA] * 2
+end
+
+CAST[K.SP_SONIC_SPEAR] = function(clev)
+   GoDirect(K.SP_SONIC_SPEAR, rnd(10) + 15 + clev, L["The sound damages the %s."], 70, "@")
+end
+
+CAST[K.SP_WEB] = function()
+   local hits = rnd(3) + 2
+   Direct(K.SP_WEB, ns.Monster.fullHit(hits), L["While the %s is entangled, you hit it %d times."], hits)
+end
+
+CAST[K.SP_STRENGTH] = function()
+   if c[K.STRCOUNT] == 0 then c[K.STREXTRA] = c[K.STREXTRA] + 3 end
+   c[K.STRCOUNT] = c[K.STRCOUNT] + 150 + rnd(100)
+end
+
+CAST[K.SP_ENLIGHTENMENT] = function()
+   local xl, yl = ns.vxy(G.playerx - 15, G.playery - 5)
+   local xh, yh = ns.vxy(G.playerx + 16, G.playery + 6)
+   for y = yl, yh do
+      for x = xl, xh do
+         know[x][y] = 1
+      end
+   end
+   ns.ui:Refresh("map")
+end
+
+CAST[K.SP_HEALING] = function(clev)
+   ns.Player.raiseHP(20 + clev * 2)
+end
+
+CAST[K.SP_CURE_BLINDNESS] = function()
+   c[K.BLINDCOUNT] = 0
+end
+
+CAST[K.SP_CREATE_MONSTER] = function()
+   ns.Monster.createMonster(ns.Monster.makeMonst(G.level + 1) + 8)
+end
+
+CAST[K.SP_PHANTASMAL_FORCES] = function(clev)
+   if rnd(11) + 7 <= c[K.WISDOM] then
+      Direct(K.SP_PHANTASMAL_FORCES, rnd(20) + 20 + clev, L["The %s believed!"], 0)
+   else
+      Msg(L["It didn't believe the illusions!"])
+   end
+end
+
+-- The amulet of invisibility adds more time.
+CAST[K.SP_INVISIBILITY] = function()
+   local amulets = 0
+   for i = 1, K.IVENSIZE do
+      if iven[i] == K.OAMULET then amulets = amulets + 1 + ivenarg[i] end
+   end
+   c[K.INVISIBILITY] = c[K.INVISIBILITY] + amulets * 128 + 12
+end
+
+CAST[K.SP_FIREBALL] = function(clev)
+   GoDirect(K.SP_FIREBALL, rnd(25 + clev) + 25 + clev, L["The fireball hits the %s."], 40, "*")
+end
+
+CAST[K.SP_COLD] = function(clev)
+   GoDirect(K.SP_COLD, rnd(25) + 20 + clev, L["The cone of cold strikes the %s."], 60, "O")
+end
+
+CAST[K.SP_POLYMORPH] = function()
+   DirPoly(K.SP_POLYMORPH)
+end
+
+CAST[K.SP_CANCELLATION] = function(clev)
+   c[K.CANCELLATION] = c[K.CANCELLATION] + 5 + clev
+end
+
+CAST[K.SP_HASTE_SELF] = function(clev)
+   c[K.HASTESELF] = c[K.HASTESELF] + 7 + clev
+end
+
+CAST[K.SP_CLOUD_KILL] = function()
+   OmniDirect(K.SP_CLOUD_KILL, 30 + rnd(10), L["The %s gasps for air!"])
+end
+
+CAST[K.SP_VAPORIZE_ROCK] = Vaporize
+
+CAST[K.SP_DEHYDRATION] = function(clev)
+   Direct(K.SP_DEHYDRATION, 100 + clev, L["The %s shrivels up."], 0)
+end
+
+CAST[K.SP_LIGHTNING] = function(clev)
+   GoDirect(K.SP_LIGHTNING, rnd(25) + 20 + clev * 2, L["A lightning bolt hits the %s."], 1, "~")
+end
+
+CAST[K.SP_DRAIN_LIFE] = function()
+   local drain = math.min(c[K.HP] - 1, idiv(c[K.HPMAX], 2))
+   Direct(K.SP_DRAIN_LIFE, drain + drain, "", 0)
+   c[K.HP] = c[K.HP] - drain
+end
+
+CAST[K.SP_INVULNERABILITY] = function()
+   if c[K.GLOBE] == 0 then c[K.MOREDEFENSES] = c[K.MOREDEFENSES] + 10 end
+   c[K.GLOBE] = c[K.GLOBE] + 200
+   LoseInt()
+end
+
+CAST[K.SP_FLOOD] = function(clev)
+   OmniDirect(K.SP_FLOOD, 32 + clev, L["The %s struggles for air in your flood!"])
+end
+
+CAST[K.SP_FINGER_OF_DEATH] = function()
+   if rnd(151) == 63 then
+      Msg(L["Your heart stopped!"])
+      ns.ui:Nap(4000)
+      ns.Player.died(270)
+      return
+   end
+   if c[K.WISDOM] > rnd(10) + 10 then
+      Direct(K.SP_FINGER_OF_DEATH, 2000, L["The %s's heart stopped."], 0)
+   else
+      Msg(L["It didn't work."])
+   end
+end
+
+CAST[K.SP_SCARE_MONSTER] = function(clev)
+   c[K.SCAREMONST] = c[K.SCAREMONST] + rnd(10) + clev
+   -- the hand of fear makes it last longer
+   for i = 1, K.IVENSIZE do
+      if iven[i] == K.OHANDofFEAR then
+         c[K.SCAREMONST] = c[K.SCAREMONST] * 3
+         break
+      end
+   end
+end
+
+CAST[K.SP_HOLD_MONSTER] = function(clev)
+   c[K.HOLDMONST] = c[K.HOLDMONST] + rnd(10) + clev
+end
+
+CAST[K.SP_TIME_STOP] = function(clev)
+   c[K.TIMESTOP] = c[K.TIMESTOP] + rnd(20) + clev * 2
+end
+
+CAST[K.SP_TELEPORT_AWAY] = function()
+   TDirect(K.SP_TELEPORT_AWAY)
+end
+
+CAST[K.SP_MAGIC_FIRE] = function(clev)
+   OmniDirect(K.SP_MAGIC_FIRE, 35 + rnd(10) + clev, L["The %s cringes from the flame."])
+end
+
+CAST[K.SP_MAKE_A_WALL] = function()
+   MakeWall(K.SP_MAKE_A_WALL)
+end
+
+CAST[K.SP_SPHERE_OF_ANNIHILATION] = function()
+   if rnd(23) == 5 and not G.wizard then
+      Msg(L["You have been enveloped by the zone of nothingness!"])
+      ns.ui:Nap(4000)
+      ns.Player.died(258)
+      return
+   end
+   LoseInt()
+   local x, y, dir = DirSub()  -- get the direction of the sphere
+   if x then
+      ns.Sphere.newsphere(x, y, dir, rnd(20) + 11)  -- make a sphere
+   end
+end
+
+CAST[K.SP_GENOCIDE] = function()
+   GenMonst()
+   G.spelknow[K.SP_GENOCIDE] = 0
+   LoseInt()
+end
+
+-- The C asks for the direction of the genocide spell here (a quirk), so does this.
+CAST[K.SP_SUMMON_DEMON] = function()
+   if rnd(100) > 30 then
+      Direct(K.SP_GENOCIDE, 150, L["The demon strikes at the %s."], 0)
+      return
+   end
+   if rnd(100) > 15 then
+      Msg(L["Nothing seems to have happened."])
+      return
+   end
+   Msg(L["The demon turned on you and then vanished!"])
+   G.lastnum = 277
+   ns.Player.losehp(rnd(40) + 30)  -- must say killed by a demon
+end
+
+CAST[K.SP_WALK_THROUGH_WALLS] = function()
+   c[K.WTW] = c[K.WTW] + rnd(10) + 5
+end
+
+CAST[K.SP_ALTER_REALITY] = AlterReality
+
+CAST[K.SP_PERMANENCE] = function()
+   ns.Magic.adjustTime(-99999)
+   G.spelknow[K.SP_PERMANENCE] = 0  -- forget
+   LoseInt()
+end
+
+-- C: speldamage(). Performs the spell the player cast.
+function Spells.speldamage(spell)
+   local cast = CAST[spell]
+   if not cast then return end  -- no such spell
 
    if c[K.TIMESTOP] ~= 0 then  -- not if time stopped
       Msg(L["It didn't seem to work."])
@@ -440,200 +664,11 @@ function Spells.speldamage(x)
       return
    end
    local clev = c[K.LEVEL]
-   if clev * 3 + 2 < x - 1 then
+   if clev * 3 + 2 < spell - 1 then
       Msg(L["Nothing happens. You seem inexperienced."])
       return
    end
-
-   -- ----- LEVEL 1 SPELLS -----
-   if x == 1 then  -- protection
-      if c[K.PROTECTIONTIME] == 0 then c[K.MOREDEFENSES] = c[K.MOREDEFENSES] + 2 end  -- protection field +2
-      c[K.PROTECTIONTIME] = c[K.PROTECTIONTIME] + 250
-
-   elseif x == 2 then  -- magic missile
-      local i = rnd((clev + 1) * 2) + clev + 3
-      GoDirect(x, i, clev >= 2 and L["Your missiles hit the %s."] or L["Your missile hit the %s."], 100, "+")
-
-   elseif x == 3 then  -- dexterity
-      if c[K.DEXCOUNT] == 0 then c[K.DEXTERITY] = c[K.DEXTERITY] + 3 end
-      c[K.DEXCOUNT] = c[K.DEXCOUNT] + 400
-
-   elseif x == 4 then  -- sleep
-      local i = rnd(3) + 1
-      Direct(x, ns.Monster.fullHit(i), L["While the %s slept, you smashed it %d times."], i)
-
-   elseif x == 5 then  -- charm monster
-      c[K.CHARMCOUNT] = c[K.CHARMCOUNT] + c[K.CHARISMA] * 2
-
-   elseif x == 6 then  -- sonic spear
-      GoDirect(x, rnd(10) + 15 + clev, L["The sound damages the %s."], 70, "@")
-
-   -- ----- LEVEL 2 SPELLS -----
-   elseif x == 7 then  -- web
-      local i = rnd(3) + 2
-      Direct(x, ns.Monster.fullHit(i), L["While the %s is entangled, you hit it %d times."], i)
-
-   elseif x == 8 then  -- strength
-      if c[K.STRCOUNT] == 0 then c[K.STREXTRA] = c[K.STREXTRA] + 3 end
-      c[K.STRCOUNT] = c[K.STRCOUNT] + 150 + rnd(100)
-
-   elseif x == 9 then  -- enlightenment
-      local xl, yl = ns.vxy(G.playerx - 15, G.playery - 5)
-      local xh, yh = ns.vxy(G.playerx + 16, G.playery + 6)
-      for i = yl, yh do
-         for j = xl, xh do
-            know[j][i] = 1
-         end
-      end
-      ui:Refresh("map")
-
-   elseif x == 10 then  -- healing
-      ns.Player.raiseHP(20 + clev * 2)
-
-   elseif x == 11 then  -- cure blindness
-      c[K.BLINDCOUNT] = 0
-
-   elseif x == 12 then  -- create monster
-      ns.Monster.createMonster(ns.Monster.makeMonst(G.level + 1) + 8)
-
-   elseif x == 13 then  -- phantasmal forces
-      if rnd(11) + 7 <= c[K.WISDOM] then
-         Direct(x, rnd(20) + 20 + clev, L["The %s believed!"], 0)
-      else
-         Msg(L["It didn't believe the illusions!"])
-      end
-
-   elseif x == 14 then  -- invisibility; the amulet of invisibility adds more time
-      local j = 0
-      for i = 1, K.IVENSIZE do
-         if iven[i] == K.OAMULET then j = j + 1 + ivenarg[i] end
-      end
-      c[K.INVISIBILITY] = c[K.INVISIBILITY] + j * 128 + 12
-
-   -- ----- LEVEL 3 SPELLS -----
-   elseif x == 15 then  -- fireball
-      GoDirect(x, rnd(25 + clev) + 25 + clev, L["The fireball hits the %s."], 40, "*")
-
-   elseif x == 16 then  -- cold
-      GoDirect(x, rnd(25) + 20 + clev, L["The cone of cold strikes the %s."], 60, "O")
-
-   elseif x == 17 then  -- polymorph
-      DirPoly(x)
-
-   elseif x == 18 then  -- cancellation
-      c[K.CANCELLATION] = c[K.CANCELLATION] + 5 + clev
-
-   elseif x == 19 then  -- haste self
-      c[K.HASTESELF] = c[K.HASTESELF] + 7 + clev
-
-   elseif x == 20 then  -- cloud kill
-      OmniDirect(x, 30 + rnd(10), L["The %s gasps for air!"])
-
-   elseif x == 21 then  -- vaporize rock
-      Vaporize()
-
-   -- ----- LEVEL 4 SPELLS -----
-   elseif x == 22 then  -- dehydration
-      Direct(x, 100 + clev, L["The %s shrivels up."], 0)
-
-   elseif x == 23 then  -- lightning
-      GoDirect(x, rnd(25) + 20 + clev * 2, L["A lightning bolt hits the %s."], 1, "~")
-
-   elseif x == 24 then  -- drain life
-      local i = math.min(c[K.HP] - 1, idiv(c[K.HPMAX], 2))
-      Direct(x, i + i, "", 0)
-      c[K.HP] = c[K.HP] - i
-
-   elseif x == 25 then  -- globe of invulnerability
-      if c[K.GLOBE] == 0 then c[K.MOREDEFENSES] = c[K.MOREDEFENSES] + 10 end
-      c[K.GLOBE] = c[K.GLOBE] + 200
-      LoseInt()
-
-   elseif x == 26 then  -- flood
-      OmniDirect(x, 32 + clev, L["The %s struggles for air in your flood!"])
-
-   elseif x == 27 then  -- finger of death
-      if rnd(151) == 63 then
-         Msg(L["Your heart stopped!"])
-         ui:Nap(4000)
-         ns.Player.died(270)
-         return
-      end
-      if c[K.WISDOM] > rnd(10) + 10 then
-         Direct(x, 2000, L["The %s's heart stopped."], 0)
-      else
-         Msg(L["It didn't work."])
-      end
-
-   -- ----- LEVEL 5 SPELLS -----
-   elseif x == 28 then  -- scare monster
-      c[K.SCAREMONST] = c[K.SCAREMONST] + rnd(10) + clev
-      -- if the player has the hand of fear it lasts longer
-      for i = 1, K.IVENSIZE do
-         if iven[i] == K.OHANDofFEAR then
-            c[K.SCAREMONST] = c[K.SCAREMONST] * 3
-            break
-         end
-      end
-
-   elseif x == 29 then  -- hold monster
-      c[K.HOLDMONST] = c[K.HOLDMONST] + rnd(10) + clev
-
-   elseif x == 30 then  -- time stop
-      c[K.TIMESTOP] = c[K.TIMESTOP] + rnd(20) + clev * 2
-
-   elseif x == 31 then  -- teleport away
-      TDirect(x)
-
-   elseif x == 32 then  -- magic fire
-      OmniDirect(x, 35 + rnd(10) + clev, L["The %s cringes from the flame."])
-
-   -- ----- LEVEL 6 SPELLS -----
-   elseif x == 33 then  -- make wall
-      MakeWall(x)
-
-   elseif x == 34 then  -- sphere of annihilation
-      if rnd(23) == 5 and not G.wizard then
-         Msg(L["You have been enveloped by the zone of nothingness!"])
-         ui:Nap(4000)
-         ns.Player.died(258)
-         return
-      end
-      LoseInt()
-      local xl, yl, dir = DirSub()  -- get the direction of the sphere
-      if xl then
-         ns.Sphere.newsphere(xl, yl, dir, rnd(20) + 11)  -- make a sphere
-      end
-
-   elseif x == 35 then  -- genocide
-      GenMonst()
-      G.spelknow[35] = 0
-      LoseInt()
-
-   elseif x == 36 then  -- summon demon
-      if rnd(100) > 30 then
-         Direct(x - 1, 150, L["The demon strikes at the %s."], 0)
-         return
-      end
-      if rnd(100) > 15 then
-         Msg(L["Nothing seems to have happened."])
-         return
-      end
-      Msg(L["The demon turned on you and then vanished!"])
-      G.lastnum = 277
-      ns.Player.losehp(rnd(40) + 30)  -- must say killed by a demon
-
-   elseif x == 37 then  -- walk through walls
-      c[K.WTW] = c[K.WTW] + rnd(10) + 5
-
-   elseif x == 38 then  -- alter reality
-      AlterReality()
-
-   elseif x == 39 then  -- permanence
-      ns.Magic.adjustTime(-99999)
-      G.spelknow[39] = 0  -- forget
-      LoseInt()
-   end
+   cast(clev)
 end
 
 -- C: cast(). Asks for the three letter code of a spell and casts it.

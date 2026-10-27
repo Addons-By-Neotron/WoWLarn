@@ -404,7 +404,7 @@ function Magic.readScroll(typ)
       ns.Monster.annihilate()
 
    elseif typ == K.SPULVERIZE then
-      ns.Spells.godirect(23, 150, L["The ray hits the %s."], 0, " ")
+      ns.Spells.godirect(K.SP_LIGHTNING, 150, L["The ray hits the %s."], 0, " ")
 
    elseif typ == K.SLIFEPROT then
       c[K.LIFEPROT] = c[K.LIFEPROT] + 1
