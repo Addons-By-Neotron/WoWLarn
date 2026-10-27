@@ -123,7 +123,10 @@ function main:Create()
       if self.focused then ns.ui:InjectKey(char) end
    end)
    frame:SetScript("OnShow", function() self:OnShow() end)
-   frame:SetScript("OnHide", function() self:SetFocus(false) end)
+   frame:SetScript("OnHide", function()
+      self:SetFocus(false)
+      ns.Save.store()
+   end)
    -- Clicking anywhere outside releases the keyboard (event is missing on some clients).
    frame:SetScript("OnEvent", function()
       if self.focused and not ((frame.IsMouseOver and frame:IsMouseOver()) or (MouseIsOver and MouseIsOver(frame))) then

@@ -43,7 +43,7 @@ LibStub = function() return {
    GetLocale = function() return setmetatable({}, { __index = function(_, k) return k end }) end,
 } end
 
-local ns = { mod = { db = { profile = { scale = 1, fast = false, window = { point = "CENTER", x = 0, y = 0 } }, global = { scores = { winners = {}, dead = {} }, taxes = {} } } } }
+local ns = { mod = { db = { profile = { scale = 1, fast = false, window = { point = "CENTER", x = 0, y = 0 } }, char = {}, global = { scores = { winners = {}, dead = {} }, taxes = {} } } } }
 local toc = io.open(root .. "/WoWLarn.toc"):read("*a")
 for file in toc:gmatch("\n([%w_\\/]+%.lua)") do
    if file ~= "WoWLarn.lua" and file ~= "Options.lua" then
@@ -936,5 +936,29 @@ do
    check(ns.Scores.taxes() == 100, "tax on a win: " .. ns.Scores.taxes())
    check(ns.Scores.payTaxes(60) == 60 and ns.Scores.taxes() == 40, "paying taxes")
    ns.scoreboard:Show(entry)
+end
+-- save and resume
+do
+   G.Reset(); ns.Create.makePlayer(ns.Classes[1]); ns.Create.newCaveLevel(0); ns.Create.newCaveLevel(3)
+   G.c[K.GOLD] = 777; G.gtime = 4242; G.course[2] = true; G.spheres[1] = { x = 3, y = 4, lev = 3, dir = 2, lifetime = 9 }
+   G.iarg[10][5] = 1234; G.item[10][5] = K.OGOLDPILE; G.loot[1105] = { { K.ODAGGER, 2 } }
+   local items = 0
+   for x = 1, K.MAXX do for y = 1, K.MAXY do if G.item[x][y] ~= 0 then items = items + 1 end end end
+   local monsters = G.monster[K.KOBOLD].hitpoints
+   ns.ui.co = {}  -- (pretend a game is going on)
+   ns.Save.store()
+   ns.ui.co = nil
+   check(ns.Save.exists(), "game stored")
+   G.Reset()
+   check(G.c[K.GOLD] == 0, "reset")
+   check(ns.Save.load(), "game loaded")
+   check(G.c[K.GOLD] == 777 and G.gtime == 4242 and G.level == 3 and G.course[2], "scalars and tables back")
+   check(G.iarg[10][5] == 1234 and G.item[10][5] == K.OGOLDPILE and G.loot[1105][1][2] == 2, "level contents back")
+   local after = 0
+   for x = 1, K.MAXX do for y = 1, K.MAXY do if G.item[x][y] ~= 0 then after = after + 1 end end end
+   check(after == items, "same items on the level: " .. after .. " vs " .. items)
+   check(G.levels[1] and G.visited[1] and G.spheres[1].lifetime == 9 and G.monster[K.KOBOLD].hitpoints == monsters, "levels, spheres, monsters")
+   ns.Save.clear()
+   check(not ns.Save.exists(), "save cleared")
 end
 print("ALL OK")

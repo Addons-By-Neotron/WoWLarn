@@ -721,3 +721,4 @@ L["U L A R N    S C O R E S"] = true
 L["Winners"] = true
 L["The dead"] = true
 L["%2d) %9d  %s (%s), %d mobuls, difficulty %d"] = true
+L["Welcome back.  Your game goes on where you left it."] = true

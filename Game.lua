@@ -179,6 +179,7 @@ end
 local function Finish()
    local cause = G.dead
    if type(cause) ~= "number" then cause = 284 end
+   ns.Save.clear()  -- (one life)
    local entry = ns.Scores.record(cause)
    ui:Log("damage", "%s %s", G.name, ns.Scores.deathLine(cause))
    ui:Log("system", L["Score: %d   Difficulty: %d"], c[K.GOLD], c[K.HARDGAME])
@@ -192,12 +193,17 @@ function Game.Run()
    G.sex = UnitSex("player") == 3 and 0 or 1  -- C: 1 is a man, 0 a woman
    G.taxes = ns.Scores.taxes()  -- what the LRS wants from an earlier win
 
-   local class = ui:PickClass(ns.Classes, DefaultClass())
-   ns.Create.makePlayer(class)
-   ns.Create.newCaveLevel(0)
-   ui:Refresh("all")
-   Welcome()
-   ui:Log("system", L["You set out as %s."], LOCALIZED_CLASS_NAMES_MALE[class.token] or class.token)
+   if ns.Save.load() then
+      ui:Refresh("all")
+      ui:Log("system", L["Welcome back.  Your game goes on where you left it."])
+   else
+      local class = ui:PickClass(ns.Classes, DefaultClass())
+      ns.Create.makePlayer(class)
+      ns.Create.newCaveLevel(0)
+      ui:Refresh("all")
+      Welcome()
+      ui:Log("system", L["You set out as %s."], LOCALIZED_CLASS_NAMES_MALE[class.token] or class.token)
+   end
 
    while true do
       if not G.dropflag then

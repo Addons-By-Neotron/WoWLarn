@@ -403,8 +403,8 @@ Each milestone is playable or testable in game.
    - the unique artifacts were already finished by the earlier milestones (`Player.take`/`adjustCValues` for the stat changes, `Regen`, `hitm`, `movemonst`, `spattack` and `Magic` for the rest); an audit of every `O*` object used by the C against the Lua found no gap
    - changed from the C: Esc at the "give money or just pray" question goes back to the first altar question (the C ignores Esc there)
    - left to milestone 8: the town buildings (school, banks, DND store, trading post, home, pad and LRS), which print "(Not implemented yet.)" until then
-8. **Town buildings:** store windows for DND store, school, bank and 5th branch, trading post, LRS taxes, home, and the goblin alchemist.
-9. **Endgame + persistence:** save/resume in SVs, win at home, time limit, scoreboards (winners/dead with inventory), tax letters.
+8. **Town buildings (done, not yet checked in the client):** `Town.lua` and `UI/Store.lua`; item tooltips and `[Item]` links (`ItemInfo.lua`); store windows for DND store, school, bank and 5th branch, trading post, LRS taxes, home, and the goblin alchemist.
+9. **Endgame + persistence (mostly done):** `Scores.lua` + `UI/Scoreboard.lua` (winners and dead lists in `WoWLarn.global`, life protection in `Player.died`, taxes per character, LRS pays them), `Save.lua` (the game goes to `WoWLarn.char.game` at logout and when the window hides; resumed when a new session starts; death, a win or quitting clears it). Still to do: the tax letters (`bill.c`), a slash command to view the scoreboard, saving the equipped-slot idea of open decision 6.
 10. **2.5D view:**
     - projection, perspective floor quads, wall panels
     - pooled `PlayerModel` actors with display lookup, per-monster tune, the depth fix (`Seat` technique) and animations

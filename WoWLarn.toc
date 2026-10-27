@@ -28,6 +28,7 @@ Data\Visuals.lua
 Runner.lua
 Player.lua
 Scores.lua
+Save.lua
 Equipment.lua
 ItemInfo.lua
 Create.lua
