@@ -137,6 +137,8 @@ local function Eat(xx, yy)
    end
 end
 
+Create.eat = Eat
+
 -- C: cannedlevel(). Reads a level from the map data about half of the time (always on the
 -- bottom levels). Returns true if it made the level.
 local function CannedLevel(lev)

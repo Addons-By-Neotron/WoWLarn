@@ -631,9 +631,161 @@ Clear(); G.item[31][8] = K.OCHEST; G.iarg[31][8] = 2; keys("l"); check(ui.wait =
 keys("t"); check(G.iven[1] == K.OCHEST, "took the chest")
 Clear(); G.item[31][8] = K.OCHEST; G.iarg[31][8] = 2; keys("l"); keys("o")
 check(G.item[31][8] ~= K.OCHEST or (last() or ""):find("Nothing happens"), "opened the chest")
+-- spells, cast in the live game thread
+do
+   local savedc, savedspells = {}, {}
+   for i = 1, 100 do savedc[i] = G.c[i] end
+   for i = 1, K.SPNUM do savedspells[i] = G.spelknow[i] end
+   local oldfast = ns.mod.db.profile.fast
+   ns.mod.db.profile.fast = true
+   local T = ns.Tables
+   local function Code(name)
+      for i = 1, K.SPNUM do if T.spelname[i] == name then return T.spelcode[i], i end end
+      error("no spell " .. name)
+   end
+   local function Arena()
+      ns.Create.newCaveLevel(3); Clear()
+      for i = 1, K.SPNUM do G.spelknow[i] = 1 end
+      G.c[K.INTELLIGENCE], G.c[K.WISDOM], G.c[K.CHARISMA], G.c[K.LEVEL] = 25, 25, 25, 40
+      G.c[K.HP], G.c[K.HPMAX] = 5000, 5000
+      G.c[K.CONFUSE], G.c[K.BLINDCOUNT], G.c[K.TIMESTOP], G.c[K.HOLDMONST], G.c[K.CANCELLATION] = 0, 0, 0, 0, 0
+   end
+   local function Cast(name, dir)
+      local code = Code(name)
+      for _ = 1, 40 do
+         G.c[K.SPELLS] = 50; LOG = {}
+         keys("c"); keys(code)
+         if dir and debug.traceback(ui.co):find("PickDirection") then keys(dir) end
+         local text = table.concat(lines(), "|")
+         check(not debug.traceback(ui.co):find("FindItem"), "stuck on an item after casting " .. name .. " at " .. G.playerx .. "," .. G.playery .. " item " .. G.item[G.playerx][G.playery] .. ": " .. text)
+         if not (text:find("didn't work") or text:find("Nothing happens")) then return text end
+         if ui.wait == "key" then ui:InjectKey("ESC") end
+      end
+      error("the spell " .. name .. " never worked")
+   end
+   local function Monster(x, y, id)
+      G.monster[id].hitpoints = 100000  -- (hitm clamps to the table)
+      G.mon[x][y], G.hitp[x][y] = id, 100000
+   end
+
+   Arena(); keys("c"); check(ui.wait == "key" and ns.spellbook:IsShown(), "casting shows the spellbook")
+   ui:InjectKey("ESC"); check(last():find("aborted") and not ns.spellbook:IsShown(), "Esc aborts casting")
+   G.c[K.SPELLS] = 0; LOG = {};keys("c"); check(last():find("any spells"), "no spells left")
+   G.c[K.SPELLS] = 5; keys("c"); keys("zzz"); check(ui.wait == "key" and G.c[K.SPELLS] == 4, "an unknown code costs a spell and asks again")
+   ui:InjectKey("ESC")
+   ns.spellbook:ShowDiscoveries(); ns.spellbook:Open(); ns.spellbook:Close()
+
+   Arena(); LOG = {}; check(ns.Spells.noSpell(select(2, Code("invisibility")), K.GNOME) and last():find("infravision"), "a gnome sees through invisibility")
+   check(not ns.Spells.noSpell(select(2, Code("fireball")), K.GNOME), "a gnome burns")
+   -- buffs
+   Arena(); Cast("protection"); check(G.c[K.PROTECTIONTIME] >= 240 and G.c[K.MOREDEFENSES] >= 2, "protection")
+   Arena(); Cast("dexterity"); check(G.c[K.DEXCOUNT] >= 390, "dexterity")
+   Arena(); Cast("strength"); check(G.c[K.STRCOUNT] >= 140 and G.c[K.STREXTRA] >= 3, "strength")
+   Arena(); Cast("charm monster"); check(G.c[K.CHARMCOUNT] >= 40, "charm")
+   Arena(); Cast("invisibility"); check(G.c[K.INVISIBILITY] >= 10, "invisibility")
+   Arena(); Cast("cancellation"); check(G.c[K.CANCELLATION] >= 5, "cancellation")
+   Arena(); Cast("haste self"); check(G.c[K.HASTESELF] >= 7, "haste self")
+   Arena(); Cast("walk through walls"); check(G.c[K.WTW] >= 5, "walk through walls")
+   Arena(); Cast("hold monster"); check(G.c[K.HOLDMONST] >= 1, "hold monster")
+   Arena(); Cast("scare monster"); check(G.c[K.SCAREMONST] >= 1, "scare monster")
+   Arena(); Cast("invulnerability"); check(G.c[K.GLOBE] >= 190 and G.c[K.INTELLIGENCE] == 24, "globe costs intelligence")
+   Arena(); Cast("time stop"); check(G.c[K.TIMESTOP] >= 1, "time stop"); G.c[K.TIMESTOP] = 0
+   Arena(); G.c[K.HP] = 10; Cast("healing"); check(G.c[K.HP] > 10, "healing")
+   Arena(); G.c[K.BLINDCOUNT] = 50; Cast("cure blindness"); check(G.c[K.BLINDCOUNT] == 0, "cure blindness")
+   Arena(); for x = 1, K.MAXX do for y = 1, K.MAXY do G.know[x][y] = 0 end end
+   Cast("enlightenment"); check(G.know[30][8] == 1 and G.know[40][12] == 1, "enlightenment maps the area")
+
+   -- directed spells
+   Arena(); Monster(33, 8, K.ORC); Cast("magic missile", "l"); check(G.hitp[33][8] < 100000, "magic missile hits")
+   Arena(); Monster(33, 8, K.ORC); Cast("sonic spear", "l"); check(G.hitp[33][8] < 100000, "sonic spear hits")
+   Arena(); Monster(33, 8, K.ORC); Cast("fireball", "l"); check(G.hitp[33][8] < 100000, "fireball hits")
+   Arena(); Monster(33, 8, K.ORC); Cast("cold", "l"); check(G.hitp[33][8] < 100000, "cone of cold hits")
+   Arena(); Monster(33, 8, K.ORC); Cast("lightning", "l"); check(G.hitp[33][8] < 100000, "lightning hits")
+   Arena(); Monster(31, 8, K.ORC); Cast("sleep", "l"); check(G.hitp[31][8] < 100000, "sleep smashes")
+   Arena(); Monster(31, 8, K.ORC); Cast("web", "l"); check(G.hitp[31][8] < 100000, "web smashes")
+   Arena(); Monster(31, 8, K.ORC); Cast("phantasmal forces", "l"); check(G.hitp[31][8] < 100000, "phantasmal forces")
+   Arena(); Monster(31, 8, K.ORC); local t_ = Cast("dehydration", "l");  check(G.hitp[31][8] < 100000, "dehydration")
+   Arena(); Monster(31, 8, K.ORC); Cast("drain life", "l"); check(G.hitp[31][8] < 100000, "drain life")
+   Arena(); Monster(31, 8, K.ORC); Cast("finger of death", "l")
+   Arena(); Monster(31, 8, K.ORC); Cast("summon demon", "l")
+   Arena(); Monster(31, 8, K.ORC); Cast("teleport away", "l"); check(G.mon[31][8] == 0, "teleport away moves it")
+   Arena(); Monster(31, 8, K.ORC); Cast("polymorph", "l"); check(G.mon[31][8] ~= 0, "polymorph")
+   Arena(); Cast("magic missile", "l"); check(table.concat(lines(), "|"):find("anything there") == nil, "a missile flies on")
+   Arena(); Cast("sleep", "l"); check(table.concat(lines(), "|"):find("anything there"), "nothing to sleep")
+   Arena(); G.c[K.CONFUSE] = 20; Monster(33, 8, K.ORC); Cast("fireball", "l"); check(G.hitp[33][8] == 100000, "confused: no aim")
+   Arena(); G.item[33][8] = K.OWALL; Cast("fireball", "l"); check(G.item[33][8] == 0, "a fireball breaks a wall")
+   Arena(); G.item[33][8] = K.OCLOSEDDOOR; Cast("fireball", "l"); check(G.item[33][8] == 0, "a fireball blasts a door")
+   Arena(); G.item[33][8] = K.OSTATUE; Cast("fireball", "l"); check(G.item[33][8] == K.OBOOK, "a fireball breaks a statue")
+   Arena(); G.item[33][8] = K.OTHRONE; Cast("fireball", "l"); check(G.item[33][8] == K.OTHRONE2, "a fireball breaks the throne")
+   Arena(); G.item[32][8] = K.OMIRROR; G.c[K.HP] = 5000; Cast("fireball", "l"); check(G.c[K.HP] < 5000, "a mirror reflects the fireball")
+   Arena(); G.item[31][8] = K.OMIRROR; Cast("dehydration", "l"); check(G.c[K.HP] < 5000, "a mirror reflects a direct spell")
+   Arena(); Cast("make a wall", "l"); check(G.item[31][8] == K.OWALL, "make a wall")
+   Arena(); Cast("make a wall", "l"); Cast("make a wall", "l"); check(table.concat(lines(), "|"):find("wall there already"), "no wall on a wall")
+
+   -- area spells
+   for _, name in ipairs({ "cloud kill", "flood", "magic fire" }) do
+      Arena(); Monster(31, 8, K.ORC); Cast(name); check(G.hitp[31][8] < 100000, name .. " hits the neighbours")
+   end
+   Arena(); G.item[31][8] = K.OWALL; G.item[29][9] = K.OSTATUE; Cast("vaporize rock")
+   check(G.item[31][8] == 0 and G.item[29][9] == K.OBOOK, "vaporize rock")
+   Arena(); G.item[31][8] = K.OALTAR; Cast("vaporize rock"); check(G.mon[31][8] == K.DEMONPRINCE, "an altar summons a demon prince")
+   Arena(); Monster(31, 8, K.XORN); Cast("vaporize rock"); check(G.hitp[31][8] < 100000 or G.mon[31][8] == 0, "a xorn is hurt")
+
+   -- create monster, alter reality, genocide, permanence
+   Arena(); local before = 0; for x = 1, K.MAXX do for y = 1, K.MAXY do if G.mon[x][y] ~= 0 then before = before + 1 end end end
+   Cast("create monster"); local after = 0; for x = 1, K.MAXX do for y = 1, K.MAXY do if G.mon[x][y] ~= 0 then after = after + 1 end end end
+   check(after == before + 1, "create monster")
+   Arena(); G.item[40][8] = K.OBOOK; G.iarg[40][8] = 3
+   local objects = 0; for x = 1, K.MAXX do for y = 1, K.MAXY do if G.item[x][y] ~= 0 and G.item[x][y] ~= K.OWALL then objects = objects + 1 end end end
+   Cast("alter reality"); local objects2 = 0; for x = 1, K.MAXX do for y = 1, K.MAXY do if G.item[x][y] ~= 0 and G.item[x][y] ~= K.OWALL then objects2 = objects2 + 1 end end end
+   check(objects2 <= objects and objects2 >= objects - 4 and G.spelknow[select(2, Code("alter reality"))] == 0, "alter reality keeps the objects: " .. objects .. " " .. objects2)
+   local reachable = G.item[G.playerx][G.playery] == 0 and G.mon[G.playerx][G.playery] == 0
+   check(reachable, "alter reality puts the player on a free tile")
+   Arena(); G.spelknow[select(2, Code("genocide"))] = 1
+   keys("c"); keys(Code("genocide")); local glyph = T.monstglyphs:sub(K.ORC + 1, K.ORC + 1)
+   if ui.wait == "key" then keys(glyph) end
+   check(G.spelknow[select(2, Code("genocide"))] == 0 or (last() or ""):find("didn't work"), "genocide is used up")
+   ns.Monster.init()
+   Arena(); Cast("permanence"); check(G.spelknow[select(2, Code("permanence"))] == 0, "permanence is used up")
+
+   -- spheres of annihilation
+   Arena(); G.wizard = true; Cast("sphere of annihilation", "l"); G.wizard = false  -- (1 in 23 casts kills the caster)
+   check(#G.spheres == 1 and G.c[K.SPHCAST] == 1 and G.item[G.spheres[1].x][G.spheres[1].y] == K.OANNIHILATION, "a sphere is made")
+   for _ = 1, 6 do ns.Sphere.movsphere() end
+   check(#G.spheres == 1, "the sphere moves on")
+   local found = 0; for x = 1, K.MAXX do for y = 1, K.MAXY do if G.item[x][y] == K.OANNIHILATION then found = found + 1 end end end
+   check(found == 1, "one sphere on the level, found " .. found)
+   for _, sp in ipairs({ unpack(G.spheres) }) do ns.Sphere.rmsphere(sp.x, sp.y) end
+   check(#G.spheres == 0 and G.c[K.SPHCAST] == 0, "spheres removed")
+   Arena(); for x = 38, 42 do for y = 6, 10 do G.item[x][y] = K.OPOTION end end
+   G.item[37][8], G.item[43][8] = K.OPOTION, K.OPOTION
+   ns.Sphere.sphboom(40, 8)
+   local cleared = true; for x = 38, 42 do for y = 6, 10 do if G.item[x][y] ~= 0 then cleared = false end end end
+   check(cleared and G.item[37][8] == K.OPOTION and G.item[43][8] == K.OPOTION, "the blast clears a 5x5 area")
+   Arena(); ns.Sphere.newsphere(35, 8, 2, 20); ns.Sphere.newsphere(35, 8, 2, 20)
+   check(#G.spheres == 1 and G.c[K.SPHCAST] == 1 and G.item[35][8] == K.OANNIHILATION, "two spheres collide and a new one remains")
+   Arena(); G.spheres = {}; G.c[K.SPHCAST] = 0; G.c[K.CANCELLATION] = 5; ns.Sphere.newsphere(36, 8, 2, 20)
+   check(G.c[K.CANCELLATION] == 1, "cancellation sets off the sphere")
+   Arena(); G.spheres = {}; G.c[K.SPHCAST] = 0; Monster(36, 8, K.DEMONLORD); LOG = {}; ns.Sphere.newsphere(36, 8, 2, 20)
+   check(table.concat(lines(), "|"):find("dispels"), "a demon dispels the sphere")
+   Arena(); G.spheres = {}; G.c[K.SPHCAST] = 0
+   ns.Sphere.newsphere(G.playerx, G.playery, 2, 20); check(G.dead == 258, "enveloped by a sphere"); G.dead = nil
+   Arena(); G.spheres = {}; G.c[K.SPHCAST] = 0
+   Monster(31, 8, K.ORC); G.item[32][8] = K.OANNIHILATION
+   -- the scroll of pulverization
+   Arena(); G.item[33][8] = K.OWALL; G.iven[1], G.ivenarg[1] = K.OSCROLL, K.SPULVERIZE
+   keys("r"); keys("a"); keys("l"); check(G.item[33][8] == 0, "pulverization breaks the wall")
+   -- discoveries
+   G.scrollknown[K.SBLANK] = 1; keys("D"); check(ui.wait == "key" and ns.spellbook:IsShown(), "discoveries"); keys(" ")
+   ns.mod.db.profile.fast = oldfast
+   Arena(); Clear()
+   for i = 1, 100 do G.c[i] = savedc[i] end
+   for i = 1, K.SPNUM do G.spelknow[i] = savedspells[i] end
+   ns.Monster.init()
+end
 -- dying of a dart
 Clear(); G.c[K.HP] = 1; G.item[31][8] = K.OTRAPARROW; keys("l")
-check(not ui:IsActive() or G.dead, "an arrow ends the game at 1 hp")
+check(not ui:IsActive() or G.dead, "an arrow ends the game at 1 hp ")
 keys("S"); ns.main:Show()
 
 -- redraw paths with a populated game

@@ -153,6 +153,18 @@ def tables():
     nums = re.findall(r"\d+", section(data, "char splev[]", "};")[10:])
     out.append("-- T.splev[book level + 1]: the highest spell (C index + 1) a book of that level can teach.")
     out.append("T.splev = {" + ", ".join(nums) + "}\n")
+    weird = re.sub(r"/\*.*?\*/", "", section(data, "char spelweird[", "\n};"))
+    rows = [[int(n) for n in re.findall(r"\d+", r)] for r in re.findall(r"\{([^{}]*)\}", weird[weird.index("= {"):])]
+    rows = [r + [0] * (39 - len(r)) for r in rows]  # C zero-fills the missing columns
+    assert all(len(r) == 39 for r in rows) and len(rows) == 57 + 8, (len(rows), set(map(len, rows)))
+    out.append("-- T.spelweird[monster id][spell]: how a monster reacts to a spell (an index into T.spelmes, 0 = no effect).")
+    out.append("T.spelweird = {")
+    for row in rows:
+        out.append("   {" + ",".join(map(str, row)) + "},")
+    out.append("}")
+    mes = re.findall(r'"([^"]*)"', re.sub(r"/\*.*?\*/", "", section(data, "char *spelmes[]", "};")))
+    out.append("-- T.spelmes[reaction] (1..18).")
+    out.append("T.spelmes = {" + ", ".join(lua_string(m) for m in mes[1:]) + "}\n")
     out.append("return T")
     (OUT / "Data" / "Tables.lua").write_text("\n".join(out) + "\n")
 

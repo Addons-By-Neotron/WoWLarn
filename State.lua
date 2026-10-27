@@ -95,6 +95,7 @@ function G.Reset()
    FillArray(G.iven, K.IVENSIZE, 0)
    FillArray(G.ivenarg, K.IVENSIZE, 0)
    FillArray(G.spelknow, K.SPNUM, 0)
+   G.spheres = {}  -- the spheres of annihilation of every level, newest first
    FillArray(G.scrollknown, K.MAXSCROLL, 0)
    FillArray(G.potionknown, K.MAXPOTION, 0)
    G.potionknown[K.PINSTHEAL] = 1  -- the only potion known from the start

@@ -34,6 +34,8 @@ Item.lua
 Monster.lua
 MoveMonst.lua
 Magic.lua
+Sphere.lua
+Spells.lua
 Action.lua
 Object.lua
 UI\Widgets.lua
@@ -43,6 +45,7 @@ UI\ControlBar.lua
 UI\SidePanel.lua
 UI\MapView.lua
 UI\Inventory.lua
+UI\Spellbook.lua
 UI\ClassPicker.lua
 UI\MainFrame.lua
 Game.lua

@@ -404,8 +404,7 @@ function Magic.readScroll(typ)
       ns.Monster.annihilate()
 
    elseif typ == K.SPULVERIZE then
-      -- godirect(22, 150, ...): the ray spells arrive with milestone 6
-      Msg(L["The scroll crumbles. (Not implemented yet.)"])
+      ns.Spells.godirect(23, 150, L["The ray hits the %s."], 0, " ")
 
    elseif typ == K.SLIFEPROT then
       c[K.LIFEPROT] = c[K.LIFEPROT] + 1

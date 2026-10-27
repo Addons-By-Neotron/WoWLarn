@@ -342,5 +342,45 @@ function ui:ShowInventory()
    ns.prompt:Clear()
    ns.inventory:Close()
 end
-function ui:PickSpell() error("ui:PickSpell is not implemented yet (milestone 6)") end
+
+-- C: cast() asking for the spell. The spellbook opens beside the prompt; a spell is the
+-- three letter code, typed or clicked. Returns the code, or nil if the player cancelled.
+function ui:PickSpell()
+   ns.spellbook:Open(true)
+   local code = ""
+   local cancelled
+   while #code < 3 and not cancelled do
+      ns.prompt:Set(L["Enter your spell:"] .. " " .. code)
+      local key = self:GetKey()
+      if key == ESC then
+         cancelled = true
+      elseif key == "BACKSPACE" then
+         code = code:sub(1, -2)
+      elseif #key == 1 and key:match("%a") and not (code == "" and key == "D") then
+         code = code .. key
+      end
+   end
+   ns.prompt:Clear()
+   ns.spellbook:Close()
+   if cancelled then return nil end
+   return code
+end
+
+-- C: the missile of godirect(): shows glyph on a tile for delay milliseconds.
+function ui:Missile(x, y, glyph, delay)
+   ns.map:SetOverlay(x, y, glyph)
+   self:Refresh("map")
+   self:Nap(delay)
+   ns.map:SetOverlay()
+   self:Refresh("map")
+end
+
+-- C: seemagic(). Lists the spells, scrolls and potions found so far until a key is pressed.
+function ui:ShowDiscoveries()
+   ns.spellbook:ShowDiscoveries()
+   ns.prompt:Set(L["Press any key to close the list"])
+   self:GetKey()
+   ns.prompt:Clear()
+   ns.spellbook:Close()
+end
 function ui:Store() error("ui:Store is not implemented yet (milestone 8)") end

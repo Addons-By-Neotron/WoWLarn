@@ -124,6 +124,13 @@ local function Parse()
    elseif key == "C" then
       ui.repcount = 0
       ns.Action.closeDoor()
+   elseif key == "c" then
+      ui.repcount = 0
+      ns.Spells.cast()
+   elseif key == "D" then
+      ui.repcount = 0
+      G.nomove = true
+      ui:ShowDiscoveries()
    elseif key == "i" then
       ui.repcount = 0
       G.nomove = true

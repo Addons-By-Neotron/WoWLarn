@@ -102,7 +102,25 @@ local function MMove(aa, bb, cc, dd)
 
    local tmp = mon[aa][bb]
    mon[cc][dd] = tmp
-   -- (the sphere of annihilation, C: OANNIHILATION, arrives with the spells in milestone 6)
+   if it == K.OANNIHILATION then
+      -- demons dispel spheres
+      if tmp >= DEMONLORD then
+         local talismans = 0
+         for x = 1, K.IVENSIZE do
+            if G.iven[x] == K.OSPHTALISMAN then talismans = talismans + 1 end
+         end
+         if talismans == 0 or (talismans ~= 0 and tmp == K.LUCIFER and rnd(10) > 7) then
+            ui:Message(L["The %s dispels the sphere!"], monster[tmp].name)
+            ns.Sphere.rmsphere(cc, dd)  -- delete the sphere
+         else
+            it, tmp = 0, 0
+            mon[cc][dd] = 0  -- monster dead
+         end
+      else
+         it, tmp = 0, 0
+         mon[cc][dd] = 0  -- monster dead
+      end
+   end
 
    stealth[cc][dd] = 1
    local flag = 0
@@ -372,7 +390,7 @@ end
 function Monster.movemonst()
    if c[K.TIMESTOP] ~= 0 then return end  -- no action if time is stopped
    if c[K.HASTESELF] ~= 0 and c[K.HASTESELF] % 2 == 0 then return end
-   -- (the spheres of annihilation move here: milestone 6)
+   if #G.spheres > 0 then ns.Sphere.movsphere() end  -- move the spheres of annihilation
    if c[K.HOLDMONST] ~= 0 then return end  -- no action if monsters are held
 
    -- determine the window of monsters to move; the C works with 0-based coordinates

@@ -42,6 +42,8 @@ local function HasFlag(flags, bit)
    return flags % (bit * 2) >= bit
 end
 
+Monster.hasFlag = HasFlag
+
 local function Trunc(x)
    return x >= 0 and math.floor(x) or -math.floor(-x)
 end
@@ -175,6 +177,8 @@ local function IfBlind(x, y)
    end
    G.lastmonst = name
 end
+
+Monster.ifBlind = IfBlind
 
 -- C: fullhit(). Damage against a monster of a number of full hits.
 local function FullHit(xx)

@@ -79,6 +79,7 @@ V.GROUND = {
 }
 V.WALL = { 0.52, 0.48, 0.43 }
 V.GLYPH_COLOR = { 1, 0.9, 0.5 }
+V.MISSILE_COLOR = { 0.6, 0.85, 1 }
 
 local ground = {}
 function V.Blend(from, to, t)

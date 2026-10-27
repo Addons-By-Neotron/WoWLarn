@@ -33,6 +33,12 @@ function ns.rund(x)
    return random(0, x - 1)
 end
 
+-- C: vxy(). Keeps a coordinate on the level (the C runs 0..MAXX-1, here 1..MAXX).
+function ns.vxy(x, y)
+   local K = ns.K
+   return math.max(1, math.min(K.MAXX, x)), math.max(1, math.min(K.MAXY, y))
+end
+
 -- C integer division truncates toward zero.
 function ns.idiv(a, b)
    local quotient = a / b

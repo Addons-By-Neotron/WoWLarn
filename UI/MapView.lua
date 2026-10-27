@@ -139,6 +139,11 @@ local function DrawTile(cell, x, y, ground)
    end
 end
 
+-- C: the missile shown by godirect(). Call without arguments to remove it.
+function map:SetOverlay(x, y, glyph)
+   self.overlay = x and { x = x, y = y, glyph = glyph } or nil
+end
+
 --@debug@
 -- Prints what the map would draw, to find out why tiles are missing.
 function map:Debug()
@@ -190,6 +195,17 @@ function map:Draw()
    for row = 1, rows do
       for col = 1, cols do
          DrawTile(self.cells[row][col], camX + col - 1, camY + row - 1, ground)
+      end
+   end
+   -- The missile of a spell on its way.
+   local overlay = self.overlay
+   if overlay then
+      local cell = self.cells[overlay.y - camY + 1] and self.cells[overlay.y - camY + 1][overlay.x - camX + 1]
+      if cell then
+         cell.icon:Hide()
+         cell.glyph:SetText(overlay.glyph)
+         cell.glyph:SetTextColor(unpack(V.MISSILE_COLOR))
+         cell.glyph:Show()
       end
    end
    -- The player.

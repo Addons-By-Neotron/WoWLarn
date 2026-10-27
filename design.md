@@ -383,7 +383,7 @@ Each milestone is playable or testable in game.
    - monsters are drawn as their ASCII letter in red (tiles and minimap); invisible stalkers, demons without the eye of Larn and the mimic follow `Display.visibleMonster`
    - deliberate carry-overs from the C: a fire-breathing monster still hurts a fire-resistant player (the C `else` only guards the message); the scared-monster branch of `movemt` reads the `tmpitem` left over from an earlier move, as the C does
    - difficulty: `Monster.init` scales the monsters by `c[HARDGAME]` (C: `sethard`); no option sets the difficulty yet, so it is always 0
-   - left out on purpose: the spheres of annihilation (`movsphere`, `rmsphere`, the `OANNIHILATION` branch of `mmove`) wait for the spells in milestone 6; `annihilate` and `genmonst` belong to scrolls and spells (5 and 6)
+   - the spheres of annihilation (`movsphere`, `rmsphere`, the `OANNIHILATION` branch of `mmove`) came with the spells in milestone 6
    - still to do from this list: monster icons or portraits on the tiles and the target model with animations (they need the models of milestone 10; the glyphs are the fallback), the death screen and scoreboard (milestone 9)
 5. **Items** (done):
    - `Object.lua` `lookForObject`: gold, potions, scrolls, books, cookies, gems, orbs and wands (via `FindItem`), pits, stairs, elevators, chests, teleporter, door, arrow, dart and trapdoor traps, shafts, mushrooms and drugs, the annihilation sphere
@@ -391,9 +391,13 @@ Each milestone is playable or testable in game.
    - `UI/Inventory.lua`: the 26-slot window; `ui:PickItem`, `ui:ShowInventory`, `ui:Choose`; clicking a slot injects its letter
    - effects row: `V.EFFECTS` lists the timers, `side:UpdateEffects` shows an icon with a tooltip (name and turns left) for each running one; the item icons in `V.object` are placeholders to curate
    - left to milestones 7 and 8: altars, thrones, fountains, statues, mirrors, the brass lamp (milestone 7); the school, banks, DND store, trading post, home, pad and LRS (milestone 8); they print "(Not implemented yet.)"
-   - left to milestone 6: the scroll of pulverization is a message stub until the ray spells exist
-   - still to do: the `D` discoveries command (`seemagic`)
-6. **Spells:** spellbook, `PickSpell`/`PickDirection`, all 39 spells, `spelweird`, projectile/area animations, spheres of annihilation.
+6. **Spells** (done):
+   - `Spells.lua`: `cast`, `speldamage` with all 39 spells, `direct`, `godirect` (rays that break walls, doors, statues and thrones, bounce off mirrors and return from demons), `omnidirect`, `tdirect`, `makewall`, `dirpoly`, `genmonst`, `nospell`; spell numbers are 1..39 here, so the numbers in the C switch are shifted by one (`direct(x - 1, ...)` of the demon spell keeps the C quirk of using the genocide slot)
+   - `Sphere.lua`: `newsphere`, `rmsphere`, `sphboom`, `movsphere`; the spheres of every level are in `G.spheres` (newest first) with `c[SPHCAST]` as their count; the C quirks stay (a cancelled sphere still appears, the talisman check inside the blast loop)
+   - `Data/Tables.lua` gets `T.spelweird[monster][spell]` and `T.spelmes[reaction]`
+   - UI: `UI/Spellbook.lua` lists the known spells while casting (type the three letters or click one; hover for the description) and the discoveries list (`D`); `ui:PickSpell`, `ui:Missile` (a glyph travels along the ray, drawn by `map:SetOverlay`), `ui:ShowDiscoveries`
+   - changed from the C: Esc cancels the direction question (the C cannot be cancelled), the spell point stays spent; the scroll of pulverization now fires its ray
+   - the spell animations with models wait for milestone 10; the glyph on the tile is the fallback
 7. **Features + artifacts:** altars, thrones, fountains, statues, mirrors, the brass lamp genie, and all unique artifact effects.
 8. **Town buildings:** store windows for DND store, school, bank and 5th branch, trading post, LRS taxes, home, and the goblin alchemist.
 9. **Endgame + persistence:** save/resume in SVs, win at home, time limit, scoreboards (winners/dead with inventory), tax letters.
