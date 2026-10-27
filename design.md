@@ -454,3 +454,17 @@ Each milestone is playable or testable in game.
    - The 2.5D model view (§6.1) is the goal, with a **fixed north-up tilted camera**. A rotating camera would make the 8 movement directions confusing.
    - Build the **flat tile renderer first** (milestones 2–5), then add 2.5D as milestone 10. Both sit behind the `MapView` interface.
 5. ~~Tile art source~~ **Decided:** use **WoW textures/fileIDs** first, with the flat-color fallback. Revisit a bundled texture set later if WoW art doesn't work well or isn't available on all clients.
+6. **Equippable items (idea, not decided):** make accessories work more like WoW instead of "carry it and it works".
+   - **The original:**
+     - Rings, belts, the amulet and the artifacts take effect just by being in the pack; there is no equip step.
+     - There is **no limit on the number of rings**. The pack is the only limit, so ten rings of protection all stack (`Player.recalc` adds `ivenarg + 1` for every `OPROTRING`, `ODAMRING`, `OREGENRING`, `OENERGYRING` and `OBELT` it finds). The stat rings (`ODEXRING`, `OSTRRING`, `OCLEVERRING`) apply once when they are picked up (`take`) and are undone when they are dropped (`dropobj`).
+     - Only the weapon (`w`), body armour (`W`) and shield are "worn", with `T` to take them off.
+   - **A WoW-like version:**
+     - Add equipment slots: two ring slots, a belt, an amulet and perhaps one slot for the carried artifacts, shown on a character panel next to the inventory. Wield, wear and the shield keep their keys; a new command (`P` for "put on") and `T` handle the rest.
+     - Only equipped items would count in `recalc`. Items in the pack would do nothing, which also stops the unlimited stacking of rings.
+   - **What it would change:**
+     - `Player.take` and `dropObject` no longer apply stat changes; equip and unequip do.
+     - Curses and theft need rules: a nymph steals only from the pack, or also from the slots? Does a cursed ring stick until the remove curse scroll?
+     - Saved games store the equipped slots.
+     - The inventory window gets an "equipped" mark, and the item tooltips and icons matter more.
+   - **Balance:** capping rings to two cuts the strongest builds of the original, so decide whether this is worth it. A softer option keeps the stacking and only adds the equip step for the display.
