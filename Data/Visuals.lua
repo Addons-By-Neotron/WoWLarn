@@ -149,6 +149,7 @@ V.DISPLAY = {
    -- [monster id] = displayID, or a list of them
    [K.LEMMING] = 31,  -- a murloc
    [K.GNOME] = Range(6920, 6931),
+   [K.HOBGOBLIN] = { 30244, 30261, 30262, 30263, 30264, 30265, 30266, 30267 },
 }
 
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
