@@ -103,7 +103,7 @@ local function StockRows(page)
          local entry = ns.ItemTables.dnd[index]
          rows[#rows + 1] = {
             key = Letter((index - 1) % K.IVENSIZE + 1), text = StockName(entry),
-            price = format("%6d", entry[1] * 10), icon = entry[3],
+            price = format("%6d", entry[1] * 10), icon = entry[3], arg = entry[4],
          }
       end
    end
@@ -300,7 +300,7 @@ local function GemRows()
    for slot = 1, K.IVENSIZE do
       if GEMS[iven[slot]] then
          rows[#rows + 1] = { key = Letter(slot), text = ns.Player.itemName(slot),
-            price = format("%6d", GemValue(slot)), icon = iven[slot] }
+            price = format("%6d", GemValue(slot)), icon = iven[slot], arg = ivenarg[slot] }
       end
    end
    return rows

@@ -83,10 +83,14 @@ function store:Create(parent)
          ns.ui:InjectKey(self.key)
       end)
       button:SetScript("OnEnter", function(self)
-         if not self.tip then return end
-         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-         GameTooltip:SetText(self.tip, 1, 1, 1, 1, true)
-         GameTooltip:Show()
+         if self.id then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            ns.ItemInfo.tooltip(self.id, self.arg)
+         elseif self.tip then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(self.tip, 1, 1, 1, 1, true)
+            GameTooltip:Show()
+         end
       end)
       button:SetScript("OnLeave", GameTooltip_Hide)
       button:Hide()
@@ -117,7 +121,8 @@ function store:Open(title, intro, columns)
    self.frame:Show()
 end
 
--- rows: { key = "a", text = "...", price = "...", icon = object id, dim = true, tip = "..." }
+-- rows: { key = "a", text = "...", price = "...", icon = object id, arg = its argument (the
+-- tooltip of an item), dim = true, tip = "..." }
 -- Rows fill the first column top to bottom, then the second.
 function store:SetRows(rows)
    if not self.frame then return end
@@ -130,7 +135,7 @@ function store:SetRows(rows)
          button:SetSize(width - 4, ROW_H - 2)
          button:ClearAllPoints()
          button:SetPoint("TOPLEFT", 8 + column * ROW_W, -(HEADER_H + self.introHeight + ((index - 1) % perColumn) * ROW_H))
-         button.key, button.tip = row.key, row.tip
+         button.key, button.tip, button.id, button.arg = row.key, row.tip, row.icon, row.arg or 0
          local icon = row.icon and V.ObjectIcon(row.icon)
          if icon then
             button.icon:SetTexture(icon)
