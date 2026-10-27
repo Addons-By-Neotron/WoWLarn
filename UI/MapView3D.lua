@@ -32,7 +32,9 @@ local map3d = {}
 ns.map3d = map3d
 
 local TILE, WALL_HEIGHT = 64, 64
-local CAMERA_BACK, CAMERA_HEIGHT, FOCAL = 380, 300, 330
+local CAMERA_BACK = 360
+local TILE_PIXELS = 55  -- how wide the tile of the player is on the screen
+local CAMERA_HEIGHT, FOCAL  -- from the camera angle, see map3d:Draw
 local PLAYER_AT = 0.62  -- how far down the view the player stands
 local NEAR_ROWS, FAR_ROWS, SIDE_COLUMNS = 4, 13, 14
 local ROWS = NEAR_ROWS + FAR_ROWS + 1
@@ -42,7 +44,23 @@ local FOG_REACH = 1700  -- ahead at which things are at their darkest
 local floor, max, min = math.floor, math.max, math.min
 local MAXX, MAXY = K.MAXX, K.MAXY
 
-local FACING = math.pi * 1.5  -- the way models look: towards the camera
+local FACING = math.pi * 1.5  -- the way a model looks when it faces the camera (south)
+local TURN = 1  -- 1 if a larger facing turns a model from south to east, -1 if the other way
+-- how far to turn from south, for the directions of the game (south, east, north, west, then
+-- northeast, northwest, southeast, southwest)
+local TURN_TO = {
+   0, math.pi / 2, math.pi, math.pi * 1.5, math.pi * 0.75, math.pi * 1.25, math.pi * 0.25, math.pi * 1.75,
+}
+-- the direction that goes from one tile towards another, as a number of the game
+local DIRECTION = {
+   [0] = { [1] = 1, [0] = 1, [-1] = 3 },
+   [1] = { [0] = 2, [-1] = 5, [1] = 7 },
+   [-1] = { [0] = 4, [-1] = 6, [1] = 8 },
+}
+local function Facing(dir)
+   return FACING + TURN * (TURN_TO[dir] or 0)
+end
+local function Sign(value) return value > 0 and 1 or value < 0 and -1 or 0 end
 local MODEL_ASPECT = 1.7  -- how much taller than wide a model is drawn
 local FLOOR, WALL, ACTOR = 0, 1, 2  -- the layers of a row, back to front
 
@@ -108,14 +126,14 @@ end
 
 -- A creature standing on the floor at (x, y) in the view: a model of the unit ("player") or of
 -- a display, width pixels wide and about twice as tall.
-local function Model(layer, look, x, y, width)
+local function Model(layer, look, x, y, width, facing)
    layer.usedModels = layer.usedModels + 1
    local frame = layer.models[layer.usedModels]
    if not frame then
       frame = CreateFrame("Frame", nil, layer)
       frame.model = CreateFrame("PlayerModel", nil, frame)
       frame.model:SetAllPoints()
-      frame.model:SetScript("OnModelLoaded", function(self) self:SetFacing(FACING) end)
+      frame.model:SetScript("OnModelLoaded", function(self) self:SetFacing(frame.facing or FACING) end)
       layer.models[layer.usedModels] = frame
    end
    if frame.look ~= look then  -- (setting the look again would restart it)
@@ -125,7 +143,11 @@ local function Model(layer, look, x, y, width)
       else
          frame.model:SetDisplayInfo(look)
       end
-      frame.model:SetFacing(FACING)
+      frame.facing = nil
+   end
+   if frame.facing ~= facing then
+      frame.facing = facing
+      frame.model:SetFacing(facing)
    end
    frame:ClearAllPoints()
    frame:SetPoint("BOTTOM", layer, "TOPLEFT", x, -y)
@@ -244,14 +266,16 @@ local function DrawTile(layers, x, y, ground)
    if x == G.playerx and y == G.playery then
       local size = TILE * 0.9 * scale
       if models then
-         Model(layers[ACTOR], "player", mx, my + size * 0.1, size * 1.1)
+         Model(layers[ACTOR], "player", mx, my + size * 0.1, size * 1.1, Facing(G.facing))
       else
          Icon(layers[ACTOR], V.ClassIcon(G.class), mx, my + size * 0.15, size, size)
       end
    elseif monster ~= 0 then
       local display = models and V.MonsterDisplay(monster)
       if display then
-         Model(layers[ACTOR], display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale)
+         -- monsters face the player they are after
+         local toward = DIRECTION[Sign(G.playerx - x)][Sign(G.playery - y)]
+         Model(layers[ACTOR], display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, Facing(toward))
       else
          Glyph(layers[ACTOR], V.MonsterGlyph(monster), V.MONSTER_COLOR, mx, my + TILE * 0.1 * scale, TILE * 0.9 * scale)
       end
@@ -271,6 +295,10 @@ function map3d:Draw()
    self.shown = true
    local view = self.view
    local width, height = view:GetWidth(), view:GetHeight()
+   -- the camera angle (degrees above the floor): steeper looks more like the flat map
+   local angle = ns.mod.db.profile.cameraAngle or 55
+   CAMERA_HEIGHT = CAMERA_BACK * math.tan(math.rad(angle))
+   FOCAL = CAMERA_BACK * TILE_PIXELS / TILE
    camera.centerX = width / 2
    camera.horizon = height * PLAYER_AT - CAMERA_HEIGHT * FOCAL / CAMERA_BACK
    camera.x = (G.playerx - 0.5) * TILE

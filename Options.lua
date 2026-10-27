@@ -97,6 +97,18 @@ local function BuildOptions()
                   ns.ui:Refresh("map")
                end,
             },
+            cameraAngle = {
+               type = "range",
+               name = L["Camera angle"],
+               desc = L["How high the camera is in the 2.5D view.  Steeper looks more like the flat map."],
+               order = 16.5,
+               min = 30, max = 80, step = 5,
+               get = function() return mod.db.profile.cameraAngle or 55 end,
+               set = function(_, value)
+                  mod.db.profile.cameraAngle = value
+                  ns.ui:Refresh("map")
+               end,
+            },
             models = {
                type = "toggle",
                name = L["Creature models"],

@@ -102,7 +102,7 @@ function Monster.makeMonst(lev)
       tmp = tmp + 1  -- genocided?
    end
 
-   if G.level <= DBOTTOM and rnd(100) < 10 then
+   if G.level <= DBOTTOM and rnd(100) < 10 and not Monster.lemmingsEnough() then
       tmp = K.LEMMING
    end
    return tmp
@@ -203,6 +203,23 @@ local function DropSomething(x, y, monst)
       if rnd(101) >= 75 then ns.Item.createGem() end
       if rnd(5) == 1 then DropSomething(x, y, K.LEPRECHAUN) end
    end
+end
+
+-- FIX: not in the C. Lemmings multiply when hit, when they move and when monsters are made,
+-- which fills a level with them.  There are never more than MAX_LEMMINGS on a level.
+local MAX_LEMMINGS = 6
+function Monster.lemmingsEnough()
+   local count = 0
+   for x = 1, K.MAXX do
+      local column = mon[x]
+      for y = 1, K.MAXY do
+         if column[y] == K.LEMMING then
+            count = count + 1
+            if count >= MAX_LEMMINGS then return true end
+         end
+      end
+   end
+   return false
 end
 
 -- C: hitm(). Damages the monster at (x, y); returns the hit points it absorbed. The damage
@@ -334,7 +351,7 @@ function Monster.hitmonster(x, y)
    if monst == K.METAMORPH and hitp[x][y] < 25 and hitp[x][y] > 0 then
       mon[x][y] = K.BRONZEDRAGON + rund(9)
    end
-   if mon[x][y] == K.LEMMING and rnd(100) <= 40 then
+   if mon[x][y] == K.LEMMING and rnd(100) <= 40 and not Monster.lemmingsEnough() then
       Monster.createMonster(K.LEMMING)
    end
    ns.ui:Refresh("all")

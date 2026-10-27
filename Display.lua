@@ -80,6 +80,7 @@ function Display.moveplayer(dir)
       dir = rund(9)  -- if confused any direction
    end
 
+   if dir >= 1 then G.facing = dir end  -- the way the model of the player looks
    local k = G.playerx + DIROFFX[dir]
    local m = G.playery + DIROFFY[dir]
    if k < 1 or k > MAXX or m < 1 or m > MAXY then

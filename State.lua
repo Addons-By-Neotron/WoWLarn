@@ -110,6 +110,7 @@ function G.Reset()
    G.level = 0
    G.playerx, G.playery = 1, 1
    G.lastpx, G.lastpy = 1, 1
+   G.facing = 1         -- the last direction the player moved or attacked in (south)
    G.gtime = 0
    G.wizard = false
    G.dead = false       -- set by Player.died

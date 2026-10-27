@@ -131,7 +131,7 @@ local function MMove(aa, bb, cc, dd)
 
    if tmp == K.LEMMING then
       -- 2% chance moving a lemming creates a new lemming in the old spot
-      if rnd(100) <= 2 then
+      if rnd(100) <= 2 and not Monster.lemmingsEnough() then
          mon[aa][bb] = K.LEMMING
          know[aa][bb] = 1
       else

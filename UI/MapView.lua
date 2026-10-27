@@ -193,7 +193,7 @@ end
 -- Draws the part of the level around the player.
 -- True if the 2.5D view is the one to show (a setting).
 function map:Is3D()
-   return ns.mod.db.profile.view == "3d"
+   return ns.mod.db.profile.view == "3d" and G.level ~= 0  -- (the town is always flat)
 end
 
 -- Shows or hides the flat tiles.
