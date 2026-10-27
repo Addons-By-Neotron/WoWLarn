@@ -142,8 +142,10 @@ function ui:Flush()
    end
 end
 
--- C: model animations for attacks, wounds, spells (milestone 4+).
-function ui:Animate(event)
+-- Model animations of the 2.5D view: kind is "hit", "bite", "wound", "die" or "hurt" (see
+-- map3d:Animate); x, y the tile involved.
+function ui:Animate(kind, x, y, monster)
+   ns.map3d:Animate(kind, x, y, monster)
 end
 
 -- C: nap(). Pauses the game thread; "fast" mode skips it.

@@ -142,6 +142,7 @@ function Player.losehp(x, quiet)
    if G.dead then return end
    if not quiet and x > 0 then ns.ui:Message(L["You lose %d hit points."], x) end
    c[K.HP] = c[K.HP] - x
+   if x > 0 then ns.ui:Animate("hurt") end
    if c[K.HP] <= 0 then
       ns.ui:Message(L["Alas, you have died."])
       ns.ui:Nap(3000)

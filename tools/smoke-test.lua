@@ -38,6 +38,7 @@ UnitName = function() return "Tester" end
 UnitSex = function() return 2 end
 geterrorhandler = function() return function(e) print("ERRHANDLER: " .. tostring(e)) end end
 local timers = {}
+GetTime = function() return 0 end
 C_Timer = { After = function(sec, fn) timers[#timers + 1] = { sec, fn } end }
 LibStub = function() return {
    GetLocale = function() return setmetatable({}, { __index = function(_, k) return k end }) end,

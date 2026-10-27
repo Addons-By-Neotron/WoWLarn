@@ -268,6 +268,7 @@ function Monster.hitm(x, y, amt, hitmsg)
    local hpoints = hitp[x][y]
    Msg(hitmsg or L["The %s takes %d damage."], G.lastmonst, amt)
    if hpoints <= amt then
+      ns.ui:Animate("die", x, y, monst)
       Msg(L["The %s died!"], G.lastmonst)
       ns.Player.raiseExperience(monster[monst].experience)
       mon[x][y], know[x][y] = 0, 0  -- C: disappear(x, y)
@@ -292,6 +293,7 @@ function Monster.hitm(x, y, amt, hitmsg)
       return hpoints
    end
    hitp[x][y] = hpoints - amt
+   ns.ui:Animate("wound", x, y)
    return amt2
 end
 
@@ -310,6 +312,7 @@ function Monster.hitmonster(x, y)
 
    G.hit3flag = true
    IfBlind(x, y)
+   ns.ui:Animate("hit", x, y)
 
    local tmp = G.monster[monst].armorclass + c[K.LEVEL] + c[K.DEXTERITY]
       + idiv(c[K.WCLASS], 4) - 12 - c[K.HARDGAME]
@@ -593,6 +596,7 @@ function Monster.hitplayer(x, y)
    local name = G.lastmonst
 
    if mster == K.LEMMING then return end
+   ns.ui:Animate("bite", x, y)
 
    if mster < DEMONLORD and c[K.INVISIBILITY] ~= 0 and rnd(33) < 20 then
       Msg(L["The %s misses wildly!"], name)

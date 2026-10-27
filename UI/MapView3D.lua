@@ -64,6 +64,8 @@ local function Facing(dir)
 end
 local function Sign(value) return value > 0 and 1 or value < 0 and -1 or 0 end
 local MODEL_ASPECT = 1.7  -- how much taller than wide a model is drawn
+local ANIM = { stand = 0, death = 1, walk = 4, wound = 14, attack = 16 }  -- model animations
+local TWEEN = 0.16  -- seconds a step takes
 local FLOOR, WALL, ACTOR = 0, 1, 2  -- the layers of a row, back to front
 
 ----------------------------------------------------------------
@@ -128,14 +130,17 @@ end
 
 -- A creature standing on the floor at (x, y) in the view: a model of the unit ("player") or of
 -- a display, width pixels wide and about twice as tall.
-local function Model(layer, look, x, y, width, facing)
+local function Model(layer, look, x, y, width, facing, anim)
    layer.usedModels = layer.usedModels + 1
    local frame = layer.models[layer.usedModels]
    if not frame then
       frame = CreateFrame("Frame", nil, layer)
       frame.model = CreateFrame("PlayerModel", nil, frame)
       frame.model:SetAllPoints()
-      frame.model:SetScript("OnModelLoaded", function(self) self:SetFacing(frame.facing or FACING) end)
+      frame.model:SetScript("OnModelLoaded", function(self)
+         self:SetFacing(frame.facing or FACING)
+         if frame.anim and self.SetAnimation then self:SetAnimation(frame.anim) end  -- (loading resets it)
+      end)
       layer.models[layer.usedModels] = frame
    end
    if frame.look ~= look then  -- (setting the look again would restart it)
@@ -145,7 +150,12 @@ local function Model(layer, look, x, y, width, facing)
       else
          frame.model:SetDisplayInfo(look)
       end
-      frame.facing = nil
+      frame.facing, frame.anim = nil, nil
+   end
+   anim = anim or ANIM.stand
+   if frame.anim ~= anim then
+      frame.anim = anim
+      if frame.model.SetAnimation then frame.model:SetAnimation(anim) end
    end
    if frame.facing ~= facing then
       frame.facing = facing
@@ -267,12 +277,7 @@ local function DrawTile(layers, x, y, ground)
    local object = G.item[x][y]
    local models = ns.mod.db.profile.models ~= false and not ns.mod.db.profile.ascii
    if x == G.playerx and y == G.playery then
-      local size = TILE * 0.9 * scale
-      if models then
-         Model(layers[ACTOR], "player", mx, my + size * 0.1, size * 1.1, Facing(G.facing))
-      else
-         Icon(layers[ACTOR], V.ClassIcon(G.class), mx, my + size * 0.15, size, size)
-      end
+      return  -- (drawn at its own, possibly moving, position)
    elseif monster ~= 0 then
       local look = G.look[x][y]
       if look == 0 then
@@ -283,10 +288,15 @@ local function DrawTile(layers, x, y, ground)
       if display then
          -- monsters face the player they are after
          local toward = DIRECTION[Sign(G.playerx - x)][Sign(G.playery - y)]
-         Model(layers[ACTOR], display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, Facing(toward))
+         local entry = map3d.anims[x * 100 + y]
+         local anim = entry and entry.expires > GetTime() and entry.anim or nil
+         Model(layers[ACTOR], display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, Facing(toward), anim)
       else
          Glyph(layers[ACTOR], V.MonsterGlyph(monster), V.MONSTER_COLOR, mx, my + TILE * 0.1 * scale, TILE * 0.9 * scale)
       end
+   elseif map3d.ghosts[x * 100 + y] and map3d.ghosts[x * 100 + y].expires > GetTime() then
+      local ghost = map3d.ghosts[x * 100 + y]
+      Model(layers[ACTOR], ghost.display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, ghost.facing, ANIM.death)
    elseif object ~= 0 then
       local icon = V.ObjectIcon(object)
       local size = TILE * 0.6 * scale
@@ -296,6 +306,79 @@ local function DrawTile(layers, x, y, ground)
          Glyph(layers[ACTOR], V.ObjectGlyph(object), V.GLYPH_COLOR, mx, my + size * 0.1, size)
       end
    end
+end
+
+map3d.anims, map3d.ghosts = {}, {}  -- by tile (x * 100 + y): what a monster there is doing
+map3d.playerAnim = nil  -- { anim, expires }
+
+local function Redraw()
+   if map3d.shown then ns.map:Draw() end
+end
+
+-- Something happens on the tile (x, y), for a while: "hit" (the player attacks it), "bite" (the
+-- monster there attacks), "wound", "die" (the monster is gone from the map by now) and
+-- "hurt" (the player is wounded).
+function map3d:Animate(kind, x, y, monster)
+   local now, key = GetTime(), x and x * 100 + y
+   local duration = 0.7
+   if x and kind ~= "hurt" then  -- the player turns towards what it fights
+      local dir = DIRECTION[Sign(x - G.playerx)][Sign(y - G.playery)]
+      if dir and (kind == "hit" or kind == "bite") then G.facing = dir end
+   end
+   if kind == "hit" then
+      self.playerAnim = { anim = ANIM.attack, expires = now + duration }
+   elseif kind == "hurt" then
+      self.playerAnim = { anim = ANIM.wound, expires = now + duration }
+   elseif kind == "bite" then
+      self.anims[key] = { anim = ANIM.attack, expires = now + duration }
+   elseif kind == "wound" then
+      self.anims[key] = { anim = ANIM.wound, expires = now + duration }
+   elseif kind == "die" then
+      duration = 1.6
+      local look = G.look[x][y]
+      local display = look ~= 0 and monster and V.MonsterDisplay(monster, look)
+      if display then
+         self.ghosts[key] = { display = display, expires = now + duration,
+            facing = Facing(DIRECTION[Sign(G.playerx - x)][Sign(G.playery - y)]) }
+      end
+   end
+   C_Timer.After(duration + 0.05, Redraw)  -- back to standing
+end
+
+-- Where the player is drawn: it glides to the tile it moved to.
+function map3d:Position()
+   local px, py = G.playerx, G.playery
+   if self.level ~= G.level or not self.toX or max(math.abs(px - self.toX), math.abs(py - self.toY)) > 1 then
+      self.level, self.t0 = G.level, nil
+      self.toX, self.toY = px, py
+      return px, py, false
+   end
+   local now = GetTime()
+   local curX, curY = self.toX, self.toY
+   if self.t0 then
+      local f = min(1, (now - self.t0) / TWEEN)
+      curX, curY = self.fromX + (self.toX - self.fromX) * f, self.fromY + (self.toY - self.fromY) * f
+   end
+   if px ~= self.toX or py ~= self.toY then
+      self.fromX, self.fromY, self.t0 = curX, curY, now
+      self.toX, self.toY = px, py
+      curX, curY = self.fromX, self.fromY
+   end
+   if self.t0 and now - self.t0 >= TWEEN then self.t0 = nil end
+   if self.t0 then
+      if not self.view:GetScript("OnUpdate") then
+         local since = 0
+         self.view:SetScript("OnUpdate", function(view, elapsed)
+            since = since + elapsed
+            if since < 0.03 then return end
+            since = 0
+            Redraw()
+            if not map3d.t0 then view:SetScript("OnUpdate", nil) end
+         end)
+      end
+      return curX, curY, true
+   end
+   return self.toX, self.toY, false
 end
 
 function map3d:Draw()
@@ -310,8 +393,10 @@ function map3d:Draw()
    FOCAL = CAMERA_DISTANCE * TILE_PIXELS / TILE
    camera.centerX = width / 2
    camera.centerY = height * PLAYER_AT
-   camera.x = (G.playerx - 0.5) * TILE
-   camera.y = (G.playery - 0.5) * TILE + CAMERA_BACK
+   local posX, posY, walking = self:Position()
+   camera.x = (posX - 0.5) * TILE
+   camera.y = (posY - 0.5) * TILE + CAMERA_BACK
+   local roundX, roundY = floor(posX + 0.5), floor(posY + 0.5)
    local ground = V.Ground(G.level)
 
    for row = 1, ROWS do
@@ -322,11 +407,27 @@ function map3d:Draw()
    end
    -- Row 1 is the farthest (north), the last row the nearest.
    for row = 1, ROWS do
-      local y = G.playery - FAR_ROWS + (row - 1)
+      local y = roundY - FAR_ROWS + (row - 1)
       if y >= 1 and y <= MAXY then
          local layers = self.layers[row]
-         for x = max(1, G.playerx - SIDE_COLUMNS), min(MAXX, G.playerx + SIDE_COLUMNS) do
+         for x = max(1, roundX - SIDE_COLUMNS), min(MAXX, roundX + SIDE_COLUMNS) do
             if G.know[x][y] ~= 0 then DrawTile(layers, x, y, ground) end
+         end
+      end
+   end
+   -- the player, in the row of the nearest tile
+   do
+      local layer = self.layers[FAR_ROWS + 1][ACTOR]
+      local mx, my, scale = Project((posX - 0.5) * TILE, (posY - 0.5) * TILE, 0)
+      if mx then
+         local size = TILE * 0.9 * scale
+         local models = ns.mod.db.profile.models ~= false and not ns.mod.db.profile.ascii
+         if models then
+            local entry = self.playerAnim
+            local anim = entry and entry.expires > GetTime() and entry.anim or (walking and ANIM.walk or ANIM.stand)
+            Model(layer, "player", mx, my + size * 0.1, size * 1.1, Facing(G.facing), anim)
+         else
+            Icon(layer, V.ClassIcon(G.class), mx, my + size * 0.15, size, size)
          end
       end
    end
