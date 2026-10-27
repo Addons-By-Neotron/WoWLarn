@@ -641,4 +641,5 @@ ui:Flush(); ns.map:Layout(); ns.map:Draw(); ns.side:UpdateMinimap(); ns.side:Upd
 G.c[K.HASTESELF] = 5; ns.side:UpdateStats()
 for _, b in ipairs(ns.side.effectIcons) do if b.effect[1] == K.HASTESELF then check(b.scripts and b.scripts.OnEnter, "effect tooltip"); b.scripts.OnEnter(b) end end
  G.c[K.HASTESELF] = 0; ns.side:UpdateStats()
+G.Reset(); ns.Create.makePlayer(ns.Classes[1]); ns.Create.newCaveLevel(0); ns.Create.newCaveLevel(3); ns.Display.showcell(G.playerx,G.playery); ns.map:Layout(); ns.map:Draw()
 print("ALL OK")

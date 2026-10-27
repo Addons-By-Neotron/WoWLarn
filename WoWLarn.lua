@@ -96,6 +96,8 @@ function mod:ChatCommand(input)
       ns.ui.co = nil
       ns.main:Show()
       if not ns.ui:IsActive() then ns.ui:NewGame() end
+   elseif cmd == "mapdebug" then
+      ns.map:Debug()
 --@end-debug@
    else
       self:PrintHelp()

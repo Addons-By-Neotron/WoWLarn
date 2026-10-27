@@ -42,7 +42,7 @@ end
 
 local function NewCell(frame)
    local cell = {}
-   cell.bg = frame:CreateTexture(nil, "BACKGROUND")
+   cell.bg = frame:CreateTexture(nil, "BORDER")
    cell.bg:SetSize(TILE, TILE)
    cell.icon = frame:CreateTexture(nil, "ARTWORK")
    cell.icon:SetPoint("TOPLEFT", cell.bg, "TOPLEFT", 3, -3)
@@ -138,6 +138,47 @@ local function DrawTile(cell, x, y, ground)
       cell.glyph:Hide()
    end
 end
+
+--@debug@
+-- Prints what the map would draw, to find out why tiles are missing.
+function map:Debug()
+   local known, walls, shown = 0, 0, 0
+   for x = 1, MAXX do
+      for y = 1, MAXY do
+         if G.know[x][y] ~= 0 then
+            known = known + 1
+            if G.item[x][y] == K.OWALL then walls = walls + 1 end
+         end
+      end
+   end
+   for _, cells in pairs(self.cells) do
+      for _, cell in pairs(cells) do
+         if cell.bg:IsShown() then shown = shown + 1 end
+      end
+   end
+   print(format("mapdebug: level %d player %d,%d cols %s rows %s cells shown %d known %d walls %d OWALL %s wall color %s",
+      G.level, G.playerx, G.playery, tostring(self.cols), tostring(self.rows), shown, known, walls,
+      tostring(K.OWALL), tostring(V.WALL and V.WALL[1])))
+   local camX = max(1, min(G.playerx - floor(self.cols / 2), MAXX - self.cols + 1))
+   local camY = max(1, min(G.playery - floor(self.rows / 2), MAXY - self.rows + 1))
+   print(format("mapdebug: camera %d,%d frame %dx%d visible %s", camX, camY, self.frame:GetWidth(), self.frame:GetHeight(),
+      tostring(self.frame:IsVisible())))
+   local listed = 0
+   for row = 1, self.rows do
+      for col = 1, self.cols do
+         local x, y = camX + col - 1, camY + row - 1
+         if x <= MAXX and y <= MAXY and G.know[x][y] ~= 0 and listed < 6 then
+            listed = listed + 1
+            local cell = self.cells[row][col]
+            print(format("  tile %d,%d item %d cell %d,%d bg shown %s visible %s left %s top %s", x, y, G.item[x][y], col, row,
+               tostring(cell.bg:IsShown()), tostring(cell.bg:IsVisible()), tostring(cell.bg:GetLeft()), tostring(cell.bg:GetTop())))
+         end
+      end
+   end
+   local ok, err = pcall(self.Draw, self)
+   print("mapdebug: Draw " .. (ok and "ok" or tostring(err)))
+end
+--@end-debug@
 
 -- Draws the part of the level around the player.
 function map:Draw()
