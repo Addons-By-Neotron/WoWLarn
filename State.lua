@@ -95,6 +95,8 @@ function G.Reset()
    G.lastpx, G.lastpy = 1, 1
    G.gtime = 0
    G.wizard = false
+   G.dead = false       -- set by Player.died
+   G.lastnum = 0        -- cause of the last damage, for the scoreboard
    G.hitflag, G.hit2flag, G.hit3flag = false, false, false
    G.nomove, G.dropflag, G.viewflag = false, false, false
    G.rmst = 80          -- random monster creation counter

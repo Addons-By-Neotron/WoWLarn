@@ -90,8 +90,8 @@ Game-logic modules mirror the C files so each one can be ported and checked agai
 WoW addons cannot read files at runtime, so all data files become Lua tables.
 
 - `tools/convert-data.py` (not shipped) reads the Ularn sources and writes the generated files, which are committed:
-  - done: `Constants.lua` (`ns.K`, from the three headers, with the index shifts applied), `Data/Tables.lua` (experience table, level titles, level names, glyph strings, object names), `Data/Monsters.lua` (the 65 monsters), `Data/Help.lua` (story and help pages)
-  - to come: `Data/Maps.lua` (milestone 3), `Data/Fortunes.lua`, and the spell, scroll, potion and probability tables with their milestones (5 and 6)
+  - done: `Constants.lua` (`ns.K`, from the three headers, with the index shifts applied), `Data/Tables.lua` (experience table, level titles, level names, glyph strings, object names), `Data/Monsters.lua` (the 65 monsters), `Data/Help.lua` (story and help pages), `Data/Maps.lua` (the 21 canned levels; the C only picks the first 20), `Data/Items.lua` (`scprob`, `potprob`, `nlpts`, `nch`, `nplt`, `ndgg`, `nsw`, `nobjtab`)
+  - to come: `Data/Fortunes.lua`, and the spell and scroll description tables with their milestones (5 and 6)
   - Modules import the constants they use as locals (`local HP, AC = K.HP, K.AC`), because a file may only have 200 locals.
   - Run `tools/convert-data.py` after changing it; never edit the generated files.
   - `Umaps`: 21 maps × 17 rows × 67 chars, separated by blank lines. Store as an array of 17 strings per map. Decode glyphs to object ids at level creation, as `create.c:cannedlevel` does, using `row:sub(x, x)` with 1-based x.
@@ -370,7 +370,13 @@ Each milestone is playable or testable in game.
    - character creation (§9), level 0 rendered with tiles
    - movement and run, minimap, stats panel, player model
    - still to do from this list: icon names in `Data/Visuals.lua` are placeholders to check in game; tile hover tooltips and click-to-move; the spell, scroll and potion tables (milestones 5 and 6); standing on a building does nothing yet (milestone 8)
-3. **Dungeon:** `Data/Maps.lua`, `makemaze`/`cannedlevel`/`treasureroom`, stairs, `newcavelevel` with persistence of visited levels, entrance/exit, volcano entrance, depth-themed ground.
+3. **Dungeon** (done):
+   - `Create.lua`: `makeMaze` (recursive-backtracker `Eat`, open rooms, corridor), `CannedLevel`, `TreasureRoom`/`TRoom`, `makeObject` with all object rules; `Item.lua`: `cgood`, `createItem`, `dropGold`, `something`, `newObject`; `Player.packWeight`, `Player.losehp`, `Player.died` (sets `G.dead`; the game loop ends when it is set, so code after `losehp` must check `G.dead`)
+   - `Object.lua`: dungeon entrance, stairs up and down, volcano shafts; `newCaveLevel` keeps visited levels; `ui:Choose` is the "(g) go inside, or (i) ignore it?" prompt
+   - depth-themed ground colours in `Visuals.Ground`
+   - the monster hooks `Monster.makeMonst` and `Monster.createMonster` are stubs until milestone 4, so levels have no monsters yet; Dealer McDope's pad (`OPAD`) is the goblin alchemist's
+   - deviations from the C, all deliberate: `scprob` and `potprob` are rolled one past their end in the C (it reads the next array); the last entry is used instead. A door in a treasure room may sit in a corner, so tests treat diagonal steps as connected. Canned maps have no level-1 exit; entering the dungeon opens it, as in the C. The `rnd(n)` loop limits in `makeObject` are re-rolled on every pass, as in the C.
+   - still to do from this list: pits, trapdoors, elevators and the rest of the features (milestone 7)
 4. **Monsters + combat:**
    - monster creation (`makemonst`/`fillmonst`) and `movemonst` (all AI)
    - `hitmonster`/`hitplayer`/`spattack`, `died`, experience and levelling, `regen`, random spawns

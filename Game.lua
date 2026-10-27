@@ -133,6 +133,7 @@ function Game.Run()
    while true do
       if not G.dropflag then
          ns.Object.lookForObject()  -- see if there is an object here
+         if G.dead then break end
       else
          G.dropflag = false  -- don't show what was just dropped
       end
@@ -152,8 +153,10 @@ function Game.Run()
       while G.nomove do  -- get commands and make moves
          G.nomove = false
          if Parse() then return end
+         if G.dead then break end
       end
 
+      if G.dead then break end
       Regen.regen()
       if c[K.TIMESTOP] == 0 then
          G.rmst = G.rmst - 1
@@ -163,4 +166,5 @@ function Game.Run()
          end
       end
    end
+   ui:Log("system", L["Game over. Press any key to start again."])
 end

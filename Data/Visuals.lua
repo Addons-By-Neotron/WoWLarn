@@ -45,9 +45,17 @@ V.GROUND = {
    town = { 0.16, 0.30, 0.12 },
    dungeon = { 0.13, 0.12, 0.11 },
    volcano = { 0.22, 0.08, 0.05 },
+   deep = { 0.06, 0.07, 0.13 },
+   lava = { 0.38, 0.10, 0.04 },
 }
 V.WALL = { 0.40, 0.36, 0.33 }
 V.GLYPH_COLOR = { 1, 0.9, 0.5 }
+
+local ground = {}
+function V.Blend(from, to, t)
+   for i = 1, 3 do ground[i] = from[i] + (to[i] - from[i]) * t end
+   return ground
+end
 
 function V.ObjectIcon(id)
    local visual = V.object[id]
@@ -62,8 +70,14 @@ function V.ClassIcon(class)
    return ICONS .. class.icon
 end
 
+-- The dungeon ground gets darker and bluer with depth, the volcano redder.
 function V.Ground(level)
    if level == 0 then return V.GROUND.town end
-   if level > K.DBOTTOM then return V.GROUND.volcano end
-   return V.GROUND.dungeon
+   local depth
+   if level > K.DBOTTOM then
+      depth = (level - K.DBOTTOM - 1) / (K.VBOTTOM - K.DBOTTOM - 1)
+      return V.Blend(V.GROUND.volcano, V.GROUND.lava, depth)
+   end
+   depth = (level - 1) / (K.DBOTTOM - 1)
+   return V.Blend(V.GROUND.dungeon, V.GROUND.deep, depth)
 end

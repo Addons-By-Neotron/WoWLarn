@@ -21,6 +21,8 @@ Data\Tables.lua
 Data\Monsters.lua
 Data\Classes.lua
 Data\Help.lua
+Data\Items.lua
+Data\Maps.lua
 Data\Visuals.lua
 Runner.lua
 Player.lua
@@ -28,6 +30,7 @@ Create.lua
 Regen.lua
 MoveMonst.lua
 Display.lua
+Item.lua
 Object.lua
 UI\Widgets.lua
 UI\MessageLog.lua

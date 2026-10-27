@@ -207,6 +207,24 @@ function ui:YesNo(message)
    return answer
 end
 
+-- C: the "(g) go inside, or (i) ignore it?" prompts. keys is a string of the accepted
+-- lowercase letters; "i" and Esc always ignore. Returns the key, "i" for Esc.
+function ui:Choose(message, keys)
+   ns.prompt:Set(message, nil)
+   local answer
+   while not answer do
+      local key = self:GetKey()
+      if key == ESC then
+         answer = "i"
+      elseif #key == 1 and (key == "i" or keys:find(key, 1, true)) then
+         answer = key
+      end
+   end
+   ns.prompt:Clear()
+   self:Log("prompt", "%s %s", message, answer)
+   return answer
+end
+
 -- C: more()/retcont().
 function ui:More()
    ns.prompt:Set(L["--- press space to continue ---"], "more")

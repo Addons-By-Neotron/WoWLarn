@@ -25,6 +25,15 @@ local _, ns = ...
 local Monster = {}
 ns.Monster = Monster
 
+-- C: makemonst(lev). Picks a monster id for the level; no monsters exist yet, so none (0).
+function Monster.makeMonst(lev)
+   return 0
+end
+
+-- C: createmonster(). Puts a monster next to the player. Arrives with the monsters.
+function Monster.createMonster(id)
+end
+
 -- C: movemonst(). No monsters exist yet.
 function Monster.movemonst()
 end

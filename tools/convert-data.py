@@ -193,7 +193,77 @@ def lua_long_string(text):
     return "[" + "=" * level + "[\n" + text + "]" + "=" * level + "]"
 
 
+def array_body(text, decl):
+    """Comment-free text between the braces of a C array initialiser."""
+    body = section(text, decl, ";")
+    body = body[body.index("{") + 1:body.rindex("}")]
+    return re.sub(r"/\*.*?\*/", "", body, flags=re.S)
+
+
+def lua_list(body, ids):
+    """Convert the elements of a C initialiser: names in ids come from K, numbers stay."""
+    items = []
+    for tok in re.findall(r"\w+", body):
+        items.append(tok if tok.isdigit() else f"K.{tok}")
+        assert tok.isdigit() or tok in ids, tok
+    return items
+
+
+def item_tables():
+    data = (ULARN / "data.c").read_text()
+    monster = (ULARN / "monster.c").read_text()
+    constants = (OUT / "Constants.lua").read_text()
+    ids = set(re.findall(r"^\s+(\w+) = ", constants, re.M))
+    out = [HEADER, "local _, ns = ...\n", "local K = ns.K\n", "local I = {}", "ns.ItemTables = I\n",
+           "-- Probability tables of data.c. Scroll and potion ids are the shifted (+1) ones;",
+           "-- rolls index them with rund(n) + 1. Where the C rolls past the end of a table",
+           "-- (scprob, potprob, nch) the entry past the end is nil here, see Create.lua.\n"]
+    for var in ("scprob", "potprob"):
+        items = lua_list(array_body(data, f"char {var}[]"), ids)
+        out.append(f"I.{var} = {{ " + ", ".join(items) + " }")
+        out.append(f"-- {len(items)} entries\n")
+    for var in ("nlpts", "nch", "nplt", "ndgg", "nsw"):
+        items = lua_list(array_body(data, f"char {var}[]"), ids)
+        out.append(f"I.{var} = {{ " + ", ".join(items) + " }")
+    # nobjtab[tmp] with tmp = rnd(n): the C array starts with a dummy 0 at index 0, kept as nobjtab[1] is
+    # the first real entry here (index = C index, so nobjtab[1..37]).
+    items = lua_list(array_body(monster, "static char     nobjtab[]"), ids)
+    assert items[0] == "0" and len(items) == 38, len(items)
+    out.append("-- nobjtab[tmp] for tmp = 1..37 (C index; the dummy entry 0 is dropped).")
+    out.append("I.nobjtab = { " + ", ".join(items[1:]) + " }")
+    out.append("\nreturn I")
+    (OUT / "Data" / "Items.lua").write_text("\n".join(out) + "\n")
+
+
+def maps():
+    # Umaps: 17 rows of 67 characters per map, one blank line between maps. The C picks rund(20).
+    raw = (ULARN.parent / "data" / "Umaps").read_text().split("\n")
+    maps_ = []
+    for i in range(0, len(raw), 18):
+        rows = raw[i:i + 17]
+        if len(rows) < 17:
+            break
+        assert all(len(r) == 67 for r in rows), (i, [len(r) for r in rows])
+        maps_.append(rows)
+    assert len(maps_) == 21, len(maps_)
+    out = [HEADER, "local _, ns = ...\n",
+           "-- ns.Maps[n][y] is row y (1..17) of canned level n: 67 characters, x = 1..67.",
+           "-- # wall, D door, . monster, ~ eye of larn, ! cure dianthroritis, - random object.",
+           "-- The C only ever picks maps 1..20 (rund(20)); the 21st is kept for completeness.",
+           "ns.Maps = {"]
+    for rows in maps_:
+        out.append("   {")
+        for r in rows:
+            assert "]]" not in r
+            out.append("      " + lua_string(r) + ",")
+        out.append("   },")
+    out.append("}")
+    (OUT / "Data" / "Maps.lua").write_text("\n".join(out) + "\n")
+
+
 constants()
 tables()
 help_pages()
+item_tables()
+maps()
 print("ok")

@@ -133,6 +133,83 @@ check(G.know[1][1] == 1 and G.know[K.MAXX][K.MAXY] == 1, "town fully known")
 ns.Create.newCaveLevel(0)
 check(buildings() == before, "level survives a save and restore")
 
+---------------------------------------------------------------- dungeon levels
+check(#ns.Maps >= 20 and #ns.Maps[1] == 17 and #ns.Maps[1][1] == 67, "maps loaded")
+check(#ns.ItemTables.scprob == 81 and #ns.ItemTables.potprob == 41 and #ns.ItemTables.nobjtab == 37, "item tables")
+math.randomseed(12345)
+local function count(what)
+   local n = 0
+   for x = 1, K.MAXX do for y = 1, K.MAXY do if G.item[x][y] == what then n = n + 1 end end end
+   return n
+end
+-- Floods from the first tile holding `from` through everything but walls (doors open,
+-- diagonal steps allowed: a treasure room's door may sit in a corner).
+local function reaches(from, to)
+   local seen, queue, head = {}, {}, 1
+   for x = 1, K.MAXX do for y = 1, K.MAXY do
+      if G.item[x][y] == from and #queue == 0 then queue[1] = { x, y }; seen[x * 100 + y] = true end
+   end end
+   while queue[head] do
+      local x, y = queue[head][1], queue[head][2]
+      head = head + 1
+      if G.item[x][y] == to then return true end
+      for d = 1, 8 do
+         local nx, ny = x + ns.Display.DIROFFX[d], y + ns.Display.DIROFFY[d]
+         if nx >= 1 and nx <= K.MAXX and ny >= 1 and ny <= K.MAXY and not seen[nx * 100 + ny]
+            and G.item[nx][ny] ~= K.OWALL then
+            seen[nx * 100 + ny] = true
+            queue[#queue + 1] = { nx, ny }
+         end
+      end
+   end
+   return false
+end
+local unreachable, total = 0, 0
+for trial = 1, 8 do
+   for lev = 1, 20 do
+      G.Reset(); ns.Create.makePlayer(ns.Classes[1]); ns.Create.newCaveLevel(0)
+      ns.Create.newCaveLevel(lev)
+      local tag = "level " .. lev .. " trial " .. trial
+      check(G.level == lev and G.Visited(lev), tag .. " made")
+      check(count(K.OSTAIRSUP) == ((lev > 1 and lev ~= K.DBOTTOM) and 1 or 0), tag .. " stairs up " .. count(K.OSTAIRSUP))
+      check(count(K.OSTAIRSDOWN) == ((lev ~= K.DBOTTOM and lev < K.VBOTTOM - 2) and 1 or 0), tag .. " stairs down")
+      check(count(K.OVOLUP) == (lev == K.DBOTTOM + 1 and 1 or 0), tag .. " volcano shaft")
+      for x = 1, K.MAXX do
+         -- Canned maps have no exit on level 1; entering the dungeon opens it (as in the C).
+         local exit = lev == 1 and x == 34
+         check(G.item[x][1] == K.OWALL and (exit or G.item[x][K.MAXY] == K.OWALL), tag .. " wall row at x=" .. x)
+      end
+      for y = 1, K.MAXY do check(G.item[1][y] == K.OWALL and G.item[K.MAXX][y] == K.OWALL, tag .. " wall column") end
+      if lev ~= K.DBOTTOM and lev + 1 <= 15 and lev > 1 and count(K.OSTAIRSUP) == 1 and count(K.OSTAIRSDOWN) == 1 then
+         total = total + 1
+         if not reaches(K.OSTAIRSUP, K.OSTAIRSDOWN) then unreachable = unreachable + 1 end
+      end
+   end
+end
+print(("stairs unreachable: %d of %d"):format(unreachable, total))
+check(unreachable == 0, "stairs are connected")
+
+-- visited levels are restored as they were
+G.Reset(); ns.Create.makePlayer(ns.Classes[1]); ns.Create.newCaveLevel(0); ns.Create.newCaveLevel(3)
+G.item[2][2] = K.OALTAR; G.iarg[2][2] = 77
+local snapshot = 0
+for x = 1, K.MAXX do for y = 1, K.MAXY do snapshot = snapshot + G.item[x][y] * (x + y) end end
+ns.Create.newCaveLevel(4); ns.Create.newCaveLevel(3)
+local after = 0
+for x = 1, K.MAXX do for y = 1, K.MAXY do after = after + G.item[x][y] * (x + y) end end
+check(after == snapshot and G.item[2][2] == K.OALTAR and G.iarg[2][2] == 77, "level 3 restored")
+
+-- createitem and gold
+G.Reset(); ns.Create.makePlayer(ns.Classes[1]); ns.Create.newCaveLevel(0)
+for x = 1, K.MAXX do for y = 1, K.MAXY do G.item[x][y] = 0 end end
+G.playerx, G.playery = 30, 8
+ns.Item.dropGold(100)
+local piles = 0
+for x = 29, 31 do for y = 7, 9 do if G.item[x][y] == K.OGOLDPILE then piles = piles + 1 end end end
+check(piles == 1, "gold pile dropped")
+for _ = 1, 50 do local id, arg = ns.Item.newObject(12); check(id >= 0 and arg >= 0, "newobject") end
+check(ns.Player.packWeight() >= 0, "pack weight")
+
 ---------------------------------------------------------------- the game
 ui.co = nil
 ui:NewGame()
@@ -170,6 +247,41 @@ ui:InjectKey("ESC"); check(not ns.main.focused, "Esc releases the keyboard")
 keys("Q"); keys("n"); check(ui:IsActive(), "quit declined")
 keys("Q"); keys("y"); check(not ui:IsActive(), "quit ends the game")
 keys("a"); check(ui:IsActive() and ns.picker.frame.shown, "any key starts a new game")
+
+-- stairs, entrance and shaft in a real game
+ns.picker.frame.shown = true
+ui:InjectKey("ENTER"); keys(" ")
+check(G.class and ui.wait == "key", "new game ready")
+local function Neighbour(what)
+   -- puts the player beside the object and returns the direction key that steps onto it
+   for x = 1, K.MAXX do for y = 1, K.MAXY do
+      if G.item[x][y] == what then
+         for key, dir in pairs({ j = 1, l = 2, k = 3, h = 4 }) do
+            local nx, ny = x - ns.Display.DIROFFX[dir], y - ns.Display.DIROFFY[dir]
+            if nx >= 1 and nx <= K.MAXX and ny >= 1 and ny <= K.MAXY and G.item[nx][ny] ~= K.OWALL then
+               G.item[nx][ny] = 0; G.mon[nx][ny] = 0
+               G.playerx, G.playery = nx, ny
+               return key
+            end
+         end
+      end
+   end end
+   error("object not found: " .. what)
+end
+local key = Neighbour(K.OENTRANCE)
+keys(key); check(last():find("You have found") and ui.wait == "key", "entrance prompt, got " .. tostring(last()))
+keys("g"); check(G.level == 1 and G.playerx == 34 and G.playery == K.MAXY - 1, "entered the dungeon at " .. G.playerx .. "," .. G.playery)
+keys("j"); check(G.level == 0 and G.item[G.playerx][G.playery] ~= K.OENTRANCE or G.level == 0, "left the dungeon")
+check(G.level == 0, "exit from level 1 leads to town")
+key = Neighbour(K.OVOLDOWN)
+keys(key); keys("c"); check(G.level == K.DBOTTOM + 1 and count(K.OVOLUP) == 1, "down the volcano shaft to " .. G.level)
+ns.Create.newCaveLevel(2)
+key = Neighbour(K.OSTAIRSUP)
+keys(key); check(last():find("circular staircase") and ui.wait == "key", "stairs prompt, got " .. tostring(last()))
+keys("u"); check(G.level == 1 and G.item[G.playerx][G.playery] == K.OSTAIRSDOWN, "up the stairs")
+key = Neighbour(K.OSTAIRSDOWN)
+keys(key); keys("d"); check(G.level == 2 and G.item[G.playerx][G.playery] == K.OSTAIRSUP, "down the stairs")
+keys("S"); ns.main:Show()
 
 -- redraw paths with a populated game
 ui:Flush(); ns.map:Layout(); ns.map:Draw(); ns.side:UpdateMinimap(); ns.side:UpdateStats()

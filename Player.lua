@@ -20,6 +20,7 @@ along with WoWLarn.  If not, see <https://www.gnu.org/licenses/old-licenses/gpl-
 
 **********************************************************************
 ]]
+local L = LibStub("AceLocale-3.0"):GetLocale("WoWLarn")
 local _, ns = ...
 local K = ns.K
 local G = ns.G
@@ -104,6 +105,50 @@ function Player.positionPlayer()
    if try == 0 then
       ns.ui:Message("Failure in positionplayer")
    end
+end
+
+-- C: packweight(). The number of pounds the player is carrying.
+local WEIGHT = {
+   [K.OSSPLATE] = 40, [K.OPLATEARMOR] = 40, [K.OPLATE] = 35, [K.OHAMMER] = 30, [K.OSPLINT] = 26,
+   [K.OCHAIN] = 23, [K.OBATTLEAXE] = 23, [K.O2SWORD] = 23,
+   [K.OLONGSWORD] = 20, [K.OPSTAFF] = 20, [K.OSWORD] = 20, [K.ORING] = 20, [K.OFLAIL] = 20,
+   [K.OELVENCHAIN] = 15, [K.OSWORDofSLASHING] = 15, [K.OLANCE] = 15, [K.OSLAYER] = 15,
+   [K.OSTUDLEATHER] = 15, [K.OLEATHER] = 8, [K.OSPEAR] = 8,
+   [K.OORBOFDRAGON] = 4, [K.OORB] = 4, [K.OBELT] = 4, [K.OSHIELD] = 7,
+}
+
+function Player.packWeight()
+   local k = ns.idiv(c[K.GOLD], 1000)
+   local last = IVENSIZE
+   while last > 0 and iven[last] == 0 do
+      last = last - 1
+   end
+   for i = 1, last do
+      local id = iven[i]
+      if id == K.OCHEST then
+         k = k + 30 + ivenarg[i]
+      elseif id ~= 0 then
+         k = k + (WEIGHT[id] or 1)
+      end
+   end
+   return k
+end
+
+-- C: losehp(). Removes hit points; kills the player at zero. Callers must check G.dead
+-- afterwards, since nothing stops the game code the way the C exit() in died() does.
+function Player.losehp(x)
+   c[K.HP] = c[K.HP] - x
+   if c[K.HP] <= 0 then
+      ns.ui:Message(L["Alas, you have died."])
+      ns.ui:Nap(3000)
+      Player.died(G.lastnum)
+   end
+   ns.ui:Refresh("stats")
+end
+
+-- C: died(). The full scoreboard and tombstone arrive in milestone 9.
+function Player.died(cause)
+   G.dead = cause or true
 end
 
 -- C: drop_object(). Arrives with the inventory in milestone 5.
