@@ -68,6 +68,46 @@ local function BuildOptions()
                   ns.ui:Refresh("map")
                end,
             },
+            difficulty = {
+               type = "range",
+               name = L["Difficulty"],
+               desc = L["How hard the game is.  Monsters are tougher and the dungeon is meaner.  It applies to games you start from now on."],
+               order = 12,
+               min = 0, max = 6, step = 1,
+            },
+            tileSize = {
+               type = "range",
+               name = L["Tile size"],
+               desc = L["The size of a tile in the flat view."],
+               order = 16,
+               min = 24, max = 48, step = 4,
+               get = function() return mod.db.profile.tileSize or 32 end,
+               set = function(_, value)
+                  mod.db.profile.tileSize = value
+                  ns.map:Layout()
+               end,
+            },
+            ascii = {
+               type = "toggle",
+               name = L["Classic letters"],
+               desc = L["Draw monsters and things as the original letters instead of pictures."],
+               order = 17,
+               set = function(_, value)
+                  mod.db.profile.ascii = value
+                  ns.ui:Refresh("map")
+               end,
+            },
+            minimap = {
+               type = "toggle",
+               name = L["Minimap button"],
+               desc = L["Show a button on the minimap."],
+               order = 30,
+               get = function() return not mod.db.profile.minimap.hide end,
+               set = function(_, value)
+                  mod.db.profile.minimap.hide = not value
+                  mod:UpdateMinimapButton()
+               end,
+            },
             fast = {
                type = "toggle",
                name = L["Fast mode"],

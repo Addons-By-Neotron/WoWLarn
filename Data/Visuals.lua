@@ -133,6 +133,7 @@ end
 
 -- Monsters are drawn as their ASCII letter until they get icons and models (milestone 10).
 V.MONSTER_COLOR = { 1, 0.35, 0.3 }
+V.PLAYER_COLOR = { 0.3, 1, 0.3 }
 
 function V.MonsterGlyph(id)
    return ns.Tables.monstglyphs:sub(id + 1, id + 1)

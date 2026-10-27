@@ -34,6 +34,8 @@ ns.mod = mod
 mod.defaults = {
    profile = {
       scale = 1,
+      difficulty = 0,
+      minimap = { hide = false },
       view = "flat",  -- "flat" tiles or the "3d" view
       fast = false,  -- skip the delays (naps) between game steps
       window = { point = "CENTER", x = 0, y = 0 },
@@ -60,7 +62,39 @@ function mod:OnInitialize()
    self:RegisterChatCommand("wowlarn", "ChatCommand")
 end
 
+-- The launcher for the data broker displays (and the minimap button), when the libraries are
+-- there.
+function mod:SetupLauncher()
+   local ldb = LibStub("LibDataBroker-1.1", true)
+   if not ldb then return end
+   self.launcher = ldb:NewDataObject("WoWLarn", {
+      type = "launcher",
+      icon = "Interface\\Icons\\INV_Misc_Book_08",
+      OnClick = function(_, button)
+         if button == "RightButton" then
+            self:OpenConfig()
+         else
+            ns.main:Toggle()
+         end
+      end,
+      OnTooltipShow = function(tooltip)
+         tooltip:AddLine("WoWLarn")
+         tooltip:AddLine(L["Click to open or close the game."], 1, 1, 1)
+         tooltip:AddLine(L["Right-click for the settings."], 1, 1, 1)
+      end,
+   })
+   local icon = LibStub("LibDBIcon-1.0", true)
+   if icon then icon:Register("WoWLarn", self.launcher, self.db.profile.minimap) end
+end
+
+function mod:UpdateMinimapButton()
+   local icon = LibStub("LibDBIcon-1.0", true)
+   if not icon then return end
+   if self.db.profile.minimap.hide then icon:Hide("WoWLarn") else icon:Show("WoWLarn") end
+end
+
 function mod:OnEnable()
+   self:SetupLauncher()
    self:RegisterEvent("PLAYER_LOGOUT", function() ns.Save.store() end)
 end
 

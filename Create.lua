@@ -37,6 +37,7 @@ local hitp = G.hitp
 
 -- C: makeplayer() and pick_char(). class is an entry of ns.Classes.
 function Create.makePlayer(class)
+   c[K.HARDGAME] = ns.mod.db.profile.difficulty or 0  -- (the setting at the start of the game)
    c[K.LEVEL] = 1
    c[K.REGENCOUNTER] = 16
    c[K.ECOUNTER] = 96  -- start regeneration correctly

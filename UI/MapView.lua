@@ -28,7 +28,8 @@ local V = ns.Visuals
 local map = {}
 ns.map = map
 
-local TILE = 32
+local DEFAULT_TILE = 32
+local TILE = DEFAULT_TILE  -- (the setting Tile size, see map:Layout)
 local floor, max, min = math.floor, math.max, math.min
 local MAXX, MAXY = K.MAXX, K.MAXY
 
@@ -75,6 +76,7 @@ end
 
 -- Builds the grid of tiles that fits the frame.
 function map:Layout()
+   TILE = ns.mod.db.profile.tileSize or DEFAULT_TILE
    local width, height = self.frame:GetWidth(), self.frame:GetHeight()
    local cols, rows = floor(width / TILE), floor(height / TILE)
    if cols < 1 or rows < 1 then return end
@@ -84,6 +86,7 @@ function map:Layout()
       for col = 1, cols do
          local cell = self.cells[row][col] or NewCell(self.frame)
          self.cells[row][col] = cell
+         cell.bg:SetSize(TILE, TILE)
          cell.bg:ClearAllPoints()
          cell.bg:SetPoint("TOPLEFT", self.frame, "TOPLEFT", offsetX + (col - 1) * TILE, -(offsetY + (row - 1) * TILE))
          cell.bg:Show()
@@ -126,7 +129,7 @@ local function DrawTile(cell, x, y, ground)
       return
    end
    cell.glyph:SetTextColor(unpack(V.GLYPH_COLOR))
-   local icon = object ~= 0 and V.ObjectIcon(object)
+   local icon = object ~= 0 and not ns.mod.db.profile.ascii and V.ObjectIcon(object)
    if icon then
       cell.icon:SetTexture(icon)
       cell.icon:Show()
@@ -246,8 +249,15 @@ function map:Draw()
    local col, row = G.playerx - camX + 1, G.playery - camY + 1
    local cell = self.cells[row] and self.cells[row][col]
    if cell and G.class then
-      cell.actor:SetTexture(V.ClassIcon(G.class))
-      cell.actor:Show()
-      cell.glyph:Hide()
+      if ns.mod.db.profile.ascii then  -- the original @
+         cell.glyph:SetText("@")
+         cell.glyph:SetTextColor(unpack(V.PLAYER_COLOR))
+         cell.glyph:Show()
+         cell.icon:Hide()
+      else
+         cell.actor:SetTexture(V.ClassIcon(G.class))
+         cell.actor:Show()
+         cell.glyph:Hide()
+      end
    end
 end
