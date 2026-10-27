@@ -112,7 +112,7 @@ function Equipment.summary()
    if shieldSlot > 0 and iven[shieldSlot] == K.OSHIELD then shield = 2 + ivenarg[shieldSlot] end
    local weapon = 0
    if wield > 0 then weapon = (ns.Player.WEAPON_WC[iven[wield]] or 0) + ivenarg[wield] end
-   local artifacts = {}
+   local artifacts, seen = {}, {}
    for i = 1, K.IVENSIZE do
       local id, arg = iven[i], ivenarg[i]
       if id == K.OPROTRING then
@@ -136,8 +136,8 @@ function Equipment.summary()
       elseif id == K.OPSTAFF then
          wisdom = wisdom + 10
       end
-      if EFFECTS[id] and not SHORT[id] and id ~= K.OHAMMER and id ~= K.OSLAYER and id ~= K.OPSTAFF and not artifacts[id] then
-         artifacts[id] = true
+      if EFFECTS[id] and not SHORT[id] and id ~= K.OHAMMER and id ~= K.OSLAYER and id ~= K.OPSTAFF and not seen[id] then
+         seen[id] = true
          artifacts[#artifacts + 1] = ns.Tables.objectname[id]
       end
    end

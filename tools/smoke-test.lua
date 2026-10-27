@@ -498,7 +498,8 @@ keys("h"); check(G.playerx == 1 and G.gtime == t0, "wall of the map costs no tur
 ui:InjectKey("UP"); check(G.playery == 7, "arrow keys move")
 G.item[5][7] = K.OBANK
 keys("L"); check(G.playerx == 5, "run stops on an object, x=" .. G.playerx)
-check(last():find("the Bank of Larn"), "object message, got " .. tostring(last()))
+check(last():find("the bank of Ularn"), "object message, got " .. tostring(last()))
+keys("i"); G.item[5][7] = 0  -- stay outside
 keys("S"); check(not ns.main.frame.shown, "S closes the window")
 ns.main:Show(); keys("."); keys("?"); check(last():find("help") or #LOG > 20, "help logged")
 keys("x"); check(last():find("not implemented"), "unknown command")
@@ -907,6 +908,8 @@ do
    local slot
    for i = 1, K.IVENSIZE do if G.iven[i] == K.OPROTRING then slot = i break end end
    check(ns.Equipment.short(slot) == "+3 armor class", "ring tag")
+   ns.Player.take(K.OORB, 0); ns.Player.take(K.OSPIRITSCARAB, 0)
+   check(table.concat(ns.Equipment.summary(), "\n"):find("Artifacts:"), "artifact line")
    ns.inventory:Open(); ns.inventory:Update()
    ns.inventory:Close()
 end

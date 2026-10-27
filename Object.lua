@@ -267,6 +267,20 @@ for _, id in ipairs({ K.OSCHOOL, K.OBANK, K.OBANK2, K.ODNDSTORE, K.OTRADEPOST, K
    LATER[id] = true
 end
 
+local BUILDING = {
+   [K.OSCHOOL] = { found = L["You have found the College of Ularn."], key = "g", enter = function() ns.Town.school() end },
+   [K.OBANK] = { found = L["You have found the bank of Ularn."], key = "g", enter = function() ns.Town.bank(false) end },
+   [K.OBANK2] = { found = L["You have found a branch office of the bank of Ularn."], key = "g", enter = function() ns.Town.bank(true) end },
+   [K.ODNDSTORE] = { found = L["There is a DND store here."], key = "g", enter = function() ns.Town.dndStore() end },
+   [K.OTRADEPOST] = { found = L["You have found the Ularn trading Post."], key = "g", enter = function() ns.Town.tradingPost() end },
+   [K.OHOME] = { found = L["You have found your way home."], key = "g", enter = function() ns.Town.home() end },
+   [K.OPAD] = { found = L["You have found Grizzik's Questionable Elixirs!"], key = "c", enter = function() ns.Town.pad() end },
+   [K.OLRS] = { found = L["There is an LRS office here."], key = "g", enter = function() ns.Town.lrs() end },
+}
+for _, building in pairs(BUILDING) do
+   building.prompt = building.key == "c" and L["Do you (c) check it out, or (i) ignore it?"] or L["Do you (g) go inside, or (i) stay here?"]
+end
+
 -- C: lookforobject(). Everything you can step on does something.
 function Object.lookForObject()
    local c = G.c
@@ -623,7 +637,12 @@ function Object.lookForObject()
       Msg(L["There is a dead fountain here."])
 
    elseif LATER[id] then
-      ui:Message(L["There is %s here. (Not implemented yet.)"], name)
+      if NearbyMonster() then return end
+      local building = BUILDING[id]
+      Msg(building.found)
+      if ui:Choose(building.prompt, building.key) == building.key then
+         building.enter(id)
+      end
 
    else
       FindItem(id)

@@ -92,6 +92,7 @@ function main:Create()
    ns.picker:Create(map)
    ns.inventory:Create(map)
    ns.spellbook:Create(map)
+   ns.store:Create(map)
 
    local side = ns.side:Create(frame)
    side:SetWidth(SIDE_W)

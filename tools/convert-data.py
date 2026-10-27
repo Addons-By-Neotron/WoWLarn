@@ -276,6 +276,19 @@ def item_tables():
     assert items[0] == "0" and len(items) == 38, len(items)
     out.append("-- nobjtab[tmp] for tmp = 1..37 (C index; the dummy entry 0 is dropped).")
     out.append("I.nobjtab = { " + ", ".join(items[1:]) + " }")
+    # the stock of the DND store (store.c itm[]); potion and scroll args are shifted +1
+    store = (ULARN / "store.c").read_text()
+    body = section(store, "struct _itm itm[DNDSIZE]", "};")
+    entries = re.findall(r"\{\s*(\d+),\s*(\w+),\s*(\w+),\s*(\d+),\s*(\d+)\s*,?\s*\}", body)
+    assert len(entries) == 92, len(entries)
+    out.append("\n-- I.dnd[i] = { price, kind, object, arg, quantity } for the DND store, in the order of the C itm[]")
+    out.append("-- (index + 1). Prices are in tens of gold. kind is \"potion\", \"scroll\" or nil.")
+    out.append("I.dnd = {")
+    for price, mem, obj, arg, qty in entries:
+        kind = {"0": "nil", "potionknown": '"potion"', "scrollknown": '"scroll"'}[mem]
+        arg = int(arg) + (1 if mem != "0" else 0)
+        out.append(f"   {{ {price}, {kind}, K.{obj}, {arg}, {qty} }},")
+    out.append("}")
     out.append("\nreturn I")
     (OUT / "Data" / "Items.lua").write_text("\n".join(out) + "\n")
 

@@ -58,6 +58,7 @@ function Create.makePlayer(class)
    c[K.WIELD] = class.wield or 0
    if class.lanceofdeath then
       c[K.LANCEDEATH] = 1
+      G.ramboflag = true
    end
 
    G.class = class
