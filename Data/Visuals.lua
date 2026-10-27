@@ -160,6 +160,7 @@ V.DISPLAY = {
    [K.HOBGOBLIN] = Displays(30244, { 30261, 30267 }),
    [K.ORC] = Displays({ 9794, 9805 }),
    [K.SNAKE] = 1206,
+   [K.TROGLODYTE] = 160,
 }
 
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
