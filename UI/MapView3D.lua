@@ -65,6 +65,7 @@ local function Facing(dir)
 end
 local function Sign(value) return value > 0 and 1 or value < 0 and -1 or 0 end
 local MODEL_ASPECT = 1.7  -- how much taller than wide a model is drawn
+local MODEL_ROOM = 2  -- (see Model)
 local ANIM = { stand = 0, death = 1, walk = 4, wound = 14, attack = 16 }  -- model animations
 local TWEEN = 0.16  -- seconds a step takes
 local MONSTER_TWEEN = 0.22
@@ -159,6 +160,7 @@ local function Model(layer, look, x, y, width, facing, anim)
       frame.model:SetScript("OnModelLoaded", function(self)
          self:SetFacing(frame.facing or FACING)
          if frame.anim and self.SetAnimation then self:SetAnimation(frame.anim) end  -- (loading resets it)
+         if self.SetModelScale then self:SetModelScale(1 / MODEL_ROOM) end  -- (and this)
       end)
       layer.models[layer.usedModels] = frame
    end
@@ -181,12 +183,17 @@ local function Model(layer, look, x, y, width, facing, anim)
       frame.model:SetFacing(facing)
    end
    -- a model is clipped to its frame and a dying one lies down wider than it stands, so
-   -- give it a larger frame around the same centre (the model is not scaled: it fills the frame)
-   local k = anim == ANIM.death and 1.5 or 1
+   -- every model gets a frame MODEL_ROOM times larger around the same centre, and is scaled
+   -- down by the same factor to look the same size (always, so nothing changes when it dies)
+   local k = MODEL_ROOM
    y = y + (V.LOWER[look] or 0) * width
    frame:ClearAllPoints()
    frame:SetPoint("CENTER", layer, "TOPLEFT", x, -(y - width * MODEL_ASPECT / 2))
    frame:SetSize(width * k, width * k * MODEL_ASPECT)
+   if frame.model.SetModelScale and not frame.scaled then
+      frame.scaled = true
+      frame.model:SetModelScale(1 / k)
+   end
    frame:Show()
 end
 
