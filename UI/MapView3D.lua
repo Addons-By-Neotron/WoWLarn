@@ -159,7 +159,6 @@ local function Model(layer, look, x, y, width, facing, anim)
       frame.model:SetScript("OnModelLoaded", function(self)
          self:SetFacing(frame.facing or FACING)
          if frame.anim and self.SetAnimation then self:SetAnimation(frame.anim) end  -- (loading resets it)
-         if frame.k and frame.k ~= 1 and self.SetModelScale then self:SetModelScale(1 / frame.k) end  -- (and this)
       end)
       layer.models[layer.usedModels] = frame
    end
@@ -182,16 +181,12 @@ local function Model(layer, look, x, y, width, facing, anim)
       frame.model:SetFacing(facing)
    end
    -- a model is clipped to its frame and a dying one lies down wider than it stands, so
-   -- give it a larger frame around the same centre and scale the model down to fit
-   local k = anim == ANIM.death and 2 or 1
+   -- give it a larger frame around the same centre (the model is not scaled: it fills the frame)
+   local k = anim == ANIM.death and 1.5 or 1
    y = y + (V.LOWER[look] or 0) * width
    frame:ClearAllPoints()
    frame:SetPoint("CENTER", layer, "TOPLEFT", x, -(y - width * MODEL_ASPECT / 2))
    frame:SetSize(width * k, width * k * MODEL_ASPECT)
-   if frame.model.SetModelScale and (frame.k or 1) ~= k then
-      frame.k = k
-      frame.model:SetModelScale(1 / k)
-   end
    frame:Show()
 end
 
