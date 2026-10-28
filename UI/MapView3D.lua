@@ -139,20 +139,16 @@ end
 
 -- A creature standing on the floor at (x, y) in the view: a model of the unit ("player") or of
 -- a display, width pixels wide and about twice as tall.
-local function Model(layer, look, x, y, width, facing, anim)
-   layer.usedModels = layer.usedModels + 1
-   local models, used = layer.models, layer.usedModels
-   -- keep a model that is playing its animation (a dying one) on its own frame: when the
-   -- pool shifts, setting another look on it would restart it
-   if anim == ANIM.death and not (models[used] and models[used].look == look and models[used].anim == anim) then
-      for index = used + 1, #models do
-         if models[index].look == look and models[index].anim == anim then
-            models[used], models[index] = models[index], models[used]
-            break
-         end
+-- owner: a table that keeps its own frame (a dying monster), so the shifting of the pool of
+-- frames never sets another look on it, which would restart its animation.
+local function Model(layer, look, x, y, width, facing, anim, owner)
+   local frame = owner and owner.frame
+   if not frame then
+      if not owner then
+         layer.usedModels = layer.usedModels + 1
+         frame = layer.models[layer.usedModels]
       end
    end
-   local frame = models[used]
    if not frame then
       frame = CreateFrame("Frame", nil, layer)
       frame.model = CreateFrame("PlayerModel", nil, frame)
@@ -162,7 +158,15 @@ local function Model(layer, look, x, y, width, facing, anim)
          if frame.anim and self.SetAnimation then self:SetAnimation(frame.anim) end  -- (loading resets it)
          if self.SetModelScale then self:SetModelScale(1 / MODEL_ROOM) end  -- (and this)
       end)
-      layer.models[layer.usedModels] = frame
+      if owner then
+         owner.frame = frame
+      else
+         layer.models[layer.usedModels] = frame
+      end
+   end
+   if frame:GetParent() ~= layer then  -- (an owned frame follows its tile from row to row)
+      frame:SetParent(layer)
+      frame:SetFrameLevel(layer:GetFrameLevel() + 1)
    end
    if frame.look ~= look then  -- (setting the look again would restart it)
       frame.look = look
@@ -375,7 +379,7 @@ local function DrawTile(layers, x, y, ground)
    elseif map3d.ghosts[x * 100 + y] and map3d.ghosts[x * 100 + y].expires > GetTime() then
       local ghost = map3d.ghosts[x * 100 + y]
       Shadow(layers[ACTOR], (x - 0.5) * TILE, (y - 0.5) * TILE, TILE * 0.42)
-      Model(layers[ACTOR], ghost.display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, ghost.facing, ANIM.death)
+      Model(layers[ACTOR], ghost.display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, ghost.facing, ANIM.death, ghost)
    elseif object ~= 0 then
       local icon = not ns.mod.db.profile.ascii and V.ObjectIcon(object)
       local size = TILE * 0.6 * scale
@@ -442,7 +446,7 @@ function map3d:Animate(kind, x, y, monster, fromY)
    elseif kind == "wound" then
       self.anims[key] = { anim = ANIM.wound, expires = now + duration }
    elseif kind == "die" then
-      duration = 2.6
+      duration = 5
       local look = G.look[x][y]
       local display = look ~= 0 and monster and V.MonsterDisplay(monster, look)
       if display then
@@ -533,6 +537,10 @@ function map3d:Draw()
    camera.centerX = width / 2
    camera.centerY = height * PLAYER_AT
    self.tweening = false
+   for key, ghost in pairs(self.ghosts) do  -- (shown again where drawn)
+      if ghost.frame then ghost.frame:Hide() end
+      if ghost.expires <= GetTime() then self.ghosts[key] = nil end
+   end
    local posX, posY, walking = self:Position()
    camera.x = (posX - 0.5) * TILE
    camera.y = (posY - 0.5) * TILE + CAMERA_BACK
