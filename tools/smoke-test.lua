@@ -569,6 +569,7 @@ local function Clear()
    for i = 1, K.IVENSIZE do G.iven[i], G.ivenarg[i] = 0, 0 end
    G.c[K.WIELD], G.c[K.WEAR], G.c[K.SHIELD] = 0, 0, 0
    G.dropflag = false
+   G.lookedHere = nil
    LOG = {}
 end
 Clear()

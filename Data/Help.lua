@@ -39,6 +39,7 @@ n  move southeast	   N  run southeast		w  wield a weapon
 d  drop an item	           i  inventory your pockets	Q  quit the game
 v  print program version   S  save the game		D  list all items found
 ?  this help screen	   C  close an open door        e  eat something
+,  use what is here (stairs, altars, fountains...)
 
 Ularn -s            list the scoreboard
 Ularn -i            list scores with inventories

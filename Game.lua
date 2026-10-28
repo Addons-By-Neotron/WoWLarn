@@ -135,6 +135,10 @@ local function Parse()
       ui.repcount = 0
       G.nomove = true
       ui:ShowInventory()
+   elseif key == "," then
+      ui.repcount = 0
+      G.nomove = true
+      ns.Object.lookForObject()  -- use what is here
    elseif key == "g" then
       ui.repcount = 0
       G.nomove = true
@@ -213,14 +217,15 @@ function Game.Run()
       if G.race then ui:Log("system", L["Your %s blood adds to your abilities."], G.race) end
    end
 
-   local lookedHere  -- where the player last looked at what is on the tile
+   G.lookedHere = nil  -- where the player last looked at what is on the tile
    while true do
-      -- FIX: not in the C. Fighting on a tile does not bring up what is there again.
+      -- FIX: not in the C. What is on a tile comes up when you step on it, not again every turn
+      -- you stay there (the comma brings it up on purpose).
       local here = G.playerx .. "," .. G.playery .. "," .. G.level
       if G.dropflag then
          G.dropflag = false  -- don't show what was just dropped
-      elseif not ((G.hitflag or G.hit3flag) and lookedHere == here) then
-         lookedHere = here
+      elseif G.lookedHere ~= here then
+         G.lookedHere = here
          ns.Object.lookForObject()  -- see if there is an object here
          if G.dead then break end
       end
