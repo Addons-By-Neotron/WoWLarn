@@ -56,6 +56,16 @@ function Display.visibleMonster(x, y)
    return id
 end
 
+-- True if the ground of the tile is on the map: it is known now, or was. A tile that is not
+-- known now (a monster came or went) shows the ground only.
+function Display.remembered(x, y)
+   if know[x][y] ~= 0 then
+      G.seen[x][y] = 1
+      return true
+   end
+   return G.seen[x][y] ~= 0
+end
+
 -- C: showcell(). Marks the tiles around the player as seen.
 function Display.showcell(x, y)
    local radius = 1

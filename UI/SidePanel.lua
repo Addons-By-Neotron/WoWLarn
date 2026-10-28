@@ -306,6 +306,10 @@ function side:UpdateMinimap()
    if not self.tiles or G.c[K.LEVEL] == 0 then return end
    local ground = V.Ground(G.level)
    local keys = self.minimapKey
+   if self.minimapLevel ~= G.level then  -- another level: paint everything again
+      self.minimapLevel = G.level
+      for x = 1, K.MAXX do keys[x] = nil end
+   end
    for x = 1, K.MAXX do
       local column, known, items = self.tiles[x], G.know[x], G.item[x]
       keys[x] = keys[x] or {}
@@ -313,8 +317,12 @@ function side:UpdateMinimap()
          local kind
          if x == G.playerx and y == G.playery then
             kind = "player"
-         elseif known[y] == 0 then
+         elseif not ns.Display.remembered(x, y) then
             kind = "unknown"
+         elseif items[y] == K.OWALL then
+            kind = "wall"
+         elseif known[y] == 0 then
+            kind = "floor"
          elseif ns.Display.visibleMonster(x, y) ~= 0 then
             kind = "monster"
          elseif items[y] == K.OWALL then

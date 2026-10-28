@@ -29,7 +29,7 @@ ns.Save = Save
 
 local VERSION = 1
 local MAXX, MAXY = K.MAXX, K.MAXY
-local GRIDS = { "item", "iarg", "know", "hitp", "mon", "stealth", "look" }
+local GRIDS = { "item", "iarg", "know", "hitp", "mon", "stealth", "look", "seen" }
 -- The plain values of G (numbers, strings, booleans) that are part of a game.
 local SCALARS = {
    "level", "playerx", "playery", "lastpx", "lastpy", "lasthx", "lasthy", "gtime", "wizard", "lastnum",

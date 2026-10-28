@@ -256,7 +256,7 @@ function map3d:Hide()
 end
 
 local function IsWall(x, y)
-   return x >= 1 and x <= MAXX and y >= 1 and y <= MAXY and G.know[x][y] ~= 0 and G.item[x][y] == K.OWALL
+   return x >= 1 and x <= MAXX and y >= 1 and y <= MAXY and ns.Display.remembered(x, y) and G.item[x][y] == K.OWALL
 end
 
 -- The floor tile (x, y), and what stands on it.
@@ -308,6 +308,8 @@ local function DrawTile(layers, x, y, ground)
 
    local checker = ((x + y) % 2 == 0) and 1 or 0.93
    Quad(layers[FLOOR], Shade(ground, ahead, checker), ax, ay, bx, by, cx, cy, dx, dy)
+
+   if G.know[x][y] == 0 and not (x == G.playerx and y == G.playery) then return end  -- (not in sight)
 
    -- what stands on the floor, in the middle of the tile
    local mx, my, scale = Project((x - 0.5) * TILE, (y - 0.5) * TILE, 0)
@@ -473,7 +475,7 @@ function map3d:Draw()
       if y >= 1 and y <= MAXY then
          local layers = self.layers[row]
          for x = max(1, roundX - SIDE_COLUMNS), min(MAXX, roundX + SIDE_COLUMNS) do
-            if G.know[x][y] ~= 0 then DrawTile(layers, x, y, ground) end
+            if ns.Display.remembered(x, y) then DrawTile(layers, x, y, ground) end
          end
       end
    end

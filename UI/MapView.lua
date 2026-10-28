@@ -168,7 +168,7 @@ function map:Layout()
 end
 
 local function DrawTile(cell, x, y, ground)
-   if x > MAXX or y > MAXY or G.know[x][y] == 0 then
+   if x > MAXX or y > MAXY or not ns.Display.remembered(x, y) then
       Fill(cell.bg, { 0, 0, 0, 1 })
       HideCell(cell)
       return
@@ -181,6 +181,10 @@ local function DrawTile(cell, x, y, ground)
    end
    Fill(cell.bg, ground)
    cell.actor:Hide()
+   if G.know[x][y] == 0 and not (x == G.playerx and y == G.playery) then  -- (not in sight)
+      HideCell(cell)
+      return
+   end
    local monster = ns.Display.visibleMonster(x, y)
    if monster ~= 0 then
       cell.icon:Hide()
