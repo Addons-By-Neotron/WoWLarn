@@ -190,10 +190,8 @@ local function Model(layer, look, x, y, width, facing, anim)
    frame:ClearAllPoints()
    frame:SetPoint("CENTER", layer, "TOPLEFT", x, -(y - width * MODEL_ASPECT / 2))
    frame:SetSize(width * k, width * k * MODEL_ASPECT)
-   if frame.model.SetModelScale and not frame.scaled then
-      frame.scaled = true
-      frame.model:SetModelScale(1 / k)
-   end
+   -- (every time: the client resets the scale when it reloads or restarts the model)
+   if frame.model.SetModelScale then frame.model:SetModelScale(1 / k) end
    frame:Show()
 end
 
