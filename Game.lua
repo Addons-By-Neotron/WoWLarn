@@ -219,7 +219,7 @@ function Game.Run()
       local here = G.playerx .. "," .. G.playery .. "," .. G.level
       if G.dropflag then
          G.dropflag = false  -- don't show what was just dropped
-      elseif not (G.hitflag and lookedHere == here) then
+      elseif not ((G.hitflag or G.hit3flag) and lookedHere == here) then
          lookedHere = here
          ns.Object.lookForObject()  -- see if there is an object here
          if G.dead then break end
