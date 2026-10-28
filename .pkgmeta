@@ -3,6 +3,7 @@ package-as: WoWLarn
 ignore:
     - design.md
     - tools
+    - MONSTERS.md
 
 externals:
     Libs/LibStub: https://repos.wowace.com/wow/libstub/trunk
