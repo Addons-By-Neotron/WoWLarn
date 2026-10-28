@@ -504,6 +504,27 @@ function map3d:Draw()
          end
       end
    end
+   -- the missile of a spell on its way: a glow on the floor and the glyph above it
+   local overlay = ns.map.overlay
+   if overlay then
+      local row = overlay.y - (roundY - FAR_ROWS) + 1
+      local layer = self.layers[row] and self.layers[row][ACTOR]
+      if layer and overlay.x >= 1 and overlay.x <= MAXX and overlay.y >= 1 and overlay.y <= MAXY then
+         local wx, wy = (overlay.x - 0.5) * TILE, (overlay.y - 0.5) * TILE
+         local mx, my, scale = Project(wx, wy, TILE * 0.35)
+         if mx then
+            local ax, ay = Project(wx - TILE * 0.6, wy - TILE * 0.6, 0)
+            local bx, by = Project(wx + TILE * 0.6, wy - TILE * 0.6, 0)
+            local cx, cy = Project(wx + TILE * 0.6, wy + TILE * 0.6, 0)
+            local dx, dy = Project(wx - TILE * 0.6, wy + TILE * 0.6, 0)
+            if ax and bx and cx and dx then
+               local color = V.MISSILE_COLOR
+               Quad(layer, { color[1], color[2], color[3], 0.9 }, ax, ay, bx, by, cx, cy, dx, dy, SHADOW)
+            end
+            Glyph(layer, overlay.glyph, V.MISSILE_COLOR, mx, my, TILE * 1.1 * scale)
+         end
+      end
+   end
    -- the player, in the row of the nearest tile
    do
       local layer = self.layers[FAR_ROWS + 1][ACTOR]
