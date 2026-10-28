@@ -150,7 +150,8 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
       end
    end
    if not frame then
-      frame = CreateFrame("Frame", nil, layer)
+      -- (an owned frame hangs on the view: changing its parent, or hiding it, restarts it)
+      frame = CreateFrame("Frame", nil, owner and layer:GetParent() or layer)
       frame.model = CreateFrame("PlayerModel", nil, frame)
       frame.model:SetAllPoints()
       frame.model:SetScript("OnModelLoaded", function(self)
@@ -164,9 +165,12 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
          layer.models[layer.usedModels] = frame
       end
    end
-   if frame:GetParent() ~= layer then  -- (an owned frame follows its tile from row to row)
-      frame:SetParent(layer)
-      frame:SetFrameLevel(layer:GetFrameLevel() + 1)
+   if owner then  -- (follows its tile from row to row)
+      owner.drawn = map3d.drawn
+      if frame.level ~= layer:GetFrameLevel() + 1 then
+         frame.level = layer:GetFrameLevel() + 1
+         frame:SetFrameLevel(frame.level)
+      end
    end
    if frame.look ~= look then  -- (setting the look again would restart it)
       frame.look = look
@@ -537,10 +541,7 @@ function map3d:Draw()
    camera.centerX = width / 2
    camera.centerY = height * PLAYER_AT
    self.tweening = false
-   for key, ghost in pairs(self.ghosts) do  -- (shown again where drawn)
-      if ghost.frame then ghost.frame:Hide() end
-      if ghost.expires <= GetTime() then self.ghosts[key] = nil end
-   end
+   self.drawn = (self.drawn or 0) + 1
    local posX, posY, walking = self:Position()
    camera.x = (posX - 0.5) * TILE
    camera.y = (posY - 0.5) * TILE + CAMERA_BACK
@@ -617,6 +618,12 @@ function map3d:Draw()
       end
    end
    if self.t0 or self.tweening then self:EnsureDriver() end
+   for key, ghost in pairs(self.ghosts) do  -- (hiding a model restarts it: only those not drawn)
+      if ghost.drawn ~= self.drawn then
+         if ghost.frame then ghost.frame:Hide() end
+         if ghost.expires <= GetTime() then self.ghosts[key] = nil end
+      end
+   end
    for row = 1, ROWS do
       for _, layer in pairs(self.layers[row]) do Finish(layer) end
    end
