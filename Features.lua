@@ -229,10 +229,10 @@ local function FountainChange(how)
    elseif roll == 8 then
       local j = rnd(G.level + 1)
       if how > 0 then
-         Msg(j == 1 and L["You just gained %d spell!"] or L["You just gained %d spells!"], j)
+         Msg(L["You just gained %d mana!"], j)
          Player.raiseMaxSpells(j)
       else
-         Msg(j == 1 and L["You just lost %d spell!"] or L["You just lost %d spells!"], j)
+         Msg(L["You just lost %d mana!"], j)
          Player.loseMaxSpells(j)
       end
    else

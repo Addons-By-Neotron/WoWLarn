@@ -675,7 +675,7 @@ end
 function Spells.cast()
    local ui = ns.ui
    if c[K.SPELLS] <= 0 then
-      Msg(L["You don't have any spells!"])
+      Msg(L["You don't have any mana!"])
       return
    end
    local T = ns.Tables

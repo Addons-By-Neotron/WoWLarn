@@ -675,7 +675,7 @@ do
 
    Arena(); keys("c"); check(ui.wait == "key" and ns.spellbook:IsShown(), "casting shows the spellbook")
    ui:InjectKey("ESC"); check(last():find("aborted") and not ns.spellbook:IsShown(), "Esc aborts casting")
-   G.c[K.SPELLS] = 0; LOG = {};keys("c"); check(last():find("any spells"), "no spells left")
+   G.c[K.SPELLS] = 0; LOG = {};keys("c"); check(last():find("any mana"), "no spells left")
    G.c[K.SPELLS] = 5; keys("c"); keys("zzz"); check(ui.wait == "key" and G.c[K.SPELLS] == 4, "an unknown code costs a spell and asks again")
    ui:InjectKey("ESC")
    ns.spellbook:ShowDiscoveries(); ns.spellbook:Open(); ns.spellbook:Close()

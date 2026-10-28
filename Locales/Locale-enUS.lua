@@ -831,3 +831,6 @@ L["Draw a shadow under the player and monsters in the 2.5D view."] = true
 L["The lock holds firm and the chest stays shut."] = true
 L["Sound effects"] = true
 L["Play sounds for fights, pick-ups, doors and more."] = true
+L["You just gained %d mana!"] = true
+L["You just lost %d mana!"] = true
+L["You don't have any mana!"] = true
