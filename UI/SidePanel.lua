@@ -293,7 +293,7 @@ end
 local MINIMAP = {
    stairsup = { 0.2, 0.85, 1 }, stairsdown = { 0.85, 0.35, 1 },
    elevatorup = { 0.6, 1, 0.9 }, elevatordown = { 1, 0.6, 0.85 },
-   wall = { 0.5, 0.5, 0.55 }, monster = { 1, 0.2, 0.2 }, object = { 1, 0.82, 0 }, player = { 0.3, 1, 0.3 },
+   wall = { 0.62, 0.62, 0.68 }, monster = { 1, 0.2, 0.2 }, object = { 1, 0.82, 0 }, player = { 0.3, 1, 0.3 },
 }
 
 -- The ways between the levels have colors of their own.
@@ -332,7 +332,7 @@ function side:UpdateMinimap()
             if kind == "unknown" then
                Fill(tile, 0, 0, 0, 0.5)
             elseif kind == "floor" then
-               Fill(tile, ground[1] * 1.6, ground[2] * 1.6, ground[3] * 1.6, 1)
+               Fill(tile, ground[1] * 0.7, ground[2] * 0.7, ground[3] * 0.7, 1)
             else
                local color = MINIMAP[kind]
                Fill(tile, color[1], color[2], color[3], 1)
