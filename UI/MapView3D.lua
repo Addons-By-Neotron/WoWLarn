@@ -346,6 +346,13 @@ local function DrawTile(layers, x, y, ground)
    local monster = ns.Display.visibleMonster(x, y)
    local object = G.item[x][y]
    local models = ns.mod.db.profile.models ~= false and not ns.mod.db.profile.ascii
+   local ghost = map3d.ghosts[x * 100 + y]
+   if ghost and monster == 0 and ghost.expires > GetTime() and models then  -- (the corpse stays under the player)
+      Shadow(layers[ACTOR], (x - 0.5) * TILE, (y - 0.5) * TILE, TILE * 0.42)
+      Model(layers[ACTOR], ghost.display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, ghost.facing, ANIM.death, ghost)
+   else
+      ghost = nil
+   end
    if x == G.playerx and y == G.playery then
       return  -- (drawn at its own, possibly moving, position)
    elseif monster ~= 0 then
@@ -380,10 +387,8 @@ local function DrawTile(layers, x, y, ground)
       else
          Glyph(layers[ACTOR], V.MonsterGlyph(monster), V.MONSTER_COLOR, mx, my + TILE * 0.1 * scale, TILE * 0.9 * scale)
       end
-   elseif map3d.ghosts[x * 100 + y] and map3d.ghosts[x * 100 + y].expires > GetTime() then
-      local ghost = map3d.ghosts[x * 100 + y]
-      Shadow(layers[ACTOR], (x - 0.5) * TILE, (y - 0.5) * TILE, TILE * 0.42)
-      Model(layers[ACTOR], ghost.display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, ghost.facing, ANIM.death, ghost)
+   elseif ghost then
+      -- (drawn above)
    elseif object ~= 0 then
       local icon = not ns.mod.db.profile.ascii and V.ObjectIcon(object)
       local size = TILE * 0.6 * scale
