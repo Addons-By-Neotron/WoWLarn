@@ -321,7 +321,7 @@ def maps():
 
 constants()
 tables()
-help_pages()
+# (Data/Help.lua is written by hand now, it is not generated)
 item_tables()
 maps()
 fortunes()

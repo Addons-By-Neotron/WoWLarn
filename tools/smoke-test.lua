@@ -64,7 +64,7 @@ check(#ns.MonsterData == 65, "65 monsters, got " .. #ns.MonsterData)
 check(K.PTREASURE == 20 and K.STRENGTH == 1 and K.OENTRANCE == 54, "shifted constants")
 check(ns.Tables.objectname[K.ODNDSTORE] == "the DND store", "object names")
 check(ns.Tables.class[1] == "novice explorer", "class titles")
-check(#ns.HelpPages == 6, "help pages")
+check(#ns.HelpPages == 5, "help pages")
 -- Lua 5.1 (unlike LuaJIT and 5.4) rejects a nested opening bracket inside a long string.
 do
    local source = io.open(root .. "/Data/Help.lua"):read("*a")
