@@ -168,6 +168,7 @@ end
 
 function G.FillKnow(value)
    FillGrid(G.know, value)
+   if value == 0 then FillGrid(G.seen, 0) end  -- (forgotten: not on the map either)
 end
 
 function G.FillStealth(value)
