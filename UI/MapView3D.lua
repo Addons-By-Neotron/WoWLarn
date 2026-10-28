@@ -409,6 +409,13 @@ function map3d:Animate(kind, x, y, monster, fromY)
    C_Timer.After(duration + 0.05, Redraw)  -- back to standing
 end
 
+-- A glow under the player for a moment: color is { r, g, b }.
+function map3d:Flash(color)
+   self.flash = { color = color, expires = GetTime() + 0.6 }
+   Redraw()
+   C_Timer.After(0.65, Redraw)
+end
+
 -- Where the player is drawn: it glides to the tile it moved to.
 -- The tile under the cursor (pixels from the top left of the view): the floor it points at, or
 -- the tile of a monster or an object standing there.
@@ -536,6 +543,19 @@ function map3d:Draw()
             local entry = self.playerAnim
             local anim = entry and entry.expires > GetTime() and entry.anim or (walking and ANIM.walk or ANIM.stand)
             Shadow(layer, (posX - 0.5) * TILE, (posY - 0.5) * TILE, TILE * 0.42)
+            local flash = self.flash
+            if flash and flash.expires > GetTime() then  -- (fades out)
+               local fade = (flash.expires - GetTime()) / 0.6
+               local wx, wy, radius = (posX - 0.5) * TILE, (posY - 0.5) * TILE, TILE * (1.3 - 0.4 * fade)
+               local ax, ay = Project(wx - radius, wy - radius, 0)
+               local bx, by = Project(wx + radius, wy - radius, 0)
+               local cx, cy = Project(wx + radius, wy + radius, 0)
+               local dx, dy = Project(wx - radius, wy + radius, 0)
+               if ax and bx and cx and dx then
+                  local color = flash.color
+                  Quad(layer, { color[1], color[2], color[3], 0.9 * fade }, ax, ay, bx, by, cx, cy, dx, dy, SHADOW)
+               end
+            end
             Model(layer, "player", mx, my + size * 0.1, size * 1.1, Facing(G.facing), anim)
          else
             Icon(layer, V.ClassIcon(G.class), mx, my + size * 0.15, size, size)

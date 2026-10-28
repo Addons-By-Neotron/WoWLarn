@@ -132,7 +132,13 @@ local SOUND = {
 local SOUND_ORDER = { "levelup", "gold", "coin", "pickup", "drop", "door", "stuck", "potion", "scroll", "cast",
    "swing", "hit", "bite", "hurt", "kill", "level", "death", "win" }
 
+-- A colored glow under the player (2.5D view): spells, potions and scrolls.
+local FLASH = {
+   cast = { 0.4, 0.7, 1 }, potion = { 0.4, 1, 0.5 }, scroll = { 1, 0.9, 0.4 }, levelup = { 1, 0.85, 0.2 },
+}
+
 function ui:Sound(name)
+   if FLASH[name] then ns.map3d:Flash(FLASH[name]) end
    local sound = name and SOUND[name]
    if not sound or not PlaySound or ns.mod.db.profile.sound == false then return end
    PlaySound((SOUNDKIT and SOUNDKIT[sound[1]]) or sound[2])
