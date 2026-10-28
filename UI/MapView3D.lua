@@ -65,7 +65,7 @@ local function Facing(dir)
 end
 local function Sign(value) return value > 0 and 1 or value < 0 and -1 or 0 end
 local MODEL_ASPECT = 1.7  -- how much taller than wide a model is drawn
-local MODEL_ROOM = 2  -- (see Model)
+local MODEL_ROOM = 1  -- (see Model; above 1 the models are scaled down in larger frames, which proved unreliable)
 local ANIM = { stand = 0, death = 1, walk = 4, wound = 14, attack = 16 }  -- model animations
 local TWEEN = 0.16  -- seconds a step takes
 local MONSTER_TWEEN = 0.22
@@ -156,7 +156,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
       frame.model:SetScript("OnModelLoaded", function(self)
          self:SetFacing(frame.facing or FACING)
          if frame.anim and self.SetAnimation then self:SetAnimation(frame.anim) end  -- (loading resets it)
-         if self.SetModelScale then self:SetModelScale(1 / MODEL_ROOM) end  -- (and this)
+         if MODEL_ROOM ~= 1 and self.SetModelScale then self:SetModelScale(1 / MODEL_ROOM) end  -- (and this)
       end)
       if owner then
          owner.frame = frame
@@ -195,7 +195,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    frame:SetPoint("CENTER", layer, "TOPLEFT", x, -(y - width * MODEL_ASPECT / 2))
    frame:SetSize(width * k, width * k * MODEL_ASPECT)
    -- (every time: the client resets the scale when it reloads or restarts the model)
-   if frame.model.SetModelScale then frame.model:SetModelScale(1 / k) end
+   if k ~= 1 and frame.model.SetModelScale then frame.model:SetModelScale(1 / k) end
    frame:Show()
 end
 
