@@ -46,7 +46,7 @@ local ALWAYS = {
    [K.OLARNEYE] = LEGENDARY, [K.OCOOKIE] = POOR, [K.OLANCE] = EPIC, [K.OVORPAL] = EPIC,
    [K.OSLAYER] = EPIC, [K.OHAMMER] = EPIC, [K.OSPHTALISMAN] = EPIC,
 }
--- Special weapons that are never worth less than this, whatever their enchantment.
+-- Special weapons: never worth less than this, whatever their enchantment.
 local AT_LEAST = { [K.OSWORDofSLASHING] = RARE }
 local GEMS = { [K.ODIAMOND] = true, [K.ORUBY] = true, [K.OEMERALD] = true, [K.OSAPPHIRE] = true }
 local ENCHANTABLE = {}
@@ -72,7 +72,10 @@ function ItemInfo.quality(id, arg)
    end
    if ENCHANTABLE[id] then  -- armor and weapons go by their enchantment
       local quality = arg < 0 and POOR or arg == 0 and COMMON or arg < 5 and UNCOMMON or RARE
-      return math.max(quality, AT_LEAST[id] or 0)
+      if AT_LEAST[id] then  -- (a special weapon is a grade better: rare, epic from +5)
+         quality = quality >= RARE and EPIC or math.max(quality, AT_LEAST[id])
+      end
+      return quality
    end
    local worth = Worth(id, arg)
    local quality = worth < 500 and COMMON or worth < 2000 and UNCOMMON or worth < 8000 and RARE or EPIC
