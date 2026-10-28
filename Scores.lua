@@ -24,8 +24,7 @@ local idiv = ns.idiv
 local format = string.format
 
 -- The scoreboards (C: scores.c). There are two lists, the winners and the dead, shared by
--- all characters of the account (WoWLarnDB.global). Each character has at most one entry
--- in each list, and a winner's earlier deaths are removed. The taxes a winner owes are
+-- all characters of the account (WoWLarnDB.global), the best games first. The taxes a winner owes are
 -- kept per character too.
 local Scores = {}
 ns.Scores = Scores
@@ -112,24 +111,10 @@ local function Sort(list)
    for index = #list, ns.K.SCORESIZE + 1, -1 do list[index] = nil end
 end
 
-local function Find(list, key)
-   for index, entry in ipairs(list) do
-      if entry.key == key then return index, entry end
-   end
-end
-
--- C: newscore(), new1sub() and new2sub().
-local function Enter(list, entry, replaceIf)
-   local index, old = Find(list, entry.key)
-   if old then
-      if entry.score >= old.score or entry.hardlev > old.hardlev then list[index] = entry end
-   elseif #list < K.SCORESIZE then
-      list[#list + 1] = entry
-   else
-      Sort(list)
-      local last = list[#list]
-      if entry.score >= last.score or entry.hardlev > last.hardlev then list[#list] = entry end
-   end
+-- C: newscore(), new1sub() and new2sub(). FIX: the C keeps one entry per player; here every
+-- game gets its own, as a player usually has just the one character.
+local function Enter(list, entry)
+   list[#list + 1] = entry
    Sort(list)
 end
 
@@ -149,11 +134,7 @@ function Scores.record(cause)
       sex = G.sex, date = date and date("%Y-%m-%d") or "",
    }
    if cause == WIN then
-      -- a winner loses the non-winning scores, and owes taxes
-      local dead = board.dead
-      for index = #dead, 1, -1 do
-         if dead[index].key == entry.key then table.remove(dead, index) end
-      end
+      -- a winner owes taxes
       local taxes = math.floor(G.taxes + score * K.TAXRATE)
       ns.mod.db.global.taxes[entry.key] = (ns.mod.db.global.taxes[entry.key] or 0) + taxes
       G.taxes = ns.mod.db.global.taxes[entry.key]

@@ -934,11 +934,11 @@ do
    check(G.dead == 256, "quitting is not saved")
    G.c[K.GOLD] = 1000; G.c[K.BANKACCOUNT] = 500
    local entry = ns.Scores.record(5)
-   check(entry and entry.score == 1500 and #ns.Scores.dead() == 1, "death scored with the bank")
+   check(entry and entry.score == 1500 and #ns.Scores.dead() >= 1, "death scored with the bank")
    check(ns.Scores.deathLine(5):find("killed by"), ns.Scores.deathLine(5))
    G.c[K.GOLD] = 2000
    entry = ns.Scores.record(ns.Scores.WIN)
-   check(#ns.Scores.dead() == 0 and #ns.Scores.winners() == 1, "win replaces the deaths")
+   check(#ns.Scores.dead() >= 1 and #ns.Scores.winners() == 1, "a win keeps the deaths")
    check(ns.Scores.taxes() == 100, "tax on a win: " .. ns.Scores.taxes())
    check(ns.Scores.payTaxes(60) == 60 and ns.Scores.taxes() == 40, "paying taxes")
    check(#ns.Scores.letters() == 6 and ns.Scores.letters()[1][3]:find("2000 gold"), "letters")
