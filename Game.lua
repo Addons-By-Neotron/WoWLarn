@@ -225,9 +225,10 @@ function Game.Run()
       if G.dropflag then
          G.dropflag = false  -- don't show what was just dropped
       elseif G.lookedHere ~= here then
-         G.lookedHere = here
          ns.Object.lookForObject()  -- see if there is an object here
          if G.dead then break end
+         -- (a door that stays shut sends the player back, and the tile it came from counts)
+         G.lookedHere = G.playerx .. "," .. G.playery .. "," .. G.level
       end
       if not G.hitflag then
          if c[K.HASTEMONST] ~= 0 then Monster.movemonst() end

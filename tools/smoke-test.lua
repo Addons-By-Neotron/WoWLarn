@@ -524,7 +524,7 @@ local function Neighbour(what)
             local nx, ny = x - ns.Display.DIROFFX[dir], y - ns.Display.DIROFFY[dir]
             if nx >= 1 and nx <= K.MAXX and ny >= 1 and ny <= K.MAXY and G.item[nx][ny] ~= K.OWALL then
                G.item[nx][ny] = 0; G.mon[nx][ny] = 0
-               G.playerx, G.playery = nx, ny
+               G.playerx, G.playery = nx, ny; G.lookedHere = nil
                return key
             end
          end
