@@ -45,7 +45,6 @@ local function ShowTooltip(row)
    local class = row.class
    GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
    GameTooltip:SetText(ClassName(class.token))
-   GameTooltip:AddLine(format(L["Originally: %s"], class.original), 0.7, 0.7, 0.7)
    for _, entry in ipairs(class.kit) do
       GameTooltip:AddLine(ns.Tables.objectname[entry[1]] or "?", 1, 1, 1)
    end
@@ -86,7 +85,7 @@ function picker:Create(parent)
       letter:SetText(class.letter .. ")")
       local name = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
       name:SetPoint("LEFT", letter, "RIGHT", 6, 6)
-      name:SetText(ClassName(class.token) .. (class.original and " |cff888888(" .. class.original .. ")|r" or ""))
+      name:SetText(ClassName(class.token))
       local detail = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
       detail:SetPoint("TOPLEFT", name, "BOTTOMLEFT", 0, -2)
       detail:SetText(Summary(class))
