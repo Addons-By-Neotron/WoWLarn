@@ -291,7 +291,15 @@ end
 
 -- Minimap colors: [kind] = { r, g, b }.
 local MINIMAP = {
+   stairsup = { 0.2, 0.85, 1 }, stairsdown = { 0.85, 0.35, 1 },
+   elevatorup = { 0.6, 1, 0.9 }, elevatordown = { 1, 0.6, 0.85 },
    wall = { 0.5, 0.5, 0.55 }, monster = { 1, 0.2, 0.2 }, object = { 1, 0.82, 0 }, player = { 0.3, 1, 0.3 },
+}
+
+-- The ways between the levels have colors of their own.
+local STAIRS = {
+   [K.OSTAIRSUP] = "stairsup", [K.OSTAIRSDOWN] = "stairsdown",
+   [K.OELEVATORUP] = "elevatorup", [K.OELEVATORDOWN] = "elevatordown",
 }
 
 function side:UpdateMinimap()
@@ -311,6 +319,8 @@ function side:UpdateMinimap()
             kind = "monster"
          elseif items[y] == K.OWALL then
             kind = "wall"
+         elseif STAIRS[items[y]] then
+            kind = STAIRS[items[y]]
          elseif items[y] ~= 0 then
             kind = "object"
          else
