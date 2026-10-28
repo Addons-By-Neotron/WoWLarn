@@ -128,6 +128,7 @@ local function MMove(aa, bb, cc, dd)
    -- set hit points
    hitp[cc][dd] = hitp[aa][bb]
    G.look[cc][dd] = G.look[aa][bb]  -- it keeps its look
+   ns.ui:Animate("move", cc, dd, aa, bb)
    if hitp[cc][dd] < 0 then hitp[cc][dd] = 1 end
 
    if tmp == K.LEMMING then

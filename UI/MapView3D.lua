@@ -67,6 +67,7 @@ local function Sign(value) return value > 0 and 1 or value < 0 and -1 or 0 end
 local MODEL_ASPECT = 1.7  -- how much taller than wide a model is drawn
 local ANIM = { stand = 0, death = 1, walk = 4, wound = 14, attack = 16 }  -- model animations
 local TWEEN = 0.16  -- seconds a step takes
+local MONSTER_TWEEN = 0.22
 local FLOOR, WALL, ACTOR = 0, 1, 2  -- the layers of a row, back to front
 
 ----------------------------------------------------------------
@@ -331,7 +332,22 @@ local function DrawTile(layers, x, y, ground)
          local toward = DIRECTION[Sign(G.playerx - x)][Sign(G.playery - y)]
          local entry = map3d.anims[x * 100 + y]
          local anim = entry and entry.expires > GetTime() and entry.anim or nil
-         Shadow(layers[ACTOR], (x - 0.5) * TILE, (y - 0.5) * TILE, TILE * 0.42)
+         -- a monster that just moved glides from the tile it came from
+         local wx, wy = (x - 0.5) * TILE, (y - 0.5) * TILE
+         local move = map3d.moves[x * 100 + y]
+         if move then
+            local f = (GetTime() - move.t0) / MONSTER_TWEEN
+            if f >= 1 then
+               map3d.moves[x * 100 + y] = nil
+            else
+               map3d.tweening = true
+               wx, wy = wx + (move.fromX - x) * TILE * (1 - f), wy + (move.fromY - y) * TILE * (1 - f)
+               anim = anim or ANIM.walk
+               local sx, sy, sscale = Project(wx, wy, 0)
+               if sx then mx, my, scale = sx, sy, sscale end
+            end
+         end
+         Shadow(layers[ACTOR], wx, wy, TILE * 0.42)
          Model(layers[ACTOR], display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, Facing(toward), anim)
       else
          Glyph(layers[ACTOR], V.MonsterGlyph(monster), V.MONSTER_COLOR, mx, my + TILE * 0.1 * scale, TILE * 0.9 * scale)
@@ -351,7 +367,7 @@ local function DrawTile(layers, x, y, ground)
    end
 end
 
-map3d.anims, map3d.ghosts = {}, {}  -- by tile (x * 100 + y): what a monster there is doing
+map3d.anims, map3d.ghosts, map3d.moves = {}, {}, {}  -- by tile (x * 100 + y): what a monster there is doing
 map3d.playerAnim = nil  -- { anim, expires }
 
 local function Redraw()
@@ -361,8 +377,13 @@ end
 -- Something happens on the tile (x, y), for a while: "hit" (the player attacks it), "bite" (the
 -- monster there attacks), "wound", "die" (the monster is gone from the map by now) and
 -- "hurt" (the player is wounded).
-function map3d:Animate(kind, x, y, monster)
+function map3d:Animate(kind, x, y, monster, fromY)
    local now, key = GetTime(), x and x * 100 + y
+   if kind == "move" then  -- a monster stepped from (monster, fromY) to (x, y)
+      self.moves[key] = { fromX = monster, fromY = fromY, t0 = now }
+      C_Timer.After(MONSTER_TWEEN + 0.05, Redraw)
+      return
+   end
    local duration = 0.7
    if x and kind ~= "hurt" then  -- the player turns towards what it fights
       local dir = DIRECTION[Sign(x - G.playerx)][Sign(y - G.playery)]
@@ -409,6 +430,20 @@ function map3d:TileAt(sx, sy)
    return Floor(0)
 end
 
+-- Redraws a few times a second while something glides.
+function map3d:EnsureDriver()
+   self.driver = self.driver or CreateFrame("Frame")  -- (the view has its own OnUpdate)
+   if self.driver:GetScript("OnUpdate") then return end
+   local since = 0
+   self.driver:SetScript("OnUpdate", function(driver, elapsed)
+      since = since + elapsed
+      if since < 0.03 then return end
+      since = 0
+      Redraw()
+      if not map3d.t0 and not map3d.tweening then driver:SetScript("OnUpdate", nil) end
+   end)
+end
+
 function map3d:Position()
    local px, py = G.playerx, G.playery
    if self.level ~= G.level or not self.toX or max(math.abs(px - self.toX), math.abs(py - self.toY)) > 1 then
@@ -429,17 +464,6 @@ function map3d:Position()
    end
    if self.t0 and now - self.t0 >= TWEEN then self.t0 = nil end
    if self.t0 then
-      self.driver = self.driver or CreateFrame("Frame")  -- (the view has its own OnUpdate)
-      if not self.driver:GetScript("OnUpdate") then
-         local since = 0
-         self.driver:SetScript("OnUpdate", function(driver, elapsed)
-            since = since + elapsed
-            if since < 0.03 then return end
-            since = 0
-            Redraw()
-            if not map3d.t0 then driver:SetScript("OnUpdate", nil) end
-         end)
-      end
       return curX, curY, true
    end
    return self.toX, self.toY, false
@@ -457,6 +481,7 @@ function map3d:Draw()
    FOCAL = CAMERA_DISTANCE * TILE_PIXELS / TILE
    camera.centerX = width / 2
    camera.centerY = height * PLAYER_AT
+   self.tweening = false
    local posX, posY, walking = self:Position()
    camera.x = (posX - 0.5) * TILE
    camera.y = (posY - 0.5) * TILE + CAMERA_BACK
@@ -496,6 +521,7 @@ function map3d:Draw()
          end
       end
    end
+   if self.t0 or self.tweening then self:EnsureDriver() end
    for row = 1, ROWS do
       for _, layer in pairs(self.layers[row]) do Finish(layer) end
    end

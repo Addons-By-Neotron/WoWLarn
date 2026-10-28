@@ -178,9 +178,9 @@ end
 -- Model animations of the 2.5D view: kind is "hit", "bite", "wound", "die" or "hurt" (see
 -- map3d:Animate); x, y the tile involved.
 local ANIMATION_SOUND = { hit = "swing", wound = "hit", die = "kill", hurt = "hurt", bite = "bite" }
-function ui:Animate(kind, x, y, monster)
+function ui:Animate(kind, x, y, monster, fromY)
    self:Sound(ANIMATION_SOUND[kind])
-   ns.map3d:Animate(kind, x, y, monster)
+   ns.map3d:Animate(kind, x, y, monster, fromY)
 end
 
 -- C: nap(). Pauses the game thread; "fast" mode skips it.
