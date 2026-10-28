@@ -68,10 +68,11 @@ function ItemInfo.quality(id, arg)
    if (id == K.OPOTION and G.potionknown[arg] == 0) or (id == K.OSCROLL and G.scrollknown[arg] == 0) then
       return COMMON  -- (do not give away what it is)
    end
-   if ENCHANTABLE[id] and arg < 0 then return POOR end
+   if ENCHANTABLE[id] then  -- armor and weapons go by their enchantment
+      return arg < 0 and POOR or arg == 0 and COMMON or arg < 5 and UNCOMMON or RARE
+   end
    local worth = Worth(id, arg)
    local quality = worth < 500 and COMMON or worth < 2000 and UNCOMMON or worth < 8000 and RARE or EPIC
-   if ENCHANTABLE[id] and arg >= 3 then quality = math.min(quality + 1, EPIC) end
    return quality
 end
 
