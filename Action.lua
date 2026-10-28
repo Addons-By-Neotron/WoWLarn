@@ -227,10 +227,13 @@ end
 
 -- C: quaff().
 function Action.quaff()
-   local slot = ns.ui:PickItem(L["quaff"], Is(K.OPOTION))
+   local slot = ns.ui:PickItem(L["quaff"], function(id) return id == K.OPOTION or ns.Object.isElixir(id) end)
    if not slot then return end
    local id = iven[slot]
-   if id == K.OPOTION then
+   if ns.Object.isElixir(id) then
+      iven[slot], ivenarg[slot] = 0, 0
+      ns.Object.drinkElixir(id)
+   elseif id == K.OPOTION then
       local arg = ivenarg[slot]
       iven[slot] = 0
       ns.Magic.quaffPotion(arg)

@@ -148,6 +148,70 @@ local function AtLeast3(index, amount)
    if c[index] < 3 then c[index] = 3 end
 end
 
+-- The effects of the elixirs of the goblin alchemist (drunk where found or from the pack).
+local c = G.c
+local ELIXIR = {
+   [K.OSPEED] = function()
+      Msg(L["Everything around you seems to slow down!"])
+      c[K.HASTESELF] = c[K.HASTESELF] + 200 + c[K.LEVEL]
+      c[K.HALFDAM] = c[K.HALFDAM] + 300 + ns.rnd(200)
+      AtLeast3(K.INTELLIGENCE, 2)
+      AtLeast3(K.WISDOM, 2)
+      AtLeast3(K.CONSTITUTION, 2)
+      AtLeast3(K.DEXTERITY, 2)
+      AtLeast3(K.STRENGTH, 2)
+   end,
+   [K.OSHROOMS] = function()
+      Msg(L["The world turns glowy and strange..."])
+      c[K.HASTEMONST] = c[K.HASTEMONST] + ns.rnd(75) + 25
+      c[K.CONFUSE] = c[K.CONFUSE] + 30 + ns.rnd(10)
+      c[K.WISDOM] = c[K.WISDOM] + 2
+      c[K.CHARISMA] = c[K.CHARISMA] + 2
+   end,
+   [K.OACID] = function()
+      Msg(L["Your mind expands, and the room starts to spin!"])
+      c[K.CONFUSE] = c[K.CONFUSE] + 30 + ns.rnd(10)
+      c[K.WISDOM] = c[K.WISDOM] + 2
+      c[K.INTELLIGENCE] = c[K.INTELLIGENCE] + 2
+      c[K.AWARENESS] = c[K.AWARENESS] + 1500
+      c[K.AGGRAVATE] = c[K.AGGRAVATE] + 1500
+      for mx = 1, MAXX do  -- heal the monsters
+         for my = 1, MAXY do
+            if G.mon[mx][my] ~= 0 then G.hitp[mx][my] = G.monster[G.mon[mx][my]].hitpoints end
+         end
+      end
+   end,
+   [K.OHASH] = function()
+      Msg(L["The brew hits hard.  You feel strong, and very sluggish..."])
+      c[K.HASTEMONST] = c[K.HASTEMONST] + ns.rnd(75) + 25
+      c[K.INTELLIGENCE] = c[K.INTELLIGENCE] + 2
+      c[K.WISDOM] = c[K.WISDOM] + 2
+      AtLeast3(K.CONSTITUTION, 2)
+      AtLeast3(K.DEXTERITY, 2)
+      c[K.HALFDAM] = c[K.HALFDAM] + 300 + ns.rnd(200)
+      c[K.CLUMSINESS] = c[K.CLUMSINESS] + ns.rnd(1800) + 200
+   end,
+   [K.OCOKE] = function()
+      Msg(L["Fel energy surges through you!  Your nose begins to bleed!"])
+      AtLeast3(K.DEXTERITY, 2)
+      AtLeast3(K.CONSTITUTION, 2)
+      c[K.CHARISMA] = c[K.CHARISMA] + 3
+      for i = K.STRENGTH, K.STRENGTH + 5 do c[i] = c[i] + 33 end
+      c[K.COKED] = c[K.COKED] + 10
+   end,
+}
+
+function Object.isElixir(id)
+   return ELIXIR[id] ~= nil
+end
+
+-- Drinks the elixir id from the pack; returns false if it is not one.
+function Object.drinkElixir(id)
+   if not ELIXIR[id] then return false end
+   ELIXIR[id]()
+   return true
+end
+
 -- C: opit().
 local function Pit()
    local c = G.c
@@ -528,62 +592,19 @@ function Object.lookForObject()
       ui:Refresh("all")
 
    elseif id == K.OSPEED then
-      Drug(ns.ItemInfo.link(id, 0), "d", id, function()
-         Msg(L["Everything around you seems to slow down!"])
-         c[K.HASTESELF] = c[K.HASTESELF] + 200 + c[K.LEVEL]
-         c[K.HALFDAM] = c[K.HALFDAM] + 300 + ns.rnd(200)
-         AtLeast3(K.INTELLIGENCE, 2)
-         AtLeast3(K.WISDOM, 2)
-         AtLeast3(K.CONSTITUTION, 2)
-         AtLeast3(K.DEXTERITY, 2)
-         AtLeast3(K.STRENGTH, 2)
-      end)
+      Drug(ns.ItemInfo.link(id, 0), "d", id, ELIXIR[id])
 
    elseif id == K.OSHROOMS then
-      Drug(ns.ItemInfo.link(id, 0), "d", id, function()
-         Msg(L["The world turns glowy and strange..."])
-         c[K.HASTEMONST] = c[K.HASTEMONST] + ns.rnd(75) + 25
-         c[K.CONFUSE] = c[K.CONFUSE] + 30 + ns.rnd(10)
-         c[K.WISDOM] = c[K.WISDOM] + 2
-         c[K.CHARISMA] = c[K.CHARISMA] + 2
-      end)
+      Drug(ns.ItemInfo.link(id, 0), "d", id, ELIXIR[id])
 
    elseif id == K.OACID then
-      Drug(ns.ItemInfo.link(id, 0), "d", id, function()
-         Msg(L["Your mind expands, and the room starts to spin!"])
-         c[K.CONFUSE] = c[K.CONFUSE] + 30 + ns.rnd(10)
-         c[K.WISDOM] = c[K.WISDOM] + 2
-         c[K.INTELLIGENCE] = c[K.INTELLIGENCE] + 2
-         c[K.AWARENESS] = c[K.AWARENESS] + 1500
-         c[K.AGGRAVATE] = c[K.AGGRAVATE] + 1500
-         for mx = 1, MAXX do  -- heal the monsters
-            for my = 1, MAXY do
-               if G.mon[mx][my] ~= 0 then G.hitp[mx][my] = G.monster[G.mon[mx][my]].hitpoints end
-            end
-         end
-      end)
+      Drug(ns.ItemInfo.link(id, 0), "d", id, ELIXIR[id])
 
    elseif id == K.OHASH then
-      Drug(ns.ItemInfo.link(id, 0), "d", id, function()
-         Msg(L["The brew hits hard.  You feel strong, and very sluggish..."])
-         c[K.HASTEMONST] = c[K.HASTEMONST] + ns.rnd(75) + 25
-         c[K.INTELLIGENCE] = c[K.INTELLIGENCE] + 2
-         c[K.WISDOM] = c[K.WISDOM] + 2
-         AtLeast3(K.CONSTITUTION, 2)
-         AtLeast3(K.DEXTERITY, 2)
-         c[K.HALFDAM] = c[K.HALFDAM] + 300 + ns.rnd(200)
-         c[K.CLUMSINESS] = c[K.CLUMSINESS] + ns.rnd(1800) + 200
-      end)
+      Drug(ns.ItemInfo.link(id, 0), "d", id, ELIXIR[id])
 
    elseif id == K.OCOKE then
-      Drug(ns.ItemInfo.link(id, 0), "d", id, function()
-         Msg(L["Fel energy surges through you!  Your nose begins to bleed!"])
-         AtLeast3(K.DEXTERITY, 2)
-         AtLeast3(K.CONSTITUTION, 2)
-         c[K.CHARISMA] = c[K.CHARISMA] + 3
-         for i = K.STRENGTH, K.STRENGTH + 5 do c[i] = c[i] + 33 end
-         c[K.COKED] = c[K.COKED] + 10
-      end)
+      Drug(ns.ItemInfo.link(id, 0), "d", id, ELIXIR[id])
 
    elseif id == K.OWALL then
       return

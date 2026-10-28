@@ -595,6 +595,7 @@ keys("q"); keys("c"); check(G.c[K.HP] > 1 and G.iven[3] == 0 and G.potionknown[K
 keys("r"); keys("d"); check(G.iven[4] == 0 and G.scrollknown[K.SBLANK] == 1, "read the scroll")
 keys("e"); keys("e"); check(G.iven[5] == 0, "ate the cookie")
 keys("q"); ui:InjectKey("ESC"); check(ui.wait == "key" and (last() or ""):find("aborted"), "Esc cancels")
+G.iven[5], G.ivenarg[5] = K.OHASH, 0; local wisdom = G.c[K.WISDOM]; keys("q"); keys("e"); check(G.iven[5] == 0 and G.c[K.WISDOM] == wisdom + 2, "drank the elixir from the pack")
 keys("i"); check(ui.wait == "key", "inventory waits for a key"); keys(" ")
 keys("g"); check((last() or ""):find("weighs"), "pack weight")
 -- dropping an item and gold
