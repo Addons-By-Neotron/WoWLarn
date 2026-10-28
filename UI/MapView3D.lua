@@ -140,7 +140,18 @@ end
 -- a display, width pixels wide and about twice as tall.
 local function Model(layer, look, x, y, width, facing, anim)
    layer.usedModels = layer.usedModels + 1
-   local frame = layer.models[layer.usedModels]
+   local models, used = layer.models, layer.usedModels
+   -- keep a model that is playing its animation (a dying one) on its own frame: when the
+   -- pool shifts, setting another look on it would restart it
+   if anim == ANIM.death and not (models[used] and models[used].look == look and models[used].anim == anim) then
+      for index = used + 1, #models do
+         if models[index].look == look and models[index].anim == anim then
+            models[used], models[index] = models[index], models[used]
+            break
+         end
+      end
+   end
+   local frame = models[used]
    if not frame then
       frame = CreateFrame("Frame", nil, layer)
       frame.model = CreateFrame("PlayerModel", nil, frame)
@@ -429,7 +440,7 @@ function map3d:Animate(kind, x, y, monster, fromY)
    elseif kind == "wound" then
       self.anims[key] = { anim = ANIM.wound, expires = now + duration }
    elseif kind == "die" then
-      duration = 1.6
+      duration = 2.6
       local look = G.look[x][y]
       local display = look ~= 0 and monster and V.MonsterDisplay(monster, look)
       if display then
