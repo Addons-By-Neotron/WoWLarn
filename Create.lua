@@ -46,11 +46,20 @@ local RACES = {
    Goblin = { 0, 2, 0, 0, 0, 1 },
 }
 
+-- The allied races count as the race they come from.
+local KIN = {
+   VoidElf = "BloodElf", Nightborne = "BloodElf", LightforgedDraenei = "Draenei", DarkIronDwarf = "Dwarf",
+   EarthenDwarf = "Dwarf", KulTiran = "Human", Mechagnome = "Gnome", MagharOrc = "Orc",
+   HighmountainTauren = "Tauren", ZandalariTroll = "Troll", Vulpera = "Goblin",
+}
+RACES.Dracthyr = { 1, 1, 0, 1, 0, 0 }
+RACES.Haranir = { 0, 0, 1, 0, 2, 0 }
+
 -- Adds the bonuses of the race of the player; returns its name, or nil.
 local function ApplyRace()
    if not ns.mod.db.profile.races or not UnitRace then return nil end
    local name, token = UnitRace("player")
-   local bonus = RACES[token]
+   local bonus = RACES[token] or RACES[KIN[token]]
    if not bonus then return nil end
    for i = 1, 6 do c[K.STRENGTH + i - 1] = c[K.STRENGTH + i - 1] + bonus[i] end
    return name
