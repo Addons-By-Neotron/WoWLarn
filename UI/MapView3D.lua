@@ -215,13 +215,19 @@ end
 -- A round shadow on the floor around the world point (wx, wy).
 local SHADOW = "Interface\\AddOns\\WoWLarn\\Media\\Shadow"  -- (a soft round fade)
 local SHADOW_COLOR = { 0, 0, 0, 0.6 }
+local SHADOW_LIFT = TILE * 0.2  -- how far up the screen the shadow sits, to be under the feet
 local function Shadow(layer, wx, wy, radius)
    if ns.mod.db.profile.shadows == false then return end
+   local _, _, scale = Project(wx, wy, 0)
+   if not scale then return end
+   local lift = SHADOW_LIFT * scale  -- (the feet are a little above the bottom of a model)
    local ax, ay = Project(wx - radius, wy - radius, 0)
    local bx, by = Project(wx + radius, wy - radius, 0)
    local cx, cy = Project(wx + radius, wy + radius, 0)
    local dx, dy = Project(wx - radius, wy + radius, 0)
-   if ax and bx and cx and dx then Quad(layer, SHADOW_COLOR, ax, ay, bx, by, cx, cy, dx, dy, SHADOW) end
+   if ax and bx and cx and dx then
+      Quad(layer, SHADOW_COLOR, ax, ay - lift, bx, by - lift, cx, cy - lift, dx, dy - lift, SHADOW)
+   end
 end
 
 ----------------------------------------------------------------
