@@ -33,6 +33,7 @@ local map3d = {}
 ns.map3d = map3d
 
 local TILE, WALL_HEIGHT = 64, 64
+local WALL_INSET = 12  -- how much thinner a wall is than its tile, on the sides facing open floor
 local CAMERA_DISTANCE = 640  -- from the camera to the player, whatever the angle
 local TILE_PIXELS = 55  -- how wide the tile of the player is on the screen
 local CAMERA_BACK, CAMERA_HEIGHT, FOCAL  -- from the camera angle, see map3d:Draw
@@ -267,19 +268,33 @@ local function DrawTile(layers, x, y, ground)
       local wh = WALL_HEIGHT
       -- a wall between the camera and the player lets the player show through
       local alpha = (y > G.playery and math.abs(x - G.playerx) <= 1) and SEE_THROUGH or 1
-      local tx0, ty0 = Project(x0, y0, wh)
-      local tx1, ty1 = Project(x1, y0, wh)
-      local tx2, ty2 = Project(x1, y1, wh)
-      local tx3, ty3 = Project(x0, y1, wh)
-      if tx0 and tx1 and tx2 and tx3 then
+      -- a wall is thinner than its tile on the sides that face open floor, so what stands
+      -- next to it does not overlap it
+      local west = IsWall(x - 1, y) and 0 or WALL_INSET
+      local east = IsWall(x + 1, y) and 0 or WALL_INSET
+      local north = IsWall(x, y - 1) and 0 or WALL_INSET
+      local south = IsWall(x, y + 1) and 0 or WALL_INSET
+      local wx0, wx1, wy0, wy1 = x0 + west, x1 - east, y0 + north, y1 - south
+      if west + east + north + south > 0 then  -- the ground around it
+         Quad(layers[FLOOR], Shade(ground, ahead, 0.5), ax, ay, bx, by, cx, cy, dx, dy)
+      end
+      local fax, fay = Project(wx0, wy0, 0)
+      local fbx, fby = Project(wx1, wy0, 0)
+      local fcx, fcy = Project(wx1, wy1, 0)
+      local fdx, fdy = Project(wx0, wy1, 0)
+      local tx0, ty0 = Project(wx0, wy0, wh)
+      local tx1, ty1 = Project(wx1, wy0, wh)
+      local tx2, ty2 = Project(wx1, wy1, wh)
+      local tx3, ty3 = Project(wx0, wy1, wh)
+      if tx0 and tx1 and tx2 and tx3 and fcx and fdx and fax and fbx then
          Quad(layers[WALL], Shade(color, ahead, 1, alpha), tx0, ty0, tx1, ty1, tx2, ty2, tx3, ty3)
          if not IsWall(x, y + 1) then  -- the face towards the camera
-            Quad(layers[WALL], Shade(color, ahead, 0.72, alpha), tx3, ty3, tx2, ty2, cx, cy, dx, dy)
+            Quad(layers[WALL], Shade(color, ahead, 0.72, alpha), tx3, ty3, tx2, ty2, fcx, fcy, fdx, fdy)
          end
-         if camera.x > x1 and not IsWall(x + 1, y) then  -- the east face
-            Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx1, ty1, tx2, ty2, cx, cy, bx, by)
-         elseif camera.x < x0 and not IsWall(x - 1, y) then  -- the west face
-            Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx0, ty0, tx3, ty3, dx, dy, ax, ay)
+         if camera.x > wx1 and not IsWall(x + 1, y) then  -- the east face
+            Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx1, ty1, tx2, ty2, fcx, fcy, fbx, fby)
+         elseif camera.x < wx0 and not IsWall(x - 1, y) then  -- the west face
+            Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx0, ty0, tx3, ty3, fdx, fdy, fax, fay)
          end
       end
       return
