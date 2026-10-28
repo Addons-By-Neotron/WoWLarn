@@ -175,7 +175,14 @@ end
 
 function main:ApplyScale()
    if self.frame then
-      self.frame:SetScale(ns.mod.db.profile.scale)
+      -- never larger than the screen, whatever the setting
+      local frame = self.frame
+      local scale = ns.mod.db.profile.scale
+      local w, h = frame:GetWidth(), frame:GetHeight()
+      if w and w > 0 and h and h > 0 then
+         scale = math.min(scale, UIParent:GetWidth() * 0.98 / w, UIParent:GetHeight() * 0.98 / h)
+      end
+      frame:SetScale(scale)
    end
 end
 
@@ -187,6 +194,7 @@ end
 
 function main:Show()
    self:Create():Show()
+   self:ApplyScale()
    self:SetFocus(true)
 end
 
