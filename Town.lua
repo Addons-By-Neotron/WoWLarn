@@ -128,6 +128,7 @@ local function Buy(index)
          G.scrollknown[entry[4]] = 1
       end
       c[K.GOLD] = c[K.GOLD] - entry[1] * 10
+      ns.ui:Sound("coin")
       stock[index] = stock[index] - 1
       ns.Player.take(entry[3], entry[4])
       ns.ui:Nap(1001)
@@ -243,6 +244,7 @@ function Town.school()
             ui:Nap(1000)
          else
             c[K.GOLD] = c[K.GOLD] - COURSE_COST
+            ns.ui:Sound("coin")
             if Teach(index) then
                local used = COURSES[index][2] * 100
                G.gtime = G.gtime + used
@@ -254,6 +256,7 @@ function Town.school()
                ns.Magic.adjustTime(used)
             else
                c[K.GOLD] = c[K.GOLD] + COURSE_COST
+               ns.ui:Sound("coin")
             end
             ui:Refresh("stats")
             ui:Nap(1000)
@@ -310,6 +313,7 @@ local function SellGem(slot)
    if iven[slot] == K.OLARNEYE then c[K.EYEOFLARN] = 0 end
    G.gemsSold[iven[slot]] = true
    c[K.GOLD] = c[K.GOLD] + GemValue(slot)
+   ns.ui:Sound("coin")
    iven[slot], ivenarg[slot] = 0, 0
 end
 
@@ -373,6 +377,7 @@ function Town.bank(branch)
             ui:Nap(2000)
          elseif amount > 0 then
             c[K.GOLD] = c[K.GOLD] - amount
+            ns.ui:Sound("coin")
             c[K.BANKACCOUNT] = c[K.BANKACCOUNT] + amount
          end
       elseif key == "w" then
@@ -382,6 +387,7 @@ function Town.bank(branch)
             ui:Nap(2000)
          elseif amount > 0 then
             c[K.GOLD] = c[K.GOLD] + amount
+            ns.ui:Sound("coin")
             c[K.BANKACCOUNT] = c[K.BANKACCOUNT] - amount
          end
       elseif key == "s" then
@@ -461,6 +467,7 @@ function Town.tradingPost()
             local name = ns.Player.itemName(slot)
             if ui:YesNo(format(L["%s is worth %s to us.  Do you want to sell it?"], name, Gold(value))) == "y" then
                c[K.GOLD] = c[K.GOLD] + value
+               ns.ui:Sound("coin")
                if GEMS[id] then G.gemsSold[id] = true end
                if c[K.WEAR] == slot then c[K.WEAR] = 0 end
                if c[K.WIELD] == slot then c[K.WIELD] = 0 end
@@ -509,6 +516,7 @@ function Town.lrs()
             ui:Message(L["You don't have that much."])
          elseif amount > 0 then
             c[K.GOLD] = c[K.GOLD] - PayTaxes(amount)
+            ns.ui:Sound("coin")
          end
          Show()
          ui:Refresh("stats")
@@ -634,6 +642,7 @@ function Town.pad()
          else
             if Snag(elixir[3]) then
                c[K.GOLD] = c[K.GOLD] - elixir[2]
+               ns.ui:Sound("coin")
                G.drug[index] = true  -- remember that he has snagged that one
             end
             ui:Nap(1000)

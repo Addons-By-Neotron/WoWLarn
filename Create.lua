@@ -578,6 +578,7 @@ function Create.newCaveLevel(x)
    if G.Visited(G.level) then
       G.SaveLevel()
    end
+   if G.gtime and G.gtime > 0 then ns.ui:Sound("level") end
    G.level = x
    if G.Visited(x) then
       G.GetLevel()

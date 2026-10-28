@@ -136,6 +136,7 @@ function Magic.quaffPotion(pot)
 
    G.potionknown[pot] = 1
    Msg(L["You drink a potion of %s."], ns.Tables.potionname[pot])
+   ui:Sound("potion")
 
    if pot == K.PSLEEP then
       Msg(L["You fall asleep..."])
@@ -301,6 +302,7 @@ function Magic.readScroll(typ)
    if typ < 1 or typ > K.MAXSCROLL then return end  -- be sure we are within bounds
    G.scrollknown[typ] = 1
    Msg(L["You read a scroll of %s."], ns.Tables.scrollname[typ])
+   ui:Sound("scroll")
 
    if typ == K.SENCHANTARM then
       ns.Player.enchantArmor(K.ENCH_SCROLL)

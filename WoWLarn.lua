@@ -133,6 +133,8 @@ function mod:ChatCommand(input)
    elseif cmd == "view" or cmd == "3d" then
       self.db.profile.view = self.db.profile.view == "3d" and "flat" or "3d"
       ns.ui:Refresh("map")
+   elseif cmd == "sounds" then
+      ns.ui:TestSounds()
    elseif cmd == "scores" then
       ns.main:Show()
       ns.scoreboard:Show()

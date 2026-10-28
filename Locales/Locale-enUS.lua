@@ -829,3 +829,5 @@ L["Your character's race adds a few points to the stats of a new game.  Not part
 L["Shadows"] = true
 L["Draw a shadow under the player and monsters in the 2.5D view."] = true
 L["The lock holds firm and the chest stays shut."] = true
+L["Sound effects"] = true
+L["Play sounds for fights, pick-ups, doors and more."] = true

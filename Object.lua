@@ -113,6 +113,7 @@ end
 
 -- C: ogold(). Picks up gold; the piles are worth 10, 100 or 1000 times their argument.
 local function PickUpGold(kind)
+   ns.ui:Sound("gold")
    local amount = G.iarg[G.playerx][G.playery]
    if kind == K.ODGOLD then
       amount = amount * 10
@@ -408,6 +409,7 @@ function Object.lookForObject()
          local trap = G.iarg[x][y]
          -- (the C says nothing when the door does not open)
          Msg(L["The door is stuck and won't open."])
+         ui:Sound("stuck")
          if trap == 6 then
             Msg(L["Your struggle makes a loud noise!"])
             c[K.AGGRAVATE] = c[K.AGGRAVATE] + ns.rnd(400)
@@ -423,6 +425,7 @@ function Object.lookForObject()
          G.playerx, G.playery = G.lastpx, G.lastpy
       else
          Msg(L["The door opens."])
+         ui:Sound("door")
          Forget()
          G.item[x][y] = K.OOPENDOOR
       end

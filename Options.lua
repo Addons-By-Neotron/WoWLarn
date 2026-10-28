@@ -87,6 +87,14 @@ local function BuildOptions()
                   ns.map:Layout()
                end,
             },
+            sound = {
+               type = "toggle",
+               name = L["Sound effects"],
+               desc = L["Play sounds for fights, pick-ups, doors and more."],
+               order = 16.7,
+               get = function() return mod.db.profile.sound ~= false end,
+               set = function(_, value) mod.db.profile.sound = value end,
+            },
             shadows = {
                type = "toggle",
                name = L["Shadows"],

@@ -424,6 +424,7 @@ function Player.take(itm, arg)
    for i = 1, limit do
       if iven[i] == 0 then
          iven[i], ivenarg[i] = itm, arg
+         ui:Sound("pickup")
          local stats, eyeflag = false, false
          if itm == K.OPROTRING or itm == K.ODAMRING or itm == K.OBELT then
             stats = true
@@ -506,6 +507,7 @@ function Player.dropObject(k)
    end
    if G.playery == MAXY and G.playerx == 34 then return true end  -- not in the entrance
 
+   ui:Sound("drop")
    if not pitflag then
       item[G.playerx][G.playery] = itm
       G.iarg[G.playerx][G.playery] = ivenarg[k]

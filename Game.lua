@@ -181,6 +181,7 @@ local function Finish()
    if type(cause) ~= "number" then cause = 284 end
    ns.Save.clear()  -- (one life)
    local entry = ns.Scores.record(cause)
+   ui:Sound(cause == ns.Scores.WIN and "win" or cause ~= ns.Scores.QUIT and "death" or nil)
    ui:Log("damage", "%s %s", G.name, ns.Scores.deathLine(cause))
    ui:Log("system", L["Score: %d   Difficulty: %d"], c[K.GOLD], c[K.HARDGAME])
    if entry then ns.scoreboard:Show(entry) end

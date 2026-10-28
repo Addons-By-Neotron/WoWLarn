@@ -107,12 +107,45 @@ end
 
 -- Plays one of the sounds of the game; the sound kits are looked up by name, and the game
 -- goes quiet if the client does not have one.
-local SOUND = { levelup = { "LEVELUP", 888 } }
+-- name = { sound kit name, sound kit id }; change the pair to change the sound (/larn sounds
+-- plays them all, one after the other).
+local SOUND = {
+   levelup = { "LEVELUP", 888 },
+   gold = { "LOOT_WINDOW_COIN_SOUND", 120 },
+   coin = { "IG_BACKPACK_COIN_OK", 865 },
+   pickup = { "PICK_UP_GEMS", 1221 },
+   drop = { "PUT_DOWN_GEMS", 1204 },
+   door = { "IG_BACKPACK_OPEN", 862 },
+   stuck = { "IG_BACKPACK_COIN_CANCEL", 866 },
+   potion = { "IG_MAINMENU_OPTION_CHECKBOX_ON", 856 },
+   scroll = { "IG_SPELLBOOK_OPEN", 829 },
+   cast = { "IG_ABILITY_PAGE_TURN", 836 },
+   swing = { "IG_CREATURE_NEUTRAL_SELECT", 871 },
+   hit = { "IG_ABILITY_ICON_DROP", 838 },
+   bite = { "IG_CREATURE_AGGRO_SELECT", 873 },
+   hurt = { "IG_PLAYER_INVITE", 880 },
+   kill = { "IG_QUEST_LIST_COMPLETE", 878 },
+   level = { "IG_QUEST_LIST_OPEN", 875 },
+   death = { "GS_CHARACTER_SELECTION_DEL_CHARACTER", 810 },
+   win = { "UI_AUTO_QUEST_COMPLETE", 23404 },
+}
+local SOUND_ORDER = { "levelup", "gold", "coin", "pickup", "drop", "door", "stuck", "potion", "scroll", "cast",
+   "swing", "hit", "bite", "hurt", "kill", "level", "death", "win" }
 
 function ui:Sound(name)
-   local sound = SOUND[name]
-   if not sound or not PlaySound then return end
+   local sound = name and SOUND[name]
+   if not sound or not PlaySound or ns.mod.db.profile.sound == false then return end
    PlaySound((SOUNDKIT and SOUNDKIT[sound[1]]) or sound[2])
+end
+
+-- /larn sounds: plays every sound with its name.
+function ui:TestSounds()
+   for index, name in ipairs(SOUND_ORDER) do
+      C_Timer.After((index - 1) * 1.2, function()
+         ns.mod:info(name)
+         self:Sound(name)
+      end)
+   end
 end
 
 -- C: bottomline(), showcell(), draws(). what is "map", "stats" or "all". Redraws are
@@ -144,7 +177,9 @@ end
 
 -- Model animations of the 2.5D view: kind is "hit", "bite", "wound", "die" or "hurt" (see
 -- map3d:Animate); x, y the tile involved.
+local ANIMATION_SOUND = { hit = "swing", wound = "hit", die = "kill", hurt = "hurt", bite = "bite" }
 function ui:Animate(kind, x, y, monster)
+   self:Sound(ANIMATION_SOUND[kind])
    ns.map3d:Animate(kind, x, y, monster)
 end
 

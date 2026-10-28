@@ -691,6 +691,7 @@ function Spells.cast()
       for i = 1, SPNUM do
          if T.spelcode[i] == code and G.spelknow[i] ~= 0 then
             Msg(L["Casting %s (%s)."], code, T.spelname[i])
+            ui:Sound("cast")
             Spells.speldamage(i)
             found = true
             break
