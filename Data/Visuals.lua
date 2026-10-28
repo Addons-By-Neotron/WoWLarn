@@ -163,6 +163,13 @@ V.DISPLAY = {
    [K.TROGLODYTE] = 160,
 }
 
+-- The sounds of the monsters, by monster id; any of attack, wound, die and special may be
+-- left out (the default sound is played, a special attack falls back to the attack sound).
+-- A sound is a sound kit name ("LEVELUP"), a sound kit id (888) or { file = file data id }.
+V.MONSTER_SOUND = {
+   -- [K.SNAKE] = { attack = "...", wound = 0, die = { file = 0 } },
+}
+
 -- Models that stand too high (or low) on their shadow, by display id: how far to move the
 -- model, as a fraction of its width; positive is down, negative up.
 V.LOWER = {

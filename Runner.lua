@@ -137,11 +137,37 @@ local FLASH = {
    cast = { 0.4, 0.7, 1 }, potion = { 0.4, 1, 0.5 }, scroll = { 1, 0.9, 0.4 }, levelup = { 1, 0.85, 0.2 },
 }
 
+local function Play(sound)
+   if not sound or not PlaySound or ns.mod.db.profile.sound == false then return end
+   if type(sound) == "table" then
+      if sound.file then  -- { file = file data id }
+         if PlaySoundFile then PlaySoundFile(sound.file, "SFX") end
+      else  -- { sound kit name, sound kit id }
+         PlaySound((SOUNDKIT and SOUNDKIT[sound[1]]) or sound[2])
+      end
+   elseif type(sound) == "string" then  -- a sound kit name
+      if SOUNDKIT and SOUNDKIT[sound] then PlaySound(SOUNDKIT[sound]) end
+   else  -- a sound kit id
+      PlaySound(sound)
+   end
+end
+
 function ui:Sound(name)
    if FLASH[name] then ns.map3d:Flash(FLASH[name]) end
-   local sound = name and SOUND[name]
-   if not sound or not PlaySound or ns.mod.db.profile.sound == false then return end
-   PlaySound((SOUNDKIT and SOUNDKIT[sound[1]]) or sound[2])
+   Play(name and SOUND[name])
+end
+
+-- What the monsters sound like (Visuals.MONSTER_SOUND): kind is "attack", "wound", "die" or
+-- "special"; a monster without a sound of its own for it gets the default one.
+local MONSTER_SOUND_DEFAULT = { attack = "bite", wound = "hit", die = "kill", special = "bite" }
+function ui:MonsterSound(kind, monster)
+   local own = monster and ns.Visuals.MONSTER_SOUND[monster]
+   local sound = own and (own[kind] or (kind == "special" and own.attack))
+   if sound then
+      Play(sound)
+   else
+      self:Sound(MONSTER_SOUND_DEFAULT[kind])
+   end
 end
 
 -- /larn sounds: plays every sound with its name.
@@ -183,9 +209,15 @@ end
 
 -- Model animations of the 2.5D view: kind is "hit", "bite", "wound", "die" or "hurt" (see
 -- map3d:Animate); x, y the tile involved.
-local ANIMATION_SOUND = { hit = "swing", wound = "hit", die = "kill", hurt = "hurt", bite = "bite" }
+local ANIMATION_SOUND = { hit = "swing", hurt = "hurt" }
+local MONSTER_KIND = { bite = "attack", wound = "wound", die = "die", special = "special" }
 function ui:Animate(kind, x, y, monster, fromY)
-   self:Sound(ANIMATION_SOUND[kind])
+   if MONSTER_KIND[kind] then
+      self:MonsterSound(MONSTER_KIND[kind], monster or ns.G.mon[x][y])
+   else
+      self:Sound(ANIMATION_SOUND[kind])
+   end
+   if kind == "special" then return end
    ns.map3d:Animate(kind, x, y, monster, fromY)
 end
 

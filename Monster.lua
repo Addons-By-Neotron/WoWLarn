@@ -637,6 +637,7 @@ function Monster.hitplayer(x, y)
    local ac = c[K.AC]
    if monster[mster].attack > 0 then
       if dam + bias + 8 > ac or rnd(ac > 0 and ac or 1) == 1 then
+         ns.ui:Animate("special", x, y, mster)
          if Monster.spattack(monster[mster].attack, x, y) then
             return
          end
