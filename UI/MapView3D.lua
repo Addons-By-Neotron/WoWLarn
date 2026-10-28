@@ -370,6 +370,30 @@ end
 map3d.anims, map3d.ghosts, map3d.moves = {}, {}, {}  -- by tile (x * 100 + y): what a monster there is doing
 map3d.playerAnim = nil  -- { anim, expires }
 
+-- For the flat view, which draws the same models: what to draw for the monster on (x, y), or
+-- nil if it has no model (or models are off): its display, the facing and the animation.
+function map3d.MonsterModel(x, y)
+   local monster = ns.Display.visibleMonster(x, y)
+   if monster == 0 or ns.mod.db.profile.models == false or ns.mod.db.profile.ascii then return nil end
+   local look = G.look[x][y]
+   if look == 0 then
+      look = ns.rnd(1000)
+      G.look[x][y] = look
+   end
+   local display = V.MonsterDisplay(monster, look)
+   if not display then return nil end
+   local entry = map3d.anims[x * 100 + y]
+   return display, Facing(DIRECTION[Sign(G.playerx - x)][Sign(G.playery - y)]),
+      entry and entry.expires > GetTime() and entry.anim or nil
+end
+
+-- The facing and the animation of the player model.
+function map3d.PlayerModel()
+   local entry = map3d.playerAnim
+   return Facing(G.facing), entry and entry.expires > GetTime() and entry.anim or nil
+end
+map3d.Model = Model
+
 local function Redraw()
    if map3d.shown then ns.map:Draw() end
 end

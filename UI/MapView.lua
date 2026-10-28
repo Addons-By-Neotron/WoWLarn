@@ -188,6 +188,10 @@ local function DrawTile(cell, x, y, ground)
    local monster = ns.Display.visibleMonster(x, y)
    if monster ~= 0 then
       cell.icon:Hide()
+      if ns.map3d.MonsterModel(x, y) then  -- (drawn as a model, see map:Draw)
+         cell.glyph:Hide()
+         return
+      end
       cell.glyph:SetText(V.MonsterGlyph(monster))
       cell.glyph:SetTextColor(unpack(V.MONSTER_COLOR))
       cell.glyph:Show()
@@ -282,6 +286,7 @@ function map:Draw()
          ShowFlat(self, false)
          self.flatHidden = true
       end
+      if self.modelLayer then self.modelLayer:Hide() end
       ns.map3d:Draw()
       return
    end
@@ -295,9 +300,25 @@ function map:Draw()
    local camY = max(1, min(G.playery - floor(rows / 2), MAXY - rows + 1))
    self.camX, self.camY = camX, camY
    local ground = V.Ground(G.level)
+   if not self.modelLayer then  -- the models of monsters and the player stand on this
+      self.modelLayer = CreateFrame("Frame", nil, self.frame)
+      self.modelLayer:SetAllPoints()
+      self.modelLayer.models = {}
+   end
+   local frame = self.modelLayer
+   frame:Show()
+   frame.usedModels = 0
    for row = 1, rows do
       for col = 1, cols do
-         DrawTile(self.cells[row][col], camX + col - 1, camY + row - 1, ground)
+         local x, y = camX + col - 1, camY + row - 1
+         DrawTile(self.cells[row][col], x, y, ground)
+         if x <= MAXX and y <= MAXY and G.know[x][y] ~= 0 and (x ~= G.playerx or y ~= G.playery) then
+            local display, facing, anim = ns.map3d.MonsterModel(x, y)
+            if display then
+               ns.map3d.Model(frame, display, self.offsetX + (col - 0.5) * TILE,
+                  self.offsetY + row * TILE - TILE * 0.05, TILE * 0.9, facing, anim)
+            end
+         end
       end
    end
    -- The missile of a spell on its way.
@@ -320,10 +341,17 @@ function map:Draw()
          cell.glyph:SetTextColor(unpack(V.PLAYER_COLOR))
          cell.glyph:Show()
          cell.icon:Hide()
+      elseif ns.mod.db.profile.models ~= false then  -- the model of the player
+         local facing, anim = ns.map3d.PlayerModel()
+         cell.actor:Hide()
+         cell.glyph:Hide()
+         ns.map3d.Model(frame, "player", self.offsetX + (col - 0.5) * TILE,
+            self.offsetY + row * TILE - TILE * 0.05, TILE * 0.9, facing, anim)
       else
          cell.actor:SetTexture(V.ClassIcon(G.class))
          cell.actor:Show()
          cell.glyph:Hide()
       end
    end
+   for index = frame.usedModels + 1, #frame.models do frame.models[index]:Hide() end
 end
