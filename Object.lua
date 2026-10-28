@@ -246,7 +246,7 @@ local function Chest()
             i = i + 1
          end
       else
-         Msg(L["Nothing happens."])
+         Msg(L["The lock holds firm and the chest stays shut."])
       end
    elseif choice == "t" then
       if ns.Player.take(K.OCHEST, G.iarg[x][y]) then Forget() end

@@ -635,7 +635,7 @@ Clear(); G.item[31][8] = K.OTRAPDOOR; keys("^"); check((last() or ""):find("trap
 Clear(); G.item[31][8] = K.OCHEST; G.iarg[31][8] = 2; keys("l"); check(ui.wait == "key", "chest asks")
 keys("t"); check(G.iven[1] == K.OCHEST, "took the chest")
 Clear(); G.item[31][8] = K.OCHEST; G.iarg[31][8] = 2; keys("l"); keys("o")
-check(G.item[31][8] ~= K.OCHEST or (last() or ""):find("Nothing happens"), "opened the chest")
+check(G.item[31][8] ~= K.OCHEST or (last() or ""):find("lock holds"), "opened the chest")
 -- spells, cast in the live game thread
 do
    local savedc, savedspells = {}, {}
@@ -663,7 +663,7 @@ do
          if dir and debug.traceback(ui.co):find("PickDirection") then keys(dir) end
          local text = table.concat(lines(), "|")
          check(not debug.traceback(ui.co):find("FindItem"), "stuck on an item after casting " .. name .. " at " .. G.playerx .. "," .. G.playery .. " item " .. G.item[G.playerx][G.playery] .. ": " .. text)
-         if not (text:find("didn't work") or text:find("Nothing happens")) then return text end
+         if not (text:find("didn't work") or text:find("Nothing happens") or text:find("lock holds")) then return text end
          if ui.wait == "key" then ui:InjectKey("ESC") end
       end
       error("the spell " .. name .. " never worked")
