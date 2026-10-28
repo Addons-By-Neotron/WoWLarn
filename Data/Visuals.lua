@@ -163,6 +163,12 @@ V.DISPLAY = {
    [K.TROGLODYTE] = 160,
 }
 
+-- Models that stand too high (or low) on their shadow, by display id: how far to move the
+-- model, as a fraction of its width; positive is down, negative up.
+V.LOWER = {
+   [1206] = 0.12,  -- snake
+}
+
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
 -- id and the rules stay those of the original monster.
 V.MONSTER_NAME = {

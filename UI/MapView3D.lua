@@ -183,6 +183,7 @@ local function Model(layer, look, x, y, width, facing, anim)
    -- a model is clipped to its frame and a dying one lies down wider than it stands, so
    -- give it a larger frame around the same centre and scale the model down to fit
    local k = anim == ANIM.death and 2 or 1
+   y = y + (V.LOWER[look] or 0) * width
    frame:ClearAllPoints()
    frame:SetPoint("CENTER", layer, "TOPLEFT", x, -(y - width * MODEL_ASPECT / 2))
    frame:SetSize(width * k, width * k * MODEL_ASPECT)
