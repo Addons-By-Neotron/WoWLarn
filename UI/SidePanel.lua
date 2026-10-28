@@ -291,9 +291,9 @@ end
 
 -- Minimap colors: [kind] = { r, g, b }.
 local MINIMAP = {
-   stairsup = { 0.2, 0.85, 1 }, stairsdown = { 0.85, 0.35, 1 },
-   elevatorup = { 0.6, 1, 0.9 }, elevatordown = { 1, 0.6, 0.85 },
-   wall = { 0.62, 0.62, 0.68 }, monster = { 1, 0.2, 0.2 }, object = { 1, 0.82, 0 }, player = { 0.3, 1, 0.3 },
+   stairsup = { 1, 0.5, 0.05 }, stairsdown = { 0.85, 0.35, 1 },
+   elevatorup = { 1, 0.75, 0.4 }, elevatordown = { 1, 0.6, 0.85 },
+   wall = { 0.62, 0.62, 0.68 }, monster = { 1, 0.2, 0.2 }, object = { 1, 0.82, 0 }, player = { 0.35, 0.85, 1 },
 }
 
 -- The ways between the levels have colors of their own.
