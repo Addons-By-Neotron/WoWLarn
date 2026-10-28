@@ -213,12 +213,16 @@ function Game.Run()
       if G.race then ui:Log("system", L["Your %s blood adds to your abilities."], G.race) end
    end
 
+   local lookedHere  -- where the player last looked at what is on the tile
    while true do
-      if not G.dropflag then
+      -- FIX: not in the C. Fighting on a tile does not bring up what is there again.
+      local here = G.playerx .. "," .. G.playery .. "," .. G.level
+      if G.dropflag then
+         G.dropflag = false  -- don't show what was just dropped
+      elseif not (G.hitflag and lookedHere == here) then
+         lookedHere = here
          ns.Object.lookForObject()  -- see if there is an object here
          if G.dead then break end
-      else
-         G.dropflag = false  -- don't show what was just dropped
       end
       if not G.hitflag then
          if c[K.HASTEMONST] ~= 0 then Monster.movemonst() end
