@@ -357,7 +357,7 @@ local function DrawTile(layers, x, y, ground)
       Shadow(layers[ACTOR], (x - 0.5) * TILE, (y - 0.5) * TILE, TILE * 0.42)
       Model(layers[ACTOR], ghost.display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, ghost.facing, ANIM.death)
    elseif object ~= 0 then
-      local icon = V.ObjectIcon(object)
+      local icon = not ns.mod.db.profile.ascii and V.ObjectIcon(object)
       local size = TILE * 0.6 * scale
       if icon then
          Icon(layers[ACTOR], icon, mx, my + size * 0.1, size, size)
@@ -557,6 +557,8 @@ function map3d:Draw()
                end
             end
             Model(layer, "player", mx, my + size * 0.1, size * 1.1, Facing(G.facing), anim)
+         elseif ns.mod.db.profile.ascii then  -- the original @
+            Glyph(layer, "@", V.PLAYER_COLOR, mx, my + size * 0.1, size)
          else
             Icon(layer, V.ClassIcon(G.class), mx, my + size * 0.15, size, size)
          end
