@@ -26,12 +26,13 @@ local _, ns = ...
 local bar = {}
 ns.bar = bar
 
-local BUTTON_SIZE, SPACING, COLUMNS = 36, 4, 8
+local BUTTON_SIZE, SPACING, COLUMNS = 36, 4, 9
 
 -- key is the command character the game receives (main.c:parse).
 -- The icons are placeholders until Data/Visuals.lua curates them.
 local COMMANDS = {
    { key = "i", name = L["Inventory"], icon = "INV_Misc_Bag_08" },
+   { key = "I", name = L["Sort inventory"], icon = "INV_Misc_Note_02" },
    { key = "w", name = L["Wield weapon"], icon = "INV_Sword_04" },
    { key = "W", name = L["Wear armor"], icon = "INV_Chest_Chain" },
    { key = "T", name = L["Take off armor"], icon = "INV_Shirt_01" },

@@ -135,6 +135,10 @@ local function Parse()
       ui.repcount = 0
       G.nomove = true
       ui:ShowInventory()
+   elseif key == "I" then
+      ui.repcount = 0
+      G.nomove = true
+      ns.Action.sortPack()
    elseif key == "," then
       ui.repcount = 0
       G.nomove = true

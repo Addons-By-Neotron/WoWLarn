@@ -836,3 +836,5 @@ L["You just lost %d mana!"] = true
 L["You don't have any mana!"] = true
 L["/larn view  - flat tiles or the 2.5D view"] = true
 L["/larn sounds  - play every sound effect"] = true
+L["You sort your pack."] = true
+L["Sort inventory"] = true

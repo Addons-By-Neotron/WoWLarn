@@ -324,6 +324,40 @@ function Action.teleport()
    end
 end
 
+-- The 'I' command (not in the original): puts the pack in order -- what is worn or wielded,
+-- then what works while carried, then the rest, then the things to use up -- and the empty
+-- slots last. The slots of the worn things move along.
+local CONSUMABLE = Set(K.OPOTION, K.OSCROLL, K.OBOOK, K.OCOOKIE)
+function Action.sortPack()
+   local c, iven, ivenarg = G.c, G.iven, G.ivenarg
+   local function group(slot)
+      if iven[slot] == 0 then return 5 end
+      if slot == c[K.WIELD] or slot == c[K.WEAR] or slot == c[K.SHIELD] then return 1 end
+      if ns.Equipment.isPassive(iven[slot]) then return 2 end
+      if CONSUMABLE[iven[slot]] then return 4 end
+      return 3
+   end
+   local order = {}
+   for slot = 1, K.IVENSIZE do order[slot] = slot end
+   table.sort(order, function(a, b)
+      local ga, gb = group(a), group(b)
+      if ga ~= gb then return ga < gb end
+      if iven[a] ~= iven[b] then return iven[a] < iven[b] end
+      if ivenarg[a] ~= ivenarg[b] then return ivenarg[a] > ivenarg[b] end
+      return a < b
+   end)
+   local items, args, where = {}, {}, {}
+   for new, old in ipairs(order) do
+      items[new], args[new], where[old] = iven[old], ivenarg[old], new
+   end
+   for slot = 1, K.IVENSIZE do iven[slot], ivenarg[slot] = items[slot], args[slot] end
+   for _, key in ipairs({ K.WIELD, K.WEAR, K.SHIELD }) do
+      if c[key] ~= 0 then c[key] = where[c[key]] end
+   end
+   Msg(L["You sort your pack."])
+   ns.ui:Refresh("all")
+end
+
 -- C: the 'g' command.
 function Action.packWeight()
    local pounds = ns.Player.packWeight()
