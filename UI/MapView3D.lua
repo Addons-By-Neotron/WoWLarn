@@ -159,7 +159,7 @@ local function Model(layer, look, x, y, width, facing, anim)
       frame.model:SetScript("OnModelLoaded", function(self)
          self:SetFacing(frame.facing or FACING)
          if frame.anim and self.SetAnimation then self:SetAnimation(frame.anim) end  -- (loading resets it)
-         if frame.k and self.SetModelScale then self:SetModelScale(1 / frame.k) end  -- (and this)
+         if frame.k and frame.k ~= 1 and self.SetModelScale then self:SetModelScale(1 / frame.k) end  -- (and this)
       end)
       layer.models[layer.usedModels] = frame
    end
@@ -170,7 +170,7 @@ local function Model(layer, look, x, y, width, facing, anim)
       else
          frame.model:SetDisplayInfo(look)
       end
-      frame.facing, frame.anim, frame.k = nil, nil, nil
+      frame.facing, frame.anim = nil, nil
    end
    anim = anim or ANIM.stand
    if frame.anim ~= anim then
@@ -188,7 +188,7 @@ local function Model(layer, look, x, y, width, facing, anim)
    frame:ClearAllPoints()
    frame:SetPoint("CENTER", layer, "TOPLEFT", x, -(y - width * MODEL_ASPECT / 2))
    frame:SetSize(width * k, width * k * MODEL_ASPECT)
-   if frame.model.SetModelScale and frame.k ~= k then
+   if frame.model.SetModelScale and (frame.k or 1) ~= k then
       frame.k = k
       frame.model:SetModelScale(1 / k)
    end
