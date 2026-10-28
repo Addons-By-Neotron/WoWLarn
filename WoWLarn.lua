@@ -120,7 +120,9 @@ function mod:PrintHelp()
    self:info(L["Available commands:"])
    self:info(L["/larn  - show/hide the game window"])
    self:info(L["/larn config  - open settings"])
+   self:info(L["/larn view  - flat tiles or the 2.5D view"])
    self:info(L["/larn scores  - show the high scores"])
+   self:info(L["/larn sounds  - play every sound effect"])
    self:info(L["/larn reset  - reset the window position"])
 end
 
