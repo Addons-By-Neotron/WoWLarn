@@ -87,6 +87,17 @@ local function BuildOptions()
                   ns.map:Layout()
                end,
             },
+            shadows = {
+               type = "toggle",
+               name = L["Shadows"],
+               desc = L["Draw a shadow under the player and monsters in the 2.5D view."],
+               order = 16.8,
+               get = function() return mod.db.profile.shadows ~= false end,
+               set = function(_, value)
+                  mod.db.profile.shadows = value
+                  ns.ui:Refresh("map")
+               end,
+            },
             races = {
                type = "toggle",
                name = L["Races"],

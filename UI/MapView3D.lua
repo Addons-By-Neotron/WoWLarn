@@ -95,7 +95,7 @@ end
 
 -- A four-cornered piece of the view, corners in order around it (top left, top right, bottom
 -- right, bottom left), in view coordinates with y growing downwards.
-local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy)
+local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture)
    layer.usedQuads = layer.usedQuads + 1
    local quad = layer.quads[layer.usedQuads]
    if not quad then
@@ -104,7 +104,13 @@ local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy)
       quad:SetSize(1, 1)
       layer.quads[layer.usedQuads] = quad
    end
-   quad:SetColorTexture(color[1], color[2], color[3], color[4] or 1)
+   if texture then
+      quad:SetTexture(texture)
+      quad:SetVertexColor(color[1], color[2], color[3], color[4] or 1)
+   else
+      quad:SetColorTexture(color[1], color[2], color[3], color[4] or 1)
+      quad:SetVertexColor(1, 1, 1, 1)
+   end
    quad:SetVertexOffset(1, ax, -ay)
    quad:SetVertexOffset(2, dx, 1 - dy)
    quad:SetVertexOffset(3, bx - 1, -by)
@@ -205,6 +211,18 @@ local function Shade(color, ahead, factor, alpha)
    return { color[1] * fog, color[2] * fog, color[3] * fog, alpha }
 end
 
+-- A round shadow on the floor around the world point (wx, wy).
+local SHADOW = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
+local SHADOW_COLOR = { 0, 0, 0, 0.45 }
+local function Shadow(layer, wx, wy, radius)
+   if ns.mod.db.profile.shadows == false then return end
+   local ax, ay = Project(wx - radius, wy - radius, 0)
+   local bx, by = Project(wx + radius, wy - radius, 0)
+   local cx, cy = Project(wx + radius, wy + radius, 0)
+   local dx, dy = Project(wx - radius, wy + radius, 0)
+   if ax and bx and cx and dx then Quad(layer, SHADOW_COLOR, ax, ay, bx, by, cx, cy, dx, dy, SHADOW) end
+end
+
 ----------------------------------------------------------------
 -- Drawing
 ----------------------------------------------------------------
@@ -290,12 +308,14 @@ local function DrawTile(layers, x, y, ground)
          local toward = DIRECTION[Sign(G.playerx - x)][Sign(G.playery - y)]
          local entry = map3d.anims[x * 100 + y]
          local anim = entry and entry.expires > GetTime() and entry.anim or nil
+         Shadow(layers[ACTOR], (x - 0.5) * TILE, (y - 0.5) * TILE, TILE * 0.32)
          Model(layers[ACTOR], display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, Facing(toward), anim)
       else
          Glyph(layers[ACTOR], V.MonsterGlyph(monster), V.MONSTER_COLOR, mx, my + TILE * 0.1 * scale, TILE * 0.9 * scale)
       end
    elseif map3d.ghosts[x * 100 + y] and map3d.ghosts[x * 100 + y].expires > GetTime() then
       local ghost = map3d.ghosts[x * 100 + y]
+      Shadow(layers[ACTOR], (x - 0.5) * TILE, (y - 0.5) * TILE, TILE * 0.32)
       Model(layers[ACTOR], ghost.display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, ghost.facing, ANIM.death)
    elseif object ~= 0 then
       local icon = V.ObjectIcon(object)
@@ -446,6 +466,7 @@ function map3d:Draw()
          if models then
             local entry = self.playerAnim
             local anim = entry and entry.expires > GetTime() and entry.anim or (walking and ANIM.walk or ANIM.stand)
+            Shadow(layer, (posX - 0.5) * TILE, (posY - 0.5) * TILE, TILE * 0.32)
             Model(layer, "player", mx, my + size * 0.1, size * 1.1, Facing(G.facing), anim)
          else
             Icon(layer, V.ClassIcon(G.class), mx, my + size * 0.15, size, size)

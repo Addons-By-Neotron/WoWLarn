@@ -826,3 +826,5 @@ L["You"] = true
 L["Your %s blood adds to your abilities."] = true
 L["Races"] = true
 L["Your character's race adds a few points to the stats of a new game.  Not part of the original game."] = true
+L["Shadows"] = true
+L["Draw a shadow under the player and monsters in the 2.5D view."] = true
