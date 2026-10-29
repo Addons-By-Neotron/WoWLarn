@@ -1025,6 +1025,27 @@ do
    check(not G.dead and G.c[K.HP] > 0, "god mode cannot die")
    G.god, G.wizard = false, false
 end
+-- equipment preview
+Fresh(3)
+G.iven[1], G.ivenarg[1] = K.ODAGGER, 1
+G.iven[2], G.ivenarg[2] = K.OLONGSWORD, 0
+G.iven[3], G.ivenarg[3] = K.OLEATHER, 0
+G.iven[4], G.ivenarg[4] = K.OSHIELD, 0
+G.iven[5], G.ivenarg[5] = K.O2SWORD, 0
+G.c[K.WIELD], G.c[K.WEAR], G.c[K.SHIELD] = 1, 3, 4
+G.c[K.MOREDEFENSES], G.c[K.MOREDAM] = 0, 0
+ns.Player.recalc()
+local _, now, after = ns.Equipment.preview("weapon", 2)
+check(now == 4 and after == 22, "weapon preview " .. now .. " > " .. after)
+local _, wnow, wafter, warning = ns.Equipment.preview("weapon", 5)
+check(wafter == 26 and warning, "two handed sword is refused with a shield")
+local _, anow, aafter = ns.Equipment.preview("armor", 0)
+check(aafter == anow - 2, "armor off")
+local _, snow, safter = ns.Equipment.preview("shield", 0)
+check(safter == snow - 2, "shield off")
+ns.Action.takeOffWhat = "armor"; ns.Action.takeOff()
+check(G.c[K.WEAR] == 0 and G.c[K.SHIELD] == 4, "armor comes off before the shield when asked for")
+
 -- spell descriptions
 G.c[K.LEVEL], G.c[K.INTELLIGENCE], G.c[K.WISDOM] = 10, 18, 18
 for spell = 1, K.SPNUM do

@@ -49,6 +49,7 @@ UI\Widgets.lua
 UI\MessageLog.lua
 UI\Prompt.lua
 UI\ControlBar.lua
+UI\EquipMenu.lua
 UI\SidePanel.lua
 UI\MapView3D.lua
 UI\MapView.lua

@@ -33,7 +33,8 @@ local GAP = 4
 local CELL = 3  -- minimap pixels per tile
 local EFFECT_SIZE, EFFECT_COLUMNS = 24, 8
 local STAT_W, STAT_H = 68, 15
-local MINIMAP_H, PORTRAIT_H, STATS_H = K.MAXY * CELL + 22, 112, 196
+local SLOT_SIZE = 30
+local MINIMAP_H, PORTRAIT_H, STATS_H = K.MAXY * CELL + 22, 120, 196
 
 local function Section(parent, height, title)
    local panel = ns.CreatePanel(parent)
@@ -129,11 +130,12 @@ function side:Create(parent)
    portraits:SetPoint("TOPLEFT", minimap, "BOTTOMLEFT", 0, -GAP)
    portraits:SetPoint("TOPRIGHT", minimap, "BOTTOMRIGHT", 0, -GAP)
    local player = CreateFrame("PlayerModel", nil, portraits)
-   player:SetPoint("TOPLEFT", 4, -16)
+   player:SetPoint("TOPLEFT", 4 + SLOT_SIZE + 4, -16)
    player:SetPoint("BOTTOMRIGHT", portraits, "BOTTOM", -2, 4)
    pcall(player.SetUnit, player, "player")
    pcall(player.SetPortraitZoom, player, 0.8)
    self.player = player
+   self:CreateSlots(portraits)
    self.target = CreateFrame("PlayerModel", nil, portraits)
    self.target:SetPoint("TOPLEFT", portraits, "TOP", 2, -16)
    self.target:SetPoint("BOTTOMRIGHT", -4, 4)
@@ -245,6 +247,66 @@ function side:Create(parent)
    return frame
 end
 
+-- The slots of the character sheet: weapon, armor and shield.  A click opens the list of what
+-- in the pack fits (UI/EquipMenu.lua); the tooltip says what is there and how it counts.
+local SLOTS = {
+   { kind = "weapon", empty = "Interface\\PaperDoll\\UI-PaperDoll-Slot-MainHand", worn = function() return G.c[K.WIELD] end },
+   { kind = "armor", empty = "Interface\\PaperDoll\\UI-PaperDoll-Slot-Chest", worn = function() return G.c[K.WEAR] end },
+   { kind = "shield", empty = "Interface\\PaperDoll\\UI-PaperDoll-Slot-SecondaryHand", worn = function() return G.c[K.SHIELD] end },
+}
+
+function side:CreateSlots(parent)
+   self.slots = {}
+   for index, slot in ipairs(SLOTS) do
+      local button = CreateFrame("Button", nil, parent)
+      button:SetSize(SLOT_SIZE, SLOT_SIZE)
+      button:SetPoint("TOPLEFT", 4, -16 - (index - 1) * (SLOT_SIZE + 3))
+      button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+      button.icon = button:CreateTexture(nil, "ARTWORK")
+      button.icon:SetAllPoints()
+      button.border = button:CreateTexture(nil, "OVERLAY")
+      button.border:SetAllPoints()
+      Fill(button.border, 0, 0, 0, 0)
+      button.count = button:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
+      button.count:SetPoint("BOTTOMRIGHT", -2, 2)
+      button.slot = slot
+      button:SetScript("OnClick", function(b) ns.equipMenu:Open(b.slot.kind, b) end)
+      button:SetScript("OnEnter", function(b)
+         GameTooltip:SetOwner(b, "ANCHOR_LEFT")
+         local worn = b.slot.worn()
+         if worn ~= 0 and G.iven[worn] ~= 0 then
+            ns.ItemInfo.tooltip(G.iven[worn], G.ivenarg[worn])
+         else
+            GameTooltip:SetText(ns.equipMenu.KINDS[b.slot.kind].title, 1, 1, 1)
+            GameTooltip:AddLine(L["Nothing equipped."], 0.7, 0.7, 0.7)
+         end
+         GameTooltip:AddLine(L["Click to change."], 0.5, 0.8, 1)
+         GameTooltip:Show()
+      end)
+      button:SetScript("OnLeave", GameTooltip_Hide)
+      self.slots[index] = button
+   end
+end
+
+function side:UpdateSlots()
+   if not self.slots then return end
+   for _, button in ipairs(self.slots) do
+      local worn = button.slot.worn()
+      local id = worn ~= 0 and G.iven[worn] or 0
+      local icon = id ~= 0 and V.ObjectIcon(id)
+      if icon then
+         button.icon:SetTexture(icon)
+         button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+         local arg = G.ivenarg[worn]
+         button.count:SetText(arg ~= 0 and format("%+d", arg) or "")
+      else
+         button.icon:SetTexture(button.slot.empty)
+         button.icon:SetTexCoord(0, 1, 0, 1)
+         button.count:SetText("")
+      end
+   end
+end
+
 -- C: botside(). Lays out the icons of the effects that are running.
 function side:UpdateEffects()
    if not self.effectIcons then return end
@@ -283,6 +345,7 @@ function side:UpdateStats()
    self.exp.text:SetText(format("%s %d / %d", L["Exp"], c[K.EXPERIENCE], high))
 
    self:UpdateEffects()
+   self:UpdateSlots()
 
    for _, frame in ipairs(self.cells) do
       frame.text:SetText(frame.cell.text())

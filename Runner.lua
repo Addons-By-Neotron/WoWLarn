@@ -77,6 +77,11 @@ function ui:Resume(...)
 end
 
 -- The only input path: the keyboard, buttons and (later) clicks all end up here.
+-- True while the game waits for a command (not for the answer to a question).
+function ui:IsReady()
+   return self.wait == "key" and self.atCommand == true
+end
+
 function ui:InjectKey(key)
    if self.wait == "key" then
       self:Resume(key)
@@ -279,7 +284,9 @@ function ui:GetCommand()
    self.repcount = 0
 
    while true do
+      self.atCommand = true
       local key = self:GetKey()
+      self.atCommand = false
       if key == ESC then
          ns.main:SetFocus(false)
       else

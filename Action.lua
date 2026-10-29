@@ -135,9 +135,23 @@ function Action.wear()
    ns.ui:Refresh("all")
 end
 
+-- What kind of thing the equipment window wants taken off ("armor" or "shield"), for the
+-- next 'T'.
+Action.takeOffWhat = nil
+
+-- True if the object can be wielded / worn as armor / worn as a shield (for the equipment window).
+function Action.isWeapon(id) return WIELD[id] or false end
+function Action.isArmor(id) return ARMOR[id] or false end
+function Action.isShield(id) return id == K.OSHIELD end
+
 -- C: the 'T' command.
 function Action.takeOff()
-   if c[K.SHIELD] ~= 0 then
+   local what = Action.takeOffWhat
+   Action.takeOffWhat = nil
+   if what == "armor" and c[K.WEAR] ~= 0 then
+      c[K.WEAR] = 0
+      Msg(L["Your armor is off."])
+   elseif c[K.SHIELD] ~= 0 then
       c[K.SHIELD] = 0
       Msg(L["Your shield is off."])
    elseif c[K.WEAR] ~= 0 then

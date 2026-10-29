@@ -158,3 +158,35 @@ function Equipment.summary()
    if #artifacts > 0 then lines[#lines + 1] = L["Artifacts:"] .. " " .. table.concat(artifacts, ", ") end
    return lines
 end
+
+-- What the weapon class or armor class would be if the item in pack slot `slot` were equipped
+-- as `kind` ("weapon", "armor" or "shield"); slot 0 takes the current one off.  Returns the
+-- label, the value now and the value after, and a warning if the game would refuse.
+function Equipment.preview(kind, slot)
+   local P = ns.Player
+   local function Bonus(index, base)
+      if not index or index <= 0 then return 0 end
+      return (base[iven[index]] or 0) + ivenarg[index]
+   end
+   if kind == "weapon" then
+      local now = Bonus(c[K.WIELD], P.WEAPON_WC)
+      local after = slot > 0 and Bonus(slot, P.WEAPON_WC) or 0
+      local warning
+      if slot > 0 and iven[slot] == K.O2SWORD and c[K.SHIELD] ~= 0 then
+         warning = L["It needs both hands: take off your shield first."]
+      end
+      return L["Weapon class"], c[K.WCLASS], c[K.WCLASS] - now + after, warning
+   elseif kind == "armor" then
+      local now = Bonus(c[K.WEAR], P.ARMOR_AC)
+      local after = slot > 0 and Bonus(slot, P.ARMOR_AC) or 0
+      return L["Armor class"], c[K.AC], c[K.AC] - now + after
+   else
+      local now = c[K.SHIELD] > 0 and 2 + ivenarg[c[K.SHIELD]] or 0
+      local after = slot > 0 and 2 + ivenarg[slot] or 0
+      local warning
+      if slot > 0 and c[K.WIELD] > 0 and iven[c[K.WIELD]] == K.O2SWORD then
+         warning = L["Your two-handed sword needs both hands."]
+      end
+      return L["Armor class"], c[K.AC], c[K.AC] - now + after, warning
+   end
+end
