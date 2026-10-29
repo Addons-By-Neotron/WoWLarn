@@ -471,9 +471,12 @@ V.ROOM = {
    [121735] = 2.5,
 }
 
+-- Every model gets at least this much room, so wings and tails fit by default.
+V.MIN_ROOM = 2
+
 function V.Room(display)
    local own = ns.mod.db.global.rooms
-   return (own and own[display]) or V.ROOM[display] or 1
+   return math.max(V.MIN_ROOM, (own and own[display]) or V.ROOM[display] or 1)
 end
 
 -- What the player says when attacking, hurt and dying, by race (the race file of UnitRace) and
