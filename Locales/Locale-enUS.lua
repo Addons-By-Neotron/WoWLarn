@@ -925,3 +925,8 @@ L["Makes the time-limited spells permanent; costs 1 intelligence and the spell i
 L["Risky: it can backfire!"] = true
 L["Needs character level %d"] = true
 L["Chance that it works: %d%% (intelligence)"] = true
+L["%s damage to the monster in a direction, if it believes you (needs wisdom)"] = true
+L["2000 damage to the monster in a direction (needs wisdom)"] = true
+L["Makes a sphere that wanders for 12-31 turns and kills what it touches; costs 1 intelligence"] = true
+L["A demon hits the monster in a direction for 150, but it may also do nothing, or turn on you"] = true
+L["Intelligence makes spells work more often"] = true

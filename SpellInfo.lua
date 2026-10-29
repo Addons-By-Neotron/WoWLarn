@@ -72,9 +72,8 @@ local INFO = {
    [K.SP_CURE_BLINDNESS] = function() return L["Cures blindness"] end,
    [K.SP_CREATE_MONSTER] = function() return L["Creates a monster of this level's kind next to you"] end,
    [K.SP_PHANTASMAL_FORCES] = function(lev)
-      local chance = math.max(0, math.min(100, math.floor((c[K.WISDOM] - 7) / 11 * 100)))
-      return format(L["%s damage to the monster in a direction, but it only believes you %d%% of the time (wisdom)"],
-         Range(21 + lev, 40 + lev), chance), Range(21 + lev, 40 + lev)
+      return format(L["%s damage to the monster in a direction, if it believes you (needs wisdom)"],
+         Range(21 + lev, 40 + lev)), Range(21 + lev, 40 + lev)
    end,
    [K.SP_INVISIBILITY] = function() return L["Invisible for 12 turns (128 more for each amulet of invisibility)"] end,
    [K.SP_FIREBALL] = function(lev) return Missile(26 + lev, 50 + 2 * lev) end,
@@ -93,8 +92,7 @@ local INFO = {
    [K.SP_INVULNERABILITY] = function() return L["+10 armor for 200 turns; costs 1 intelligence"] end,
    [K.SP_FLOOD] = function(lev) return Adjacent(32 + lev, 32 + lev) end,
    [K.SP_FINGER_OF_DEATH] = function()
-      local chance = math.max(0, math.min(100, math.floor((c[K.WISDOM] - 11) / 10 * 100)))
-      return format(L["2000 damage to the monster in a direction; works %d%% of the time (wisdom), and 1 in 151 casts stops your own heart"], chance), "2000"
+      return L["2000 damage to the monster in a direction (needs wisdom)"], "2000"
    end,
    [K.SP_SCARE_MONSTER] = function(lev) return format(L["Monsters won't fight you for %s turns (3 times with the hand of fear)"], Range(1 + lev, 10 + lev)) end,
    [K.SP_HOLD_MONSTER] = function(lev) return format(L["Monsters are frozen for %s turns"], Range(1 + lev, 10 + lev)) end,
@@ -103,11 +101,11 @@ local INFO = {
    [K.SP_MAGIC_FIRE] = function(lev) return Adjacent(36 + lev, 45 + lev) end,
    [K.SP_MAKE_A_WALL] = function() return L["Builds a wall on an empty tile in a direction"] end,
    [K.SP_SPHERE_OF_ANNIHILATION] = function()
-      return L["Makes a sphere that wanders for 12-31 turns and kills what it touches; 1 in 23 casts kills you; costs 1 intelligence"]
+      return L["Makes a sphere that wanders for 12-31 turns and kills what it touches; costs 1 intelligence"]
    end,
    [K.SP_GENOCIDE] = function() return L["Wipes out a kind of monster for good; costs 1 intelligence and the spell is forgotten"] end,
    [K.SP_SUMMON_DEMON] = function()
-      return L["70% a demon hits the monster in a direction for 150; sometimes nothing, and now and then it turns on you for 31-70"], "150"
+      return L["A demon hits the monster in a direction for 150, but it may also do nothing, or turn on you"], "150"
    end,
    [K.SP_WALK_THROUGH_WALLS] = function() return Turns(6, 15, L["Walk through walls for %s turns"]) end,
    [K.SP_ALTER_REALITY] = function() return L["Rebuilds the level, keeping what is on it; costs 1 intelligence and the spell is forgotten"] end,
@@ -128,11 +126,4 @@ end
 -- The character level the spell needs (C: speldamage() checks level * 3 + 2 against the spell).
 function SpellInfo.minLevel(spell)
    return math.max(0, math.ceil((spell - 3) / 3))
-end
-
--- The chance that a cast works at all (the intelligence roll and the 1 in 23 fizzle).
-function SpellInfo.chance(spell)
-   if c[K.LEVEL] * 3 + 2 < spell - 1 then return 0 end
-   local int = math.max(0, math.min(18, c[K.INTELLIGENCE]))
-   return math.floor(100 * 22 / 23 * int / 18)
 end

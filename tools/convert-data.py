@@ -22,6 +22,13 @@ OBJECT_RENAMES = {
 }
 
 
+# Spell descriptions the C gets wrong (C index -> text): the code adds +3, not +2.
+SPELL_DESCRIPTION_FIXES = {
+    2: "Adds +3 to the caster's dexterity",
+    7: "Adds +3 to the caster's strength for a time",
+}
+
+
 def defines(text):
     """(name, int, comment) for every simple numeric #define."""
     result = []
@@ -159,6 +166,8 @@ def tables():
     code = re.findall(r'"(\w+)"', section(data, "char *spelcode[]", "};"))
     names = re.findall(r'"([^"]*)"', re.sub(r"/\*.*?\*/", "", section(data, "char *spelname[]", "};")))
     desc = re.findall(r'"([^"]*)"', re.sub(r"/\*.*?\*/", "", section(data, "char *speldescript[]", "};")))
+    for index, text in SPELL_DESCRIPTION_FIXES.items():
+        desc[index] = text
     assert len(code) == 39 and len(names) == 40 and len(desc) == 40, (len(code), len(names), len(desc))
     out.append("-- Spells 1..39 (C: 0..38): three letter code, name and description.")
     out.append("T.spelcode = {" + ", ".join(lua_string(n) for n in code) + "}")

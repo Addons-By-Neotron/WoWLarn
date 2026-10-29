@@ -74,7 +74,7 @@ function spellbook:Create(parent)
          if need > ns.G.c[K.LEVEL] then
             GameTooltip:AddLine(format(L["Needs character level %d"], need), 1, 0.5, 0, true)
          else
-            GameTooltip:AddLine(format(L["Chance that it works: %d%% (intelligence)"], SI.chance(self.index)), 0.7, 0.7, 0.7, true)
+            GameTooltip:AddLine(L["Intelligence makes spells work more often"], 0.7, 0.7, 0.7, true)
          end
          GameTooltip:Show()
       end)
