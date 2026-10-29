@@ -58,12 +58,6 @@ local KIND = {
    [K.SP_WALK_THROUGH_WALLS] = SELF, [K.SP_ALTER_REALITY] = LEVEL, [K.SP_PERMANENCE] = SELF,
 }
 
--- Spells whose damage or healing is the same every time (it only grows with your level).
-local FIXED = {
-   [K.SP_HEALING] = true, [K.SP_DEHYDRATION] = true, [K.SP_DRAIN_LIFE] = true, [K.SP_FLOOD] = true,
-   [K.SP_FINGER_OF_DEATH] = true, [K.SP_SUMMON_DEMON] = true,
-}
-
 -- Missiles lose strength with every tile (see GoDirect).
 local function Missile(what, low, high)
    local fade = 3 + idiv(c[K.HARDGAME], 2)
@@ -147,11 +141,6 @@ end
 -- How the spell reaches its target: "Self", "In a line", "Around you", "Next to you"...
 function SpellInfo.kind(spell)
    return KIND[spell]
-end
-
--- True if the damage or healing is the same every time.
-function SpellInfo.fixed(spell)
-   return FIXED[spell] or false
 end
 
 -- The description and the short form (or nil) of the spell for the caster as they are now.

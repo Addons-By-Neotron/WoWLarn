@@ -70,7 +70,6 @@ function spellbook:Create(parent)
          GameTooltip:AddLine(L["Instant"], 1, 1, 1)
          local effect = SI.info(self.index)
          if effect then GameTooltip:AddLine(effect, 1, 0.82, 0, true) end
-         if SI.fixed(self.index) then GameTooltip:AddLine(L["The same every time, it only grows with your level."], 1, 1, 1, true) end
          if SI.risky(self.index) then GameTooltip:AddLine(L["Risky: it can backfire!"], 1, 0.3, 0.3, true) end
          if SI.minLevel(self.index) > ns.G.c[K.LEVEL] then
             GameTooltip:AddLine(L["Might not work at your level"], 1, 0.5, 0, true)
