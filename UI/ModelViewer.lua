@@ -211,8 +211,8 @@ function viewer:Room(by)
    self:Refresh()
 end
 
--- Turns the display (a model that is too wide the way it faces), 15 degrees at a time; kept in
--- the saved variables and shown, to be put in V.TURN.
+-- Turns the display in the viewer and the zoo (not in the game), 15 degrees at a time; kept in
+-- the saved variables.
 function viewer:Turn(by)
    local turn = (ns.Visuals.Turn(self.display) + by) % (2 * math.pi)
    turn = math.floor(turn * 1000 + 0.5) / 1000

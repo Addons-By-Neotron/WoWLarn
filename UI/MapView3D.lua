@@ -205,7 +205,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
       frame.anim = anim
       if frame.model.SetAnimation then frame.model:SetAnimation(anim) end
    end
-   facing = (facing or FACING) + (look ~= "player" and V.Turn(look) or 0)  -- (some models are too wide as they are)
+   facing = facing or FACING
    if frame.facing ~= facing then
       frame.facing = facing
       frame.model:SetFacing(facing)
@@ -293,7 +293,7 @@ end
 
 -- A tile with a creature (a display, or "player") on it, as the map draws them, for the
 -- monster zoo: the centre of the tile is at (sx, sy) in the view of layer, zoom times larger.
-function map3d.DrawTile(layer, look, sx, sy, zoom, floorColor)
+function map3d.DrawTile(layer, look, sx, sy, zoom, floorColor, facing)
    local angle = ns.mod.db.profile.cameraAngle or 55
    SIN, COS = math.sin(math.rad(angle)), math.cos(math.rad(angle))
    CAMERA_BACK, CAMERA_HEIGHT = CAMERA_DISTANCE * COS, CAMERA_DISTANCE * SIN
@@ -308,7 +308,7 @@ function map3d.DrawTile(layer, look, sx, sy, zoom, floorColor)
    Shadow(layer, 0, 0, TILE * 0.42)
    local mx, my, scale = Project(0, 0, 0)
    local width = (look == "player" and TILE * 1.1 or TILE * 0.9) * scale
-   Model(layer, look, mx, my + TILE * (look == "player" and 0.1 or 0.05) * scale, width, FACING)
+   Model(layer, look, mx, my + TILE * (look == "player" and 0.1 or 0.05) * scale, width, facing or FACING)
 end
 
 ----------------------------------------------------------------

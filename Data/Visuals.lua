@@ -519,9 +519,9 @@ function V.PlayerSound(kind)
    return (own and own[sex][kind]) or (own and own[other][kind]) or human[sex][kind]
 end
 
--- Models that are too wide (or too narrow) the way they face, by display id: how far to turn
--- them from the way they face the player, in radians.  What is set in the model viewer
--- (global.turns) wins.
+-- How far to turn a model in the model viewer and the zoo, by display id, in radians: to see
+-- how wide it is from the side, for its room (the game turns them as it wants).  What is set
+-- in the model viewer (global.turns) wins.
 V.TURN = {
 }
 

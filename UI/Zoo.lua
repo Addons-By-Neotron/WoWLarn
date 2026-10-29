@@ -111,6 +111,7 @@ function zoo:Update()
    local width = TILE_W
    for id, cell in pairs(self.cells) do
       local look = id == 0 and "player" or V.MonsterDisplay(id, self.looks[id] or 1)
+      local turn = look ~= "player" and look and V.Turn(look) or 0  -- (to see how wide it is from the side)
       local column, row = id % COLUMNS, math.floor(id / COLUMNS)
       local x, y = column * CELL_W + CELL_W / 2, (row + 1) * CELL_H - 16  -- (the bottom of the tile)
       cell.floor:SetShown(self.flat)
@@ -122,9 +123,9 @@ function zoo:Update()
          cell.shadow:ClearAllPoints()
          cell.shadow:SetSize(width * 0.84, width * 0.42)
          cell.shadow:SetPoint("BOTTOM", 0, 16 + width * 0.04)
-         if look then map3d.Model(layer, look, x, y - width * 0.25, width * (id == 0 and 1.2 or 1), 0) end
+         if look then map3d.Model(layer, look, x, y - width * 0.25, width * (id == 0 and 1.2 or 1), turn) end
       elseif look then
-         map3d.DrawTile(layer, look, x, y - width * 0.25, 1, FLOOR)
+         map3d.DrawTile(layer, look, x, y - width * 0.25, 1, FLOOR, turn)
       end
    end
    map3d.Finish(layer)
