@@ -64,14 +64,15 @@ function spellbook:Create(parent)
       end)
       button:SetScript("OnEnter", function(self)
          GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-         GameTooltip:SetText(ns.Tables.spelname[self.index])
-         GameTooltip:AddLine(ns.Tables.speldescript[self.index], 1, 1, 1, true)
          local SI = ns.SpellInfo
+         GameTooltip:SetText(ns.Tables.spelname[self.index], 1, 1, 1)
+         GameTooltip:AddDoubleLine(L["1 Mana"], SI.kind(self.index) or "", 1, 1, 1, 1, 1, 1)
+         GameTooltip:AddLine(L["Instant"], 1, 1, 1)
          local effect = SI.info(self.index)
-         if effect then GameTooltip:AddLine(effect, 0.4, 1, 0.4, true) end
+         if effect then GameTooltip:AddLine(effect, 1, 0.82, 0, true) end
+         if SI.fixed(self.index) then GameTooltip:AddLine(L["The same every time, it only grows with your level."], 1, 1, 1, true) end
          if SI.risky(self.index) then GameTooltip:AddLine(L["Risky: it can backfire!"], 1, 0.3, 0.3, true) end
-         local need = SI.minLevel(self.index)
-         if need > ns.G.c[K.LEVEL] then
+         if SI.minLevel(self.index) > ns.G.c[K.LEVEL] then
             GameTooltip:AddLine(L["Might not work at your level"], 1, 0.5, 0, true)
          end
          GameTooltip:Show()
