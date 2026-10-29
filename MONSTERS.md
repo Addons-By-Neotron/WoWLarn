@@ -68,11 +68,11 @@ ones at difficulty 0; a higher difficulty scales hit points, damage and gold.
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 28 | phantasm (metamorph) | 6-8 | 32 | 9 | 3 | 3 |  | 0 | 40 | 4629, 146, 14368 |
+| 28 | phantasm (metamorph) | 6-8 | 32 | 9 | 3 | 3 |  | 0 | 40 | 4629, 146 |
 | 29 | vortex | 6-8 | 33 | 5 | 4 | 3 |  | 0 | 53 | 14525, 5327 |
 | 30 | zhevra (ziller) | 6-8 | 34 | 15 | 3 | 3 |  | 0 | 33 | 6087, 2187, 6086, 1531 |
 | 31 | violet fungus | 6-8 | 39 | 12 | 3 | 3 |  | 0 | 90 | 121735 (else 8389) |
-| 32 | wraith | 6-8 | 36 | 3 | 1 | 3 | drains a level | 0 | 300 | 7857, 14703 |
+| 32 | wraith | 6-8 | 36 | 3 | 1 | 3 | drains a level | 0 | 300 | 7857, 14703, 14368 |
 | 33 | black panther (forvalaka) | 6-8 | 55 | 3 | 5 | 7 |  | 0 | 270 | 633, 11452 |
 
 ## First seen on dungeon level 7
