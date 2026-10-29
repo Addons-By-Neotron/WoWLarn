@@ -119,6 +119,7 @@ ns.K = {
    PAD = 97,
    COKED = 98,
    TMP2 = 99,
+   STATDEBT = 100,  -- FIX: not in the C. c[STATDEBT + stat] is how far below 1 a stat would be (see Player.normalize)
 
    -- Object ids (itm.h). Unchanged: 0 is an empty tile.
    OALTAR = 1,

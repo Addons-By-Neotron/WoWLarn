@@ -74,6 +74,7 @@ end
 
 -- C: parse(). Gets and executes one command. Returns true if the game is over.
 local function Parse()
+   ns.Player.normalize()  -- (drains and the like may have left a stat low)
    local key = ui:GetCommand()
 
    if MOVE[key] then

@@ -322,8 +322,21 @@ function Player.adjustCValues(id, arg)
    end
    if flag then ns.ui:Refresh("stats") end
 
+   Player.normalize()
+end
+
+-- FIX: not in the C. No stat is ever below 1 (negative ones are odd): when items take more
+-- than a stat has, it shows 1 and the rest is kept as debt, paid first by what raises the stat
+-- again, so putting the item down gives back what was there.
+function Player.normalize()
    for i = K.STRENGTH, K.STRENGTH + 5 do
-      if c[i] < 3 then c[i] = 3 end
+      local debt = c[K.STATDEBT + i] or 0
+      local value = c[i] - debt
+      if value >= 1 then
+         c[i], c[K.STATDEBT + i] = value, 0
+      else
+         c[i], c[K.STATDEBT + i] = 1, 1 - value
+      end
    end
 end
 
@@ -470,6 +483,7 @@ function Player.take(itm, arg)
          ui:Message(L["You pick up: %s"], ns.ItemInfo.link(itm, arg))
          ui:Refresh("inv")
          if stats then Player.recalc() end
+         Player.normalize()
          ui:Refresh("stats")
          if c[K.BLINDCOUNT] == 0 and eyeflag then
             ui:Message(L["Your sight fades for a moment..."])

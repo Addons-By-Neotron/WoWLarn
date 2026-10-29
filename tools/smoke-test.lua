@@ -401,6 +401,13 @@ G.c[K.INTELLIGENCE] = G.c[K.INTELLIGENCE] + 2  -- (something raises it meanwhile
 ns.Player.dropObject(1)
 check(G.c[K.INTELLIGENCE] == 14, "dropping the hammer gives back 10, got " .. G.c[K.INTELLIGENCE])
 G.item[G.playerx][G.playery], G.iarg[G.playerx][G.playery] = 0, 0
+-- no stat is below 1: the rest of the hammer's 10 is kept and paid back
+G.c[K.INTELLIGENCE] = 5
+ns.Player.take(K.OHAMMER, 0)
+check(G.c[K.INTELLIGENCE] == 1, "intelligence stays at 1, got " .. G.c[K.INTELLIGENCE])
+ns.Player.dropObject(1)
+check(G.c[K.INTELLIGENCE] == 5, "and comes back as 5, got " .. G.c[K.INTELLIGENCE])
+G.item[G.playerx][G.playery], G.iarg[G.playerx][G.playery] = 0, 0
 check(ns.Player.dropObject(2) == false or true, "dropping nothing is fine")
 check(G.dropflag, "dropflag set")
 -- item names
