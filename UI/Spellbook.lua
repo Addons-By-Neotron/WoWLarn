@@ -20,6 +20,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("WoWLarn")
 local _, ns = ...
 local K = ns.K
 local G = ns.G
+local format = string.format
 
 -- The spellbook (the spells you know, shown while casting; C: the list of cast()) and the
 -- list of discoveries (C: seemagic()). Clicking a spell answers the pending request with
@@ -65,6 +66,16 @@ function spellbook:Create(parent)
          GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
          GameTooltip:SetText(ns.Tables.spelname[self.index])
          GameTooltip:AddLine(ns.Tables.speldescript[self.index], 1, 1, 1, true)
+         local SI = ns.SpellInfo
+         local effect = SI.info(self.index)
+         if effect then GameTooltip:AddLine(effect, 0.4, 1, 0.4, true) end
+         if SI.risky(self.index) then GameTooltip:AddLine(L["Risky: it can backfire!"], 1, 0.3, 0.3, true) end
+         local need = SI.minLevel(self.index)
+         if need > ns.G.c[K.LEVEL] then
+            GameTooltip:AddLine(format(L["Needs character level %d"], need), 1, 0.5, 0, true)
+         else
+            GameTooltip:AddLine(format(L["Chance that it works: %d%% (intelligence)"], SI.chance(self.index)), 0.7, 0.7, 0.7, true)
+         end
          GameTooltip:Show()
       end)
       button:SetScript("OnLeave", GameTooltip_Hide)
@@ -107,7 +118,9 @@ function spellbook:Open(all)
       if all or G.spelknow[index] ~= 0 then
          button:ClearAllPoints()
          button:SetPoint("TOPLEFT", 8 + (shown % COLUMNS) * COLUMN_W, -(HEADER_H + math.floor(shown / COLUMNS) * ROW_H))
-         button.text:SetText("|cffffd100" .. T.spelcode[index] .. "|r  " .. T.spelname[index])
+         local _, short = ns.SpellInfo.info(index)
+         button.text:SetText("|cffffd100" .. T.spelcode[index] .. "|r  " .. T.spelname[index]
+            .. (short and ("  |cff66ff66" .. short .. "|r") or "") .. (ns.SpellInfo.risky(index) and "  |cffff4d4d!|r" or ""))
          button:Show()
          shown = shown + 1
       else

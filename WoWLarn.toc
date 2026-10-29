@@ -42,6 +42,7 @@ Features.lua
 Town.lua
 Sphere.lua
 Spells.lua
+SpellInfo.lua
 Action.lua
 Object.lua
 UI\Widgets.lua
