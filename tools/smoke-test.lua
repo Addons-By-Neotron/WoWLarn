@@ -951,7 +951,7 @@ do
    G.iarg[10][5] = 1234; G.item[10][5] = K.OGOLDPILE; G.loot[1105] = { { K.ODAGGER, 2 } }
    local items = 0
    for x = 1, K.MAXX do for y = 1, K.MAXY do if G.item[x][y] ~= 0 then items = items + 1 end end end
-   check(G.monster[K.LEMMING].name == "murloc", "a new game has murlocs")
+   check(G.monster[K.LEMMING].name == "critter", "a new game has critters")
    local monsters = G.monster[K.KOBOLD].hitpoints
    ns.ui.co = {}  -- (pretend a game is going on)
    ns.Save.store()
@@ -965,7 +965,7 @@ do
    local after = 0
    for x = 1, K.MAXX do for y = 1, K.MAXY do if G.item[x][y] ~= 0 then after = after + 1 end end end
    check(after == items, "same items on the level: " .. after .. " vs " .. items)
-   check(G.monster[K.LEMMING].name == "murloc", "lemmings are murlocs: " .. G.monster[K.LEMMING].name)
+   check(G.monster[K.LEMMING].name == "critter", "lemmings are critters: " .. G.monster[K.LEMMING].name)
    check(G.levels[1] and G.visited[1] and G.spheres[1].lifetime == 9 and G.monster[K.KOBOLD].hitpoints == monsters, "levels, spheres, monsters")
    ns.Save.clear()
    check(not ns.Save.exists(), "save cleared")

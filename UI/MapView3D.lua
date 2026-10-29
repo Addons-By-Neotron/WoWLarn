@@ -176,6 +176,8 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
       frame.look = look
       if look == "player" then
          frame.model:SetUnit("player")
+      elseif look < 0 then  -- (a model file data id, negated)
+         frame.model:SetModel(-look)
       else
          frame.model:SetDisplayInfo(look)
       end

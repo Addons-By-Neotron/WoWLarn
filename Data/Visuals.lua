@@ -148,25 +148,196 @@ local function Displays(...)
    return list
 end
 
+-- Whether the client has a display (some are only in the newer clients).  A display is
+-- tried on a model that is never shown; the answer is kept.  One that is not known at once
+-- is tried again when its model has loaded, and the map is drawn again then.
+local usable, probe = {}, nil
+local function Usable(display)
+   if usable[display] ~= nil then return usable[display] end
+   if not probe then
+      probe = CreateFrame("PlayerModel", nil, UIParent)
+      probe:SetSize(8, 8)
+      probe:SetPoint("TOPLEFT", UIParent, "BOTTOMRIGHT", 100, -100)  -- (off screen)
+      probe:SetScript("OnModelLoaded", function(model)
+         if model.display and not usable[model.display] then
+            usable[model.display] = true
+            ns.ui:Refresh("map")
+         end
+      end)
+   end
+   probe.display = display
+   if display < 0 then probe:SetModel(-display) else probe:SetDisplayInfo(display) end
+   local file = probe.GetModelFileID and probe:GetModelFileID()
+   usable[display] = (not probe.GetModelFileID) or (file ~= nil and file ~= 0)
+   return usable[display]
+end
+
+-- Displays to try in turn: { first choices..., backup = { used if none of those is there } }.
+local function Prefer(first, backup)
+   first.backup = backup
+   return first
+end
+
+-- The list of displays a monster is shown as: its first choices that the client has, else
+-- the backup.
+local function Choices(display)
+   if type(display) ~= "table" then return { display } end
+   if not display.backup then return display end
+   local list = {}
+   for _, id in ipairs(display) do
+      if Usable(id) then list[#list + 1] = id end
+   end
+   if #list == 0 then return display.backup end
+   return list
+end
+
 -- The creature display each monster is shown as in the 2.5D view.  V.DISPLAY is the list that
 -- goes with the addon; what the player picked in the model viewer (/larn models) is kept in
 -- the saved variables and wins.
 -- A monster has a display or a list of displays, one of which each monster gets by chance.
 V.DISPLAY = {
    -- [monster id] = displayID, or a list of them
-   [K.LEMMING] = 31,  -- a murloc
+   [K.LEMMING] = Displays(2838, 1141, 1418, 134, 328, 1072, 4959),  -- (Snufflenose Gopher, rats, squirrel, rabbit, prairie dog, mouse)
+   [K.JACKAL] = Displays({ 10902, 10903 }, 1536, 2710, 2712, 2713, 2714, 1535, 12966),  -- (the hyena)
+   [K.CENTIPEDE] = 15533,
+   [K.ANT] = 11096,
+   [K.ASSASSINBUG] = 7511,
+   [K.BUGBEAR] = 11088,
+   [K.JACULI] = Displays(2705, 2703, 10991),
+   -- (the demon lords, I to VII: the felguards, the doomguard, a dreadlord)
+   [K.DEMONLORD] = 5048,
+   [K.DEMONLORD + 1] = 5047,
+   [K.DEMONLORD + 2] = 9017,
+   [K.DEMONLORD + 3] = 7970,
+   [K.DEMONLORD + 4] = 14152,
+   [K.DEMONLORD + 5] = Displays(1912, 4426),
+   [K.DEMONLORD + 6] = 10543,
+   [K.DEMONPRINCE] = 12449,  -- (Lord Kazzak)
+   [K.LUCIFER] = 12990,  -- (Echo of Archimonde)
+   [K.ELF] = 7874,  -- (Blood Elf Defender)
+   [K.SILVERDRAGON] = 6373,  -- (a teal drake)
+   [K.GREENDRAGON] = 6375,
+   [K.REDDRAGON] = 6376,  -- (Flamescale Drake)
+   [K.PLATINUMDRAGON] = 11460,  -- (Azuregos)
+   [K.BRONZEDRAGON] = 2719,  -- (Anachronos)
+   [K.WHITEDRAGON] = 10585,  -- (a cobalt whelp)
+   [K.WATERLORD] = 110,  -- (Baron Aquanis)
+   [K.EYE] = 2421,  -- (Eye of Kilrogg)
+   [K.LEPRECHAUN] = Prefer({ 61712, 51994 }, { 7109, 7197, 7202, 7203, 7228, 7230, 7234 }),  -- (the treasure goblin, else Venture Co. goblins)
+   [K.QUASIT] = Prefer({ 4449, 14380, 12345, 1015, 568, 2452, 6810, 118973 }, { 4449 }),  -- (those the client has)
+   [K.NYMPH] = Displays(12432, 1825),
+   [K.RUSTMONSTER] = Displays(7763, 15436),
+   [K.CUBE] = Displays(11141, 4754, 767, 1306, 11137, 1146, 11140, 11139, 682, 11138, 2569, 358, 1145, 2028),
+   [K.YETI] = Displays(3206, 10579, 3207),
+   [K.ZOMBIE] = Displays({ 10970, 10979 }),
+   [K.WRAITH] = Displays(7857, 14703),
+   [K.POLTERGEIST] = 10728,
+   [K.SPIRITNAGA] = 8782,
+   [K.VAMPIRE] = 8808,
+   [K.VORTEX] = Displays(14525, 5327),
+   [K.HELLHOUND] = Displays(11997, 12168),
+   [K.CENTAUR] = Displays(9419, 9410, 9447, 11640, 1349),
+   [K.TROLL] = Displays(5608, 5626, 5605, 5610, 5612, 5607, 5613, 10249, 11442, 3986, 3999, 6487, 6489, 3993, 1157, 6485),
+   [K.GREENURCHIN] = 13109,  -- (Phase Lasher)
+   [K.XVART] = Displays(506, 391, 486, 11293),  -- (Bluegill and Saltscale murlocs)
+   [K.PURPLEWORM] = Displays(7549, 13009),  -- (Murk Worm and Rock Worm)
+   -- (a negative number is a model file data id, negated: the chests are objects, not creatures)
+   [K.MIMIC] = Displays(-196976, -196979, -196982, -196987, -196988, -196989, -197063, -341746, -341870),  -- (treasure chests)
+   [K.METAMORPH] = Displays(4629, 146, 14368),  -- (Haunting, Illusionary and Eldreth Phantasms)
+   [K.FORVALAKA] = Displays(633, 11452),  -- (Shadowmaw panthers)
+   [K.ZILLER] = Displays(6087, 2187, 6086, 1531),  -- (Zhevra Runner, Charger, Courser and Tamed Zhevra)
+   [K.ICELIZARD] = 8797,  -- (Cold Eye Basilisk)
+   [K.UMBERHULK] = 12156,  -- (Hive'Regal Burrower)
+   [K.YELLOWMOLD] = 16111,  -- (the Spore, Loatheb)
+   [K.VIOLETFUNGI] = Prefer({ 121735 }, { 8389 }),  -- (the Dread Fungus, else the Rotting Behemoth)
+   [K.DISENCHANTRESS] = 1937,  -- (Anaya Dawnrunner)
+   [K.INVISIBLESTALKER] = 4870,  -- (Restless Shade)
+   [K.ROTHE] = Displays(1230, 1308, 1232, 2767, 10914, 1453, 179),  -- (kodos)
+   [K.OSEQUIP] = Displays(381, 389, 1208),  -- (boars)
+   [K.LAMANOBE] = Displays(6825, 6826, 936, 2000, 1999, 2003),  -- (the Timbermaw furbolgs)
+   [K.XORN] = Displays(2169, 2170, 2075),  -- (the stone spirits)
+   [K.SHAMBLINGMOUND] = Displays(2023, 713, 2024),  -- (the fen creeper, dweller and lord)
+   [K.GNOMEKING] = 7006,  -- (High Tinker Mekkatorque)
    [K.GNOME] = Displays({ 6920, 6931 }),
    [K.KOBOLD] = Displays({ 114157, 114160 }, { 114709, 114718 }),
    [K.HOBGOBLIN] = Displays(30244, { 30261, 30267 }),
    [K.ORC] = Displays({ 9794, 9805 }),
-   [K.SNAKE] = 1206,
-   [K.TROGLODYTE] = 160,
+   [K.SNAKE] = Displays(1206, 1986, 2954, 2955, 2957, 4268, 8173, 6303),
+   [K.TROGLODYTE] = Displays(160, 606, 611, 721, 722, 723, 726, 730, 763, 764, 1194, 11166, 11609, 11610),
 }
 
 -- The sounds of the monsters, by monster id; any of attack, wound, die and special may be
 -- left out (the default sound is played, a special attack falls back to the attack sound).
--- A sound is a sound kit name ("LEVELUP"), a sound kit id (888) or { file = file data id }.
+-- A sound is a sound kit name ("LEVELUP"), a sound kit id (888), a list of kit ids (one is
+-- played, { 1, 2, 3 }) or { file = file data id }.
 V.MONSTER_SOUND = {
+   [K.HOBGOBLIN] = { attack = 397, wound = 398, die = 400, special = 396 },  -- (Dunemaul Ogre)
+   [K.NYMPH] = { attack = { 6339, 6340, 6341 }, wound = { 6343, 6344, 6345 }, die = { 6346, 6347, 6348 }, special = 6342 },  -- (the wisp voice)
+   -- (the demon lords: the doomguard voice, or the dreadlord voice for the felguards)
+   [K.DEMONLORD] = { attack = 1091, wound = 1092, die = 1094, special = 1095 },
+   [K.DEMONLORD + 1] = { attack = 1098, wound = 1099, die = 1101, special = 1102 },
+   [K.DEMONLORD + 2] = { attack = 1091, wound = 1092, die = 1094, special = 1095 },
+   [K.DEMONLORD + 3] = { attack = 1098, wound = 1099, die = 1101, special = 1102 },
+   [K.DEMONLORD + 4] = { attack = 1098, wound = 1099, die = 1101, special = 1102 },
+   [K.DEMONLORD + 5] = { attack = 1098, wound = 1099, die = 1101, special = 1102 },
+   [K.DEMONLORD + 6] = { attack = 1091, wound = 1092, die = 1094, special = 1095 },
+   [K.LUCIFER] = { attack = 1091, wound = 1092, die = 1094, special = 1095 },  -- (Echo of Archimonde)
+   [K.DEMONPRINCE] = { attack = 8092, wound = 8093, die = 8095, special = 8096 },  -- (Lord Kazzak)
+   [K.ELF] = { attack = 1307, wound = 1308, die = 1310 },  -- (Blood Elf Defender)
+   [K.SILVERDRAGON] = { attack = 4060, wound = 4061, die = 4063, special = 4065 },  -- (Flamescale Drake)
+   [K.GREENDRAGON] = { attack = 4060, wound = 4061, die = 4063, special = 4065 },  -- (Flamescale Drake)
+   [K.REDDRAGON] = { attack = 4060, wound = 4061, die = 4063, special = 4065 },  -- (Flamescale Drake)
+   [K.PLATINUMDRAGON] = { attack = 3520, wound = 3521, die = 3523, special = 3525 },  -- (Azuregos)
+   [K.BRONZEDRAGON] = { attack = 3520, wound = 3521, die = 3523, special = 3525 },  -- (Anachronos)
+   [K.WHITEDRAGON] = { attack = 429, wound = 430, die = 432, special = 428 },  -- (Cobalt Whelp)
+   [K.WATERLORD] = { attack = 1403, wound = 1404, die = 1406, special = 1408 },  -- (Baron Aquanis)
+   [K.EYE] = { attack = 8697, wound = 8698, die = 8700, special = { 8580, 8581, 8582, 8583, 8584, 8585, 8586, 8587 } },  -- (C'Thun)
+   [K.QUASIT] = { attack = 766, wound = 767, die = 769, special = 770 },  -- (Vicious Grell)
+   [K.INVISIBLESTALKER] = { attack = 3419, wound = 3420, die = 3422, special = 3424 },  -- (Restless Shade)
+   [K.GREENURCHIN] = { attack = 5045, wound = 5046, die = 5048, special = 5050 },  -- (Phase Lasher)
+   [K.XVART] = { attack = 417, wound = 418, die = 420, special = 416 },  -- (Bluegill Warrior)
+   [K.PURPLEWORM] = { attack = 5038, wound = 5039, die = 5041, special = 5043 },  -- (Murk Worm)
+   [K.MIMIC] = { attack = 721, wound = 722, die = 723, special = 724 },  -- (the ooze sounds, as the cube)
+   [K.METAMORPH] = { attack = 3419, wound = 3420, die = 3422, special = 3424 },  -- (Haunting Phantasm)
+   [K.FORVALAKA] = { attack = 643, wound = 644, die = 646 },  -- (Shadowmaw Panther)
+   [K.ZILLER] = { attack = 725, wound = 726, die = 728, special = 729 },  -- (Zhevra Runner)
+   [K.ICELIZARD] = { attack = 565, wound = 567, die = 569, special = 570 },  -- (Cold Eye Basilisk)
+   [K.UMBERHULK] = { attack = 1225, wound = 1226, die = 1228, special = 1230 },  -- (Hive'Regal Burrower)
+   [K.YELLOWMOLD] = { attack = 8742, wound = 8743, die = 8745 },  -- (the Spore)
+   [K.VIOLETFUNGI] = { attack = 456, wound = 459, die = 458, special = 462 },  -- (the Rotting Behemoth)
+   [K.DISENCHANTRESS] = { attack = 2933, wound = 2934, die = 2936, special = 23291 },  -- (Anaya Dawnrunner; the reforging sound for disenchanting)
+   [K.ROTHE] = { attack = 772, wound = 773, die = 775, special = 771 },  -- (the kodo voice)
+   [K.OSEQUIP] = { attack = 380, wound = 381, die = 383, special = 379 },  -- (the boar voice)
+   [K.LAMANOBE] = { attack = 355, wound = 358, die = 357, special = 356 },  -- (the furbolg voice)
+   [K.XORN] = { attack = 736, wound = 737, die = 738, special = 739 },  -- (the earth elemental voice)
+   [K.SHAMBLINGMOUND] = { attack = 456, wound = 459, die = 458, special = 462 },  -- (the bog beast voice)
+   [K.GNOMEKING] = { attack = 3275, wound = 3276, die = 3278, special = 7226 },  -- (High Tinker Mekkatorque)
+   [K.GNOME] = { attack = 3275, wound = 3276, die = 3278 },  -- (Addled Leper)
+   [K.TROLL] = { attack = 3307, wound = 3308, die = 3310 },  -- (a Frostmane troll; tools/npc-sounds.py)
+-- (the sounds of one NPC of each kind: attack, injury, death, aggro; tools/npc-sounds.py)
+   [K.LEMMING] = { wound = 1379, die = 1380 },  -- (Rat; it has no attack sound, so that is the default bite)
+   [K.JACKAL] = { attack = 2506, wound = 2507, die = 2509, special = 2511 },  -- (Bonepaw Hyena)
+   [K.SNAKE] = { attack = 4494, wound = 4495, die = 4497, special = 4499 },  -- (Razzashi Cobra)
+   [K.KOBOLD] = { attack = 312, wound = 315, die = 314, special = 694 },  -- (Kobold Laborer)
+   [K.ORC] = { attack = 1319, wound = 1320, die = 1322 },  -- (Blackrock Grunt)
+   [K.CENTIPEDE] = { attack = 715, wound = 716, die = 718, special = 719 },  -- (Vekniss Hive Crawler)
+   [K.JACULI] = { attack = 586, wound = 587, die = 589, special = 590 },  -- (Cloud Serpent)
+   [K.TROGLODYTE] = { attack = 655, wound = 656, die = 658, special = 659 },  -- (Stonesplinter Skullthumper)
+   [K.ANT] = { attack = 715, wound = 716, die = 718, special = 719 },  -- (Silithid Harvester)
+   [K.LEPRECHAUN] = { attack = 1409, wound = 1410, die = 1413, special = 1415 },  -- (Venture Co. Operator)
+   [K.RUSTMONSTER] = { attack = 721, wound = 722, die = 723, special = 724 },  -- (Oozeling)
+   [K.ZOMBIE] = { attack = 1468, wound = 1469, die = 1471, special = 1473 },  -- (Blighted Zombie)
+   [K.ASSASSINBUG] = { attack = 715, wound = 716, die = 718, special = 719 },  -- (Beetle)
+   [K.BUGBEAR] = { attack = 715, wound = 716, die = 718, special = 719 },  -- (Hive'Zora Wasp)
+   [K.HELLHOUND] = { attack = 6814, wound = 6815, die = 6817, special = 6819 },  -- (Core Hound)
+   [K.CENTAUR] = { attack = 1040, wound = 1041, die = 1043, special = 1044 },  -- (Galak Centaur)
+   [K.YETI] = { attack = 1239, wound = 1240, die = 1242, special = 1243 },  -- (Cave Yeti)
+   [K.CUBE] = { attack = 721, wound = 722, die = 723, special = 724 },  -- (Glutinous Ooze)
+   [K.VORTEX] = { attack = 3784, wound = 3785, die = 3787, special = 3789 },  -- (Dust Devil)
+   [K.WRAITH] = { attack = 3419, wound = 3420, die = 3422, special = 3424 },  -- (Eldreth Wraith)
+   [K.VAMPIRE] = { attack = 3364, wound = 3365, die = 3367, special = 3369 },  -- (Vampiric Duskbat)
+   [K.POLTERGEIST] = { attack = 1167, wound = 1169, die = 1171, special = 1173 },  -- (Shrieking Banshee)
+   [K.SPIRITNAGA] = { attack = 1167, wound = 1169, die = 1171, special = 1173 },  -- (Wailing Banshee)
    -- [K.SNAKE] = { attack = "...", wound = 0, die = { file = 0 } },
 }
 
@@ -179,7 +350,31 @@ V.LOWER = {
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
 -- id and the rules stay those of the original monster.
 V.MONSTER_NAME = {
-   [K.LEMMING] = L["murloc"],
+   [K.LEMMING] = L["critter"],
+   [K.YELLOWMOLD] = L["fungal spore"],
+   [K.ZILLER] = L["zhevra"],
+   [K.XVART] = L["bluegill warrior"],
+   [K.GREENURCHIN] = L["phase lasher"],
+   [K.PURPLEWORM] = L["Giant Worm"],
+   [K.FORVALAKA] = L["black panther"],
+   [K.METAMORPH] = L["phantasm"],
+   [K.JACKAL] = L["hyena"],
+   [K.CENTIPEDE] = L["hive crawler"],
+   [K.ANT] = L["silithid harvester"],
+   [K.BUGBEAR] = L["hornet"],
+   [K.JACULI] = L["cloud serpent"],
+   [K.LEPRECHAUN] = L["treasure goblin"],
+   [K.QUASIT] = L["imp"],
+   [K.NYMPH] = L["sprite"],
+   [K.RUSTMONSTER] = L["rust oozeling"],
+   [K.CUBE] = L["corrosive ooze"],
+   [K.VAMPIRE] = L["vampire bat"],
+   [K.SPIRITNAGA] = L["banshee"],
+   [K.HELLHOUND] = L["core hound"],
+   [K.ELF] = L["blood elf"],
+   [K.LAMANOBE] = L["Timbermaw Warrior"],
+   [K.OSEQUIP] = L["dire boar"],
+   [K.ROTHE] = L["kodo"],
 }
 for id, name in pairs(V.MONSTER_NAME) do
    ns.MonsterData[id].name = name
@@ -189,10 +384,20 @@ end
 function V.MonsterDisplay(id, look)
    local own = ns.mod.db.global.displays
    local display = (own and own[id]) or V.DISPLAY[id]
-   if type(display) == "table" then
-      display = display[((look or 1) - 1) % #display + 1]
-   end
-   return display
+   if display == nil then return nil end
+   local list = Choices(display)
+   return list[((look or 1) - 1) % #list + 1]
+end
+
+-- All the displays a monster can have, the backup too: the one chosen in the model viewer,
+-- or its list.
+function V.DisplayList(id)
+   local own = ns.mod.db.global.displays
+   local display = (own and own[id]) or V.DISPLAY[id]
+   if type(display) ~= "table" then return display and { display } or {} end
+   local list = { unpack(display) }
+   for _, backup in ipairs(display.backup or {}) do list[#list + 1] = backup end
+   return list
 end
 
 function V.MonsterGlyph(id)

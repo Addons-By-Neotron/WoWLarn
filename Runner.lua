@@ -140,7 +140,9 @@ local FLASH = {
 local function Play(sound)
    if not sound or not PlaySound or ns.mod.db.profile.sound == false then return end
    if type(sound) == "table" then
-      if sound.file then  -- { file = file data id }
+      if type(sound[1]) == "number" then  -- { sound kit id, ... }: one of them
+         PlaySound(sound[math.random(#sound)])
+      elseif sound.file then  -- { file = file data id }
          if PlaySoundFile then PlaySoundFile(sound.file, "SFX") end
       else  -- { sound kit name, sound kit id }
          PlaySound((SOUNDKIT and SOUNDKIT[sound[1]]) or sound[2])
@@ -151,6 +153,8 @@ local function Play(sound)
       PlaySound(sound)
    end
 end
+
+ui.Play = Play  -- (the model viewer tries sound kits)
 
 function ui:Sound(name)
    if FLASH[name] then ns.map3d:Flash(FLASH[name]) end

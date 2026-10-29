@@ -41,15 +41,18 @@ ATTACK = {
 visuals = (ROOT / "Data" / "Visuals.lua").read_text()
 renamed = dict((k, v) for k, v in re.findall(r"\[K\.([A-Z]+)\] = L\[\"([^\"]+)\"\]", visuals))
 looks = {}
-block = visuals[visuals.index("V.DISPLAY = {"):visuals.index("-- Monsters that go by another name")]
-for k, v in re.findall(r"\[K\.([A-Z0-9]+)\] = ([^\n]+?),?(?:\s*--[^\n]*)?\n", block):
-    looks[k] = v.strip().rstrip(",")
+block = visuals[visuals.index("V.DISPLAY = {"):visuals.index("V.MONSTER_SOUND = {")]
+block = block[:block.rindex("\n}")]  # (the table ends at its closing brace)
+for k, plus, v in re.findall(r"^   \[K\.([A-Z0-9]+)(?: \+ (\d+))?\] = ([^\n]+?),?(?:\s*--[^\n]*)?\n", block, re.M):
+    looks[k + ("+" + plus if plus else "")] = v.strip().rstrip(",")  # (the demon lords: DEMONLORD+1, ...)
 consts = (ROOT / "Constants.lua").read_text()
 const_name = {}
 for k, v in re.findall(r"\n   ([A-Z0-9]+) = (\d+),", consts):
     const_name.setdefault(int(v), []).append(k)
 
 def key_of(row):
+    if row["id"] > 57 and row["id"] < 64 and f"DEMONLORD+{row['id'] - 57}" in looks:
+        return f"DEMONLORD+{row['id'] - 57}"
     for k in const_name.get(row["id"], []):
         if k in looks or k in renamed:
             return k
@@ -63,16 +66,20 @@ out = ["# Monsters", "",
        "- **Hits:** damage is up to this number, plus the bonus of a special attack.",
        "- **AC:** armor class. Lower is harder to hit. **INT:** how smart it is (chasing range).",
        "- **Look:** the model the monster has now in the addon (a display id, or a list of them), or `-` if none yet.",
-       "- Murlocs (the lemmings) can replace any monster on a dungeon level, about one in ten, up to a cap per level.",
+       "- Critters (the lemmings) can replace any monster on a dungeon level, about one in ten, up to a cap per level.",
        "- Demon lords are put on dungeon levels 11 to 15 (as many as the level minus 10), demon princes on the volcano",
        "  levels, Lucifer is the boss at the bottom.", ""]
 def pretty(text):
     """Displays({ 6920, 6931 }) -> 6920-6931"""
+    m = re.fullmatch(r"Prefer\(\{(.*?)\},\s*\{(.*?)\}\)", text)
+    if m:  # first choices, and a backup for a client that lacks them
+        return f"{pretty(m.group(1).strip())} (else {pretty(m.group(2).strip())})"
     m = re.fullmatch(r"Displays\((.*)\)", text)
     if not m:
         return text
-    parts = re.findall(r"\{\s*(\d+),\s*(\d+)\s*\}|(\d+)", m.group(1))
-    return ", ".join(f"{lo}-{hi}" if lo else single for lo, hi, single in parts)
+    parts = re.findall(r"\{\s*(\d+),\s*(\d+)\s*\}|(-?\d+)", m.group(1))
+    return ", ".join(f"{lo}-{hi}" if lo else (f"model {single[1:]}" if single.startswith("-") else single)
+                     for lo, hi, single in parts)
 
 def table(title, selected):
     out = [f"## {title}", "",

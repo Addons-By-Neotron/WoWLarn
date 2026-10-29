@@ -8,7 +8,7 @@ ones at difficulty 0; a higher difficulty scales hit points, damage and gold.
 - **Hits:** damage is up to this number, plus the bonus of a special attack.
 - **AC:** armor class. Lower is harder to hit. **INT:** how smart it is (chasing range).
 - **Look:** the model the monster has now in the addon (a display id, or a list of them), or `-` if none yet.
-- Murlocs (the lemmings) can replace any monster on a dungeon level, about one in ten, up to a cap per level.
+- Critters (the lemmings) can replace any monster on a dungeon level, about one in ten, up to a cap per level.
 - Demon lords are put on dungeon levels 11 to 15 (as many as the level minus 10), demon princes on the volcano
   levels, Lucifer is the boss at the bottom.
 
@@ -16,10 +16,10 @@ ones at difficulty 0; a higher difficulty scales hit points, damage and gold.
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 1 | murloc (lemming) | 1-4 | 0 | 0 | 0 | 3 |  | 0 | 1 | 31 |
+| 1 | critter (lemming) | 1-4 | 0 | 0 | 0 | 3 |  | 0 | 1 | 2838, 1141, 1418, 134, 328, 1072, 4959 |
 | 2 | gnome | 1-4 | 2 | 10 | 1 | 8 |  | 30 | 2 | 6920-6931 |
 | 3 | hobgoblin | 1-4 | 3 | 13 | 2 | 5 |  | 25 | 2 | 30244, 30261-30267 |
-| 4 | jackal | 1-4 | 1 | 7 | 1 | 4 |  | 0 | 1 | - |
+| 4 | hyena (jackal) | 1-4 | 1 | 7 | 1 | 4 |  | 0 | 1 | 10902-10903, 1536, 2710, 2712, 2713, 2714, 1535, 12966 |
 | 5 | kobold | 1-4 | 1 | 15 | 1 | 7 |  | 10 | 1 | 114157-114160, 114709-114718 |
 
 ## First seen on dungeon level 2
@@ -27,123 +27,123 @@ ones at difficulty 0; a higher difficulty scales hit points, damage and gold.
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
 | 6 | orc | 2-4 | 5 | 15 | 3 | 9 |  | 40 | 2 | 9794-9805 |
-| 7 | snake | 2-4 | 3 | 10 | 1 | 3 |  | 0 | 1 | 1206 |
-| 8 | giant centipede | 2-4 | 2 | 13 | 1 | 3 | sting, -1 strength | 0 | 2 | - |
-| 9 | jaculi | 2-4 | 2 | 9 | 1 | 3 |  | 0 | 1 | - |
-| 10 | troglodyte | 2-4 | 5 | 10 | 2 | 5 |  | 80 | 3 | 160 |
-| 11 | giant ant | 2-4 | 5 | 8 | 1 | 4 | sting, -1 strength | 0 | 4 | - |
+| 7 | snake | 2-4 | 3 | 10 | 1 | 3 |  | 0 | 1 | 1206, 1986, 2954, 2955, 2957, 4268, 8173, 6303 |
+| 8 | hive crawler (giant centipede) | 2-4 | 2 | 13 | 1 | 3 | sting, -1 strength | 0 | 2 | 15533 |
+| 9 | cloud serpent (jaculi) | 2-4 | 2 | 9 | 1 | 3 |  | 0 | 1 | 2705, 2703, 10991 |
+| 10 | troglodyte | 2-4 | 5 | 10 | 2 | 5 |  | 80 | 3 | - |
+| 11 | silithid harvester (giant ant) | 2-4 | 5 | 8 | 1 | 4 | sting, -1 strength | 0 | 4 | 11096 |
 
 ## First seen on dungeon level 3
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 12 | floating eye | 3-5 | 7 | 8 | 2 | 3 |  | 0 | 2 | - |
-| 13 | leprechaun | 3-5 | 15 | 3 | 0 | 3 | steals gold | 1500 | 40 | - |
-| 14 | nymph | 3-5 | 20 | 3 | 0 | 9 | steals an item | 0 | 40 | - |
-| 15 | quasit | 3-5 | 14 | 5 | 3 | 3 |  | 0 | 10 | - |
-| 16 | rust monster | 3-5 | 18 | 5 | 0 | 3 | rusts armor | 0 | 20 | - |
-| 17 | zombie | 3-5 | 9 | 12 | 3 | 3 |  | 0 | 7 | - |
+| 12 | floating eye | 3-5 | 7 | 8 | 2 | 3 |  | 0 | 2 | 2421 |
+| 13 | treasure goblin (leprechaun) | 3-5 | 15 | 3 | 0 | 3 | steals gold | 1500 | 40 | 61712, 51994 (else 7109, 7197, 7202, 7203, 7228, 7230, 7234) |
+| 14 | sprite (nymph) | 3-5 | 20 | 3 | 0 | 9 | steals an item | 0 | 40 | 12432, 1825 |
+| 15 | imp (quasit) | 3-5 | 14 | 5 | 3 | 3 |  | 0 | 10 | 4449, 14380, 12345, 1015, 568, 2452, 6810, 118973 (else 4449) |
+| 16 | rust oozeling (rust monster) | 3-5 | 18 | 5 | 0 | 3 | rusts armor | 0 | 20 | 7763, 15436 |
+| 17 | zombie | 3-5 | 9 | 12 | 3 | 3 |  | 0 | 7 | 10970-10979 |
 
 ## First seen on dungeon level 4
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 18 | assassin bug | 4-6 | 23 | 4 | 3 | 3 |  | 0 | 13 | - |
-| 19 | bitbug | 4-6 | 24 | 5 | 4 | 5 | bite (6-15) | 40 | 33 | - |
-| 20 | hell hound | 4-6 | 20 | 5 | 2 | 6 | fire breath (8-22) | 0 | 33 | - |
-| 21 | ice lizard | 4-6 | 19 | 11 | 3 | 6 | barbed tail (1-25) | 50 | 23 | - |
-| 22 | centaur | 4-6 | 25 | 6 | 4 | 10 |  | 40 | 43 | - |
+| 18 | assassin bug | 4-6 | 23 | 4 | 3 | 3 |  | 0 | 13 | 7511 |
+| 19 | hornet (bitbug) | 4-6 | 24 | 5 | 4 | 5 | bite (6-15) | 40 | 33 | 11088 |
+| 20 | core hound (hell hound) | 4-6 | 20 | 5 | 2 | 6 | fire breath (8-22) | 0 | 33 | 11997, 12168 |
+| 21 | ice lizard | 4-6 | 19 | 11 | 3 | 6 | barbed tail (1-25) | 50 | 23 | 8797 |
+| 22 | centaur | 4-6 | 25 | 6 | 4 | 10 |  | 40 | 43 | 9419, 9410, 9447, 11640, 1349 |
 
 ## First seen on dungeon level 5
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 23 | troll | 5-7 | 55 | 9 | 5 | 9 |  | 80 | 250 | - |
-| 24 | yeti | 5-7 | 45 | 8 | 4 | 5 |  | 50 | 90 | - |
-| 25 | white dragon | 5-7 | 65 | 4 | 5 | 16 | cold breath (19-33) | 500 | 1000 | - |
-| 26 | elf | 5-7 | 25 | 3 | 3 | 15 |  | 50 | 33 | - |
-| 27 | gelatinous cube | 5-7 | 24 | 9 | 3 | 3 |  | 0 | 43 | - |
+| 23 | troll | 5-7 | 55 | 9 | 5 | 9 |  | 80 | 250 | 5608, 5626, 5605, 5610, 5612, 5607, 5613, 10249, 11442, 3986, 3999, 6487, 6489, 3993, 1157, 6485 |
+| 24 | yeti | 5-7 | 45 | 8 | 4 | 5 |  | 50 | 90 | 3206, 10579, 3207 |
+| 25 | white dragon | 5-7 | 65 | 4 | 5 | 16 | cold breath (19-33) | 500 | 1000 | 10585 |
+| 26 | blood elf (elf) | 5-7 | 25 | 3 | 3 | 15 |  | 50 | 33 | 7874 |
+| 27 | corrosive ooze (gelatinous cube) | 5-7 | 24 | 9 | 3 | 3 |  | 0 | 43 | 11141, 4754, 767, 1306, 11137, 1146, 11140, 11139, 682, 11138, 2569, 358, 1145, 2028 |
 
 ## First seen on dungeon level 6
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 28 | metamorph | 6-8 | 32 | 9 | 3 | 3 |  | 0 | 40 | - |
-| 29 | vortex | 6-8 | 33 | 5 | 4 | 3 |  | 0 | 53 | - |
-| 30 | ziller | 6-8 | 34 | 15 | 3 | 3 |  | 0 | 33 | - |
-| 31 | violet fungus | 6-8 | 39 | 12 | 3 | 3 |  | 0 | 90 | - |
-| 32 | wraith | 6-8 | 36 | 3 | 1 | 3 | drains a level | 0 | 300 | - |
-| 33 | forvalaka | 6-8 | 55 | 3 | 5 | 7 |  | 0 | 270 | - |
+| 28 | phantasm (metamorph) | 6-8 | 32 | 9 | 3 | 3 |  | 0 | 40 | 4629, 146, 14368 |
+| 29 | vortex | 6-8 | 33 | 5 | 4 | 3 |  | 0 | 53 | 14525, 5327 |
+| 30 | zhevra (ziller) | 6-8 | 34 | 15 | 3 | 3 |  | 0 | 33 | 6087, 2187, 6086, 1531 |
+| 31 | violet fungus | 6-8 | 39 | 12 | 3 | 3 |  | 0 | 90 | 121735 (else 8389) |
+| 32 | wraith | 6-8 | 36 | 3 | 1 | 3 | drains a level | 0 | 300 | 7857, 14703 |
+| 33 | black panther (forvalaka) | 6-8 | 55 | 3 | 5 | 7 |  | 0 | 270 | 633, 11452 |
 
 ## First seen on dungeon level 7
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 34 | lama nobe | 7-9 | 36 | 14 | 7 | 6 |  | 0 | 70 | - |
-| 35 | osequip | 7-9 | 36 | 4 | 7 | 4 | bite (11-25) | 0 | 90 | - |
-| 36 | rothe | 7-9 | 53 | 15 | 5 | 3 |  | 100 | 230 | - |
-| 37 | xorn | 7-9 | 63 | 6 | 7 | 13 |  | 0 | 290 | - |
-| 38 | vampire | 7-9 | 55 | 5 | 4 | 17 | drains a level | 0 | 950 | - |
-| 39 | invisible stalker | 7-9 | 55 | 5 | 6 | 5 |  | 0 | 330 | - |
+| 34 | Timbermaw Warrior (lama nobe) | 7-9 | 36 | 14 | 7 | 6 |  | 0 | 70 | 6825, 6826, 936, 2000, 1999, 2003 |
+| 35 | dire boar (osequip) | 7-9 | 36 | 4 | 7 | 4 | bite (11-25) | 0 | 90 | 381, 389, 1208 |
+| 36 | kodo (rothe) | 7-9 | 53 | 15 | 5 | 3 |  | 100 | 230 | 1230, 1308, 1232, 2767, 10914, 1453, 179 |
+| 37 | xorn | 7-9 | 63 | 6 | 7 | 13 |  | 0 | 290 | 2169, 2170, 2075 |
+| 38 | vampire bat (vampire) | 7-9 | 55 | 5 | 4 | 17 | drains a level | 0 | 950 | 8808 |
+| 39 | invisible stalker | 7-9 | 55 | 5 | 6 | 5 |  | 0 | 330 | 4870 |
 
 ## First seen on dungeon level 8
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 40 | poltergeist | 8-10 | 55 | 1 | 8 | 3 |  | 0 | 430 | - |
-| 41 | disenchantress | 8-10 | 57 | 3 | 1 | 3 | disenchants an item | 0 | 500 | - |
-| 42 | shambling mound | 8-10 | 47 | 13 | 5 | 6 |  | 0 | 390 | - |
+| 40 | poltergeist | 8-10 | 55 | 1 | 8 | 3 |  | 0 | 430 | 10728 |
+| 41 | disenchantress | 8-10 | 57 | 3 | 1 | 3 | disenchants an item | 0 | 500 | 1937 |
+| 42 | shambling mound | 8-10 | 47 | 13 | 5 | 6 |  | 0 | 390 | 2023, 713, 2024 |
 
 ## First seen on dungeon level 9
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 43 | yellow mold | 9-11 | 37 | 12 | 4 | 3 |  | 0 | 240 | - |
-| 44 | umber hulk | 9-11 | 67 | 6 | 7 | 14 | confuses | 0 | 600 | - |
-| 45 | gnome king | 9-11 | 120 | -1 | 10 | 18 |  | 2000 | 3000 | - |
-| 46 | mimic | 9-11 | 57 | 9 | 7 | 8 |  | 0 | 100 | - |
+| 43 | fungal spore (yellow mold) | 9-11 | 37 | 12 | 4 | 3 |  | 0 | 240 | 16111 |
+| 44 | umber hulk | 9-11 | 67 | 6 | 7 | 14 | confuses | 0 | 600 | 12156 |
+| 45 | gnome king | 9-11 | 120 | -1 | 10 | 18 |  | 2000 | 3000 | 7006 |
+| 46 | mimic | 9-11 | 57 | 9 | 7 | 8 |  | 0 | 100 | model 196976, model 196979, model 196982, model 196987, model 196988, model 196989, model 197063, model 341746, model 341870 |
 
 ## First seen on dungeon level 10
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 48 | bronze dragon | 10-12+ | 90 | 5 | 9 | 16 | fire breath (26-45) | 300 | 4000 | - |
-| 49 | green dragon | 10-12+ | 80 | 4 | 4 | 15 | barbed tail (1-25) | 200 | 2500 | - |
-| 50 | purple worm | 10-12+ | 130 | -1 | 13 | 3 |  | 100 | 15000 | - |
+| 48 | bronze dragon | 10-12+ | 90 | 5 | 9 | 16 | fire breath (26-45) | 300 | 4000 | 2719 |
+| 49 | green dragon | 10-12+ | 80 | 4 | 4 | 15 | barbed tail (1-25) | 200 | 2500 | 6375 |
+| 50 | Giant Worm (purple worm) | 10-12+ | 130 | -1 | 13 | 3 |  | 100 | 15000 | 7549, 13009 |
 
 ## First seen on dungeon level 11
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 51 | xvart | 11-12+ | 100 | -2 | 14 | 13 |  | 0 | 1000 | - |
-| 52 | spirit naga | 11-12+ | 100 | -20 | 15 | 23 | random special attack; no beheading | 0 | 20000 | - |
-| 53 | silver dragon | 11-12+ | 110 | -4 | 10 | 20 | fire breath (26-45) | 700 | 10000 | - |
+| 51 | bluegill warrior (xvart) | 11-12+ | 100 | -2 | 14 | 13 |  | 0 | 1000 | 506, 391, 486, 11293 |
+| 52 | banshee (spirit naga) | 11-12+ | 100 | -20 | 15 | 23 | random special attack; no beheading | 0 | 20000 | 8782 |
+| 53 | silver dragon | 11-12+ | 110 | -4 | 10 | 20 | fire breath (26-45) | 700 | 10000 | 6373 |
 
 ## First seen on dungeon level 12
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 54 | platinum dragon | 12 | 150 | -7 | 15 | 22 | psionics (31-45) | 1000 | 25000 | - |
-| 55 | green urchin | 12 | 95 | -5 | 12 | 3 |  | 0 | 5000 | - |
-| 56 | red dragon | 12 | 120 | -4 | 13 | 19 | fire breath (26-45) | 800 | 14000 | - |
+| 54 | platinum dragon | 12 | 150 | -7 | 15 | 22 | psionics (31-45) | 1000 | 25000 | 11460 |
+| 55 | phase lasher (green urchin) | 12 | 95 | -5 | 12 | 3 |  | 0 | 5000 | 13109 |
+| 56 | red dragon | 12 | 120 | -4 | 13 | 19 | fire breath (26-45) | 800 | 14000 | 6376 |
 
 ## Never made at random
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 47 | water lord |  | 155 | -10 | 15 | 20 | gusher (26-40); no beheading | 0 | 15000 | - |
+| 47 | water lord |  | 155 | -10 | 15 | 20 | gusher (26-40); no beheading | 0 | 15000 | 110 |
 
 ## Demons
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 57 | type I demon lord | - | 150 | -40 | 20 | 20 | fire breath (26-45); no beheading | 0 | 50000 | - |
-| 58 | type II demon lord | - | 200 | -45 | 25 | 22 | cold breath (19-33); no beheading | 0 | 75000 | - |
-| 59 | type III demon lord | - | 250 | -50 | 30 | 24 | disenchants an item; no beheading | 0 | 100000 | - |
-| 60 | type IV demon lord | - | 300 | -55 | 35 | 26 | confuses; no beheading | 0 | 125000 | - |
-| 61 | type V demon lord | - | 350 | -60 | 40 | 28 | psionics (31-45); no beheading | 0 | 150000 | - |
-| 62 | type VI demon lord | - | 400 | -65 | 45 | 30 | psionics (31-45); no beheading | 0 | 175000 | - |
-| 63 | type VII demon lord | - | 450 | -70 | 50 | 32 | drains a level; no beheading | 0 | 200000 | - |
-| 64 | demon prince | - | 1000 | -100 | 80 | 40 | drains a level; no beheading | 0 | 500000 | - |
-| 65 | God of Hellfire | - | 32767 | -127 | 127 | 100 | drains a level; no beheading | 0 | 1000000 | - |
+| 57 | type I demon lord | - | 150 | -40 | 20 | 20 | fire breath (26-45); no beheading | 0 | 50000 | 5048 |
+| 58 | type II demon lord | - | 200 | -45 | 25 | 22 | cold breath (19-33); no beheading | 0 | 75000 | 5047 |
+| 59 | type III demon lord | - | 250 | -50 | 30 | 24 | disenchants an item; no beheading | 0 | 100000 | 9017 |
+| 60 | type IV demon lord | - | 300 | -55 | 35 | 26 | confuses; no beheading | 0 | 125000 | 7970 |
+| 61 | type V demon lord | - | 350 | -60 | 40 | 28 | psionics (31-45); no beheading | 0 | 150000 | 14152 |
+| 62 | type VI demon lord | - | 400 | -65 | 45 | 30 | psionics (31-45); no beheading | 0 | 175000 | 1912, 4426 |
+| 63 | type VII demon lord | - | 450 | -70 | 50 | 32 | drains a level; no beheading | 0 | 200000 | 10543 |
+| 64 | demon prince | - | 1000 | -100 | 80 | 40 | drains a level; no beheading | 0 | 500000 | 12449 |
+| 65 | God of Hellfire | - | 32767 | -127 | 127 | 100 | drains a level; no beheading | 0 | 1000000 | 12990 |
 
