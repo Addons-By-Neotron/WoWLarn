@@ -415,7 +415,7 @@ local function DrawTile(layers, x, y, ground)
       end
       local display = models and V.MonsterDisplay(monster, look)
       if display then
-         -- monsters face the player they are after
+         -- monsters face the player they are after, and the way they go while they walk
          local toward = DIRECTION[Sign(G.playerx - x)][Sign(G.playery - y)]
          local entry = map3d.anims[x * 100 + y]
          local anim = entry and entry.expires > GetTime() and entry.anim or nil
@@ -430,6 +430,7 @@ local function DrawTile(layers, x, y, ground)
                map3d.tweening = true
                wx, wy = wx + (move.fromX - x) * TILE * (1 - f), wy + (move.fromY - y) * TILE * (1 - f)
                anim = anim or ANIM.walk
+               toward = DIRECTION[Sign(x - move.fromX)][Sign(y - move.fromY)] or toward  -- (walks forwards)
                local sx, sy, sscale = Project(wx, wy, 0)
                if sx then mx, my, scale = sx, sy, sscale end
             end
