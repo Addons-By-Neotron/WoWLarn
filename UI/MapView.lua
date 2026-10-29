@@ -103,7 +103,8 @@ function map:Describe(x, y)
    end
    local object = G.item[x][y]
    if object == 0 or object == K.OWALL then return false end
-   ns.ItemInfo.tooltip(object, G.iarg[x][y])
+   GameTooltip:SetText(ns.ItemInfo.groundName(object), 1, 1, 1)
+   GameTooltip:Show()
    return true
 end
 

@@ -162,3 +162,19 @@ function ItemInfo.tooltip(id, arg)
    end
    GameTooltip:Show()
 end
+
+-- What an object on the floor is called when the cursor is over it: only the kind of thing,
+-- not what it is (that is for the one who picks it up).
+local KIND = {
+   [K.OPROTRING] = L["Ring"], [K.ODAMRING] = L["Ring"], [K.OREGENRING] = L["Ring"], [K.ORINGOFEXTRA] = L["Ring"],
+   [K.OENERGYRING] = L["Ring"], [K.ODEXRING] = L["Ring"], [K.OSTRRING] = L["Ring"], [K.OCLEVERRING] = L["Ring"],
+   [K.OBELT] = L["Belt"], [K.OAMULET] = L["Amulet"], [K.OORB] = L["Orb"], [K.OORBOFDRAGON] = L["Orb"],
+   [K.OSPIRITSCARAB] = L["Scarab"], [K.OCUBEofUNDEAD] = L["Cube"], [K.ONOTHEFT] = L["Device"],
+   [K.OWWAND] = L["Wand"], [K.OPSTAFF] = L["Staff"], [K.OSCROLL] = L["Scroll"], [K.OPOTION] = L["Potion"],
+   [K.OBOOK] = L["Book"], [K.OSWORDofSLASHING] = L["Sword"], [K.OSWORD] = L["Sword"], [K.OSLAYER] = L["Sword"],
+   [K.OVORPAL] = L["Sword"], [K.OLANCE] = L["Lance"], [K.OHAMMER] = L["Hammer"],
+}
+
+function ItemInfo.groundName(id)
+   return KIND[id] or ns.Tables.objectname[id] or "?"
+end
