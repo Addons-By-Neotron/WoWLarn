@@ -87,9 +87,14 @@ function Debug.createItem()
    if id < 1 or id >= K.MAXOBJ then return end
    local arg = ui:GetNumber("Its argument (enchantment, potion or scroll kind)?", 100)
    if arg < 0 then return end
+   Debug.makeItem(id, arg)
+end
+
+-- Puts an object next to the player.
+function Debug.makeItem(id, arg)
    ns.Item.createItem(G.playerx, G.playery, id, arg)
    Log("created %s (%d, %d)", ns.Tables.objectname[id] or "?", id, arg)
-   ui:Refresh("all")
+   ns.ui:RefreshNow("all")
 end
 
 function Debug.dump()
