@@ -930,3 +930,5 @@ L["2000 damage to the monster in a direction (needs wisdom)"] = true
 L["Makes a sphere that wanders for 12-31 turns and kills what it touches; costs 1 intelligence"] = true
 L["A demon hits the monster in a direction for 150, but it may also do nothing, or turn on you"] = true
 L["Intelligence makes spells work more often"] = true
+L["If it works, the monster sleeps and you get 2-4 free weapon hits on it"] = true
+L["If it works, the monster is stuck and you get 3-5 free weapon hits on it"] = true
