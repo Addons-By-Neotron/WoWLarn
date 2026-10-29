@@ -1057,6 +1057,17 @@ local itotal, ibase = ns.Equipment.statBreakdown("INT")
 check(itotal == 30 and ibase == 40, "intelligence breakdown")
 G.c[K.GIANTSTR] = 0
 
+-- discovered powers
+check(not ns.ItemInfo.isDiscovered(K.OVORPAL), "vorpal blade not discovered at first")
+LOG = {}
+ns.ItemInfo.discover(K.OVORPAL); ns.ItemInfo.discover(K.OVORPAL)
+check(ns.ItemInfo.isDiscovered(K.OVORPAL) and #LOG <= 1, "discovered once")
+local found = false
+for _, line in ipairs(ns.ItemInfo.lines(K.OVORPAL, 0)) do if line:find("behead") then found = true end end
+check(found, "the tooltip tells what the blade does once discovered")
+ns.ItemInfo.discover(K.ODAGGER)
+check(not ns.ItemInfo.isDiscovered(K.ODAGGER), "plain weapons have nothing to discover")
+
 -- spell descriptions
 G.c[K.LEVEL], G.c[K.INTELLIGENCE], G.c[K.WISDOM] = 10, 18, 18
 for spell = 1, K.SPNUM do

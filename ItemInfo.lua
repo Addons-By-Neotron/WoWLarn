@@ -126,10 +126,31 @@ local MISC = {
    [K.OBRASSLAMP] = L["Rub it, and a genie may appear."],
    [K.OURN] = L["Perhaps something is inside."],
    [K.OLARNEYE] = L["The Eye of Larn.  The bank pays a fortune for it."],
-   [K.OVORPAL] = L["Now and then a hit beheads a monster that has a head, killing it at once."],
-   [K.OLANCE] = L["Kills what it hits, but it only does 300 damage to demon lords and princes."],
-   [K.OSLAYER] = L["Kills demon lords and princes outright, and they hurt you less."],
 }
+
+-- The special powers of some weapons are found out by seeing them work, once, for all the
+-- games (the discoveries are kept with the account).  Until then the tooltip only hints at them.
+local POWER = {
+   [K.OVORPAL] = L["It can behead the monsters that have a head."],
+   [K.OLANCE] = L["It slays what it hits, but is less effective against demons."],
+   [K.OSLAYER] = L["It slays demon lords and princes, and they hurt you less."],
+}
+
+local session = {}
+local function Discoveries()
+   return ns.mod and ns.mod.db and ns.mod.db.global.discovered or session
+end
+
+function ItemInfo.isDiscovered(id)
+   return Discoveries()[id] or false
+end
+
+-- Called when the power of an object has just shown itself.
+function ItemInfo.discover(id)
+   if not POWER[id] or Discoveries()[id] then return end
+   Discoveries()[id] = true
+   ns.ui:Message(L["You have found out what %s can do!"], ns.Tables.objectname[id])
+end
 
 -- The lines of a tooltip: what the item is and does. Returns a list of strings.
 function ItemInfo.lines(id, arg)
@@ -154,6 +175,9 @@ function ItemInfo.lines(id, arg)
    end
    if GEMS[id] and G.gemsSold[id] then lines[#lines + 1] = format(L["The bank pays %d gold for it."], arg * 100) end
    if MISC[id] then lines[#lines + 1] = MISC[id] end
+   if POWER[id] then
+      lines[#lines + 1] = ItemInfo.isDiscovered(id) and POWER[id] or L["It may hold powers you have yet to see."]
+   end
    return lines
 end
 

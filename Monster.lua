@@ -253,6 +253,7 @@ function Monster.hitm(x, y, amt, hitmsg)
       and not HasFlag(monster[monst].flags, FL_NOBEHEAD) then
       Msg(L["The Vorpal Blade beheads the %s!"], G.lastmonst)
       amt = hitp[x][y]
+      ns.ItemInfo.discover(K.OVORPAL)
    end
 
    -- invincible monster fix
@@ -262,7 +263,10 @@ function Monster.hitm(x, y, amt, hitmsg)
 
    if monst >= DEMONLORD then
       if c[K.LANCEDEATH] ~= 0 then amt = 300 end
-      if wielded == K.OSLAYER then amt = 10000 end
+      if wielded == K.OSLAYER then
+         amt = 10000
+         ns.ItemInfo.discover(K.OSLAYER)
+      end
    end
 
    local hpoints = hitp[x][y]
@@ -348,6 +352,7 @@ function Monster.hitmonster(x, y)
 
    if flag then
       Monster.hitm(x, y, damag, L["You hit the %s for %d damage."])
+      if c[K.LANCEDEATH] ~= 0 then ns.ItemInfo.discover(K.OLANCE) end
       if monst >= DEMONLORD and c[K.LANCEDEATH] ~= 0 and hitp[x][y] ~= 0 then
          Msg(L["Your lance of death tickles the %s!"], G.lastmonst)
       end

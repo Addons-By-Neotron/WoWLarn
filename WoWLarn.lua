@@ -44,6 +44,7 @@ mod.defaults = {
    global = {
       scores = { winners = {}, dead = {} },  -- the scoreboards, see Scores.lua
       taxes = {},  -- what each winner owes the LRS
+      discovered = {},  -- [object id] = true: items whose special power the player has seen at work (ItemInfo.discover)
       displays = {},  -- [monster id] = the display chosen in the model viewer
       scales = {},  -- [display id] = the size set in the model viewer (Visuals.Scale)
       rooms = {},  -- [display id] = the room set in the model viewer (Visuals.Room)
