@@ -126,6 +126,9 @@ local MISC = {
    [K.OBRASSLAMP] = L["Rub it, and a genie may appear."],
    [K.OURN] = L["Perhaps something is inside."],
    [K.OLARNEYE] = L["The Eye of Larn.  The bank pays a fortune for it."],
+   [K.OVORPAL] = L["Now and then a hit beheads a monster that has a head, killing it at once."],
+   [K.OLANCE] = L["Kills what it hits, but it only does 300 damage to demon lords and princes."],
+   [K.OSLAYER] = L["Kills demon lords and princes outright, and they hurt you less."],
 }
 
 -- The lines of a tooltip: what the item is and does. Returns a list of strings.

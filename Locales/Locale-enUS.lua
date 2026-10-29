@@ -1019,3 +1019,6 @@ L["Book"] = true
 L["Sword"] = true
 L["Lance"] = true
 L["Hammer"] = true
+L["Now and then a hit beheads a monster that has a head, killing it at once."] = true
+L["Kills what it hits, but it only does 300 damage to demon lords and princes."] = true
+L["Kills demon lords and princes outright, and they hurt you less."] = true
