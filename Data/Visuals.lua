@@ -347,6 +347,17 @@ V.LOWER = {
    [1206] = 0.12,  -- snake
 }
 
+-- Models that are too big or too small for their tile, by display id: how far the camera
+-- stands from the model, 1 is the usual; above 1 shrinks the model.  What is set in the model
+-- viewer (global.scales) wins.
+V.SCALE = {
+}
+
+function V.Scale(display)
+   local own = ns.mod.db.global.scales
+   return (own and own[display]) or V.SCALE[display] or 1
+end
+
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
 -- id and the rules stay those of the original monster.
 V.MONSTER_NAME = {

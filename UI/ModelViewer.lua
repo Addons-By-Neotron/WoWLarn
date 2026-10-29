@@ -35,7 +35,7 @@ end
 
 function viewer:Create()
    local frame = ns.CreatePanel(UIParent, "WoWLarnModelViewer")
-   frame:SetSize(WIDTH + LIST_W, MODEL_H + 180)
+   frame:SetSize(WIDTH + LIST_W, MODEL_H + 210)
    frame:SetPoint("CENTER", 300, 0)
    frame:SetFrameStrata("DIALOG")
    frame:SetMovable(true)
@@ -86,6 +86,8 @@ function viewer:Create()
    Button(L["Look >"], 52, 204, 10, function() self:Look(1) end)
    Button(L["Use"], 34, 260, 10, function() self:Assign(self.display) end)
    Button(L["Clear"], 40, 298, 10, function() self:Assign(nil) end)
+   Button(L["Smaller"], 60, 8, 100, function() self:Resize(1.1) end)
+   Button(L["Bigger"], 52, 72, 100, function() self:Resize(1 / 1.1) end)
 
    -- the sounds of the monster (its own, else the default ones), and any sound kit
    local sounds = { { "attack", L["Attack"] }, { "wound", L["Wound"] }, { "die", L["Die"] }, { "special", L["Special"] } }
@@ -160,14 +162,27 @@ end
 -- Shows a display in the viewer.
 function viewer:Show(display)
    self.display = display < 0 and display or math.max(1, display)
+   self.scale = ns.Visuals.Scale(self.display)
    if self.display < 0 then
       self.model:SetModel(-self.display)  -- (a model file data id, negated)
    else
       self.model:SetDisplayInfo(self.display)
    end
    self.model:SetFacing(0)
+   if self.model.SetCamDistanceScale then self.model:SetCamDistanceScale(self.scale) end
    self.edit:SetText(tostring(self.display))
    self:Update()
+end
+
+-- Makes the model of this display smaller (factor above 1) or bigger, in the viewer and in
+-- the game; the size is kept in the saved variables and shown, so it can be put in V.SCALE.
+function viewer:Resize(factor)
+   self.scale = math.floor(self.scale * factor * 100 + 0.5) / 100
+   ns.mod.db.global.scales[self.display] = self.scale
+   if self.model.SetCamDistanceScale then self.model:SetCamDistanceScale(self.scale) end
+   ns.mod:Print(format("display %d: camera scale %.2f", self.display, self.scale))
+   self:Update()
+   if ns.ui.Refresh then ns.ui:Refresh("map") end
 end
 
 function viewer:Step(by)

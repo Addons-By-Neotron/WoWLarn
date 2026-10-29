@@ -45,6 +45,7 @@ mod.defaults = {
       scores = { winners = {}, dead = {} },  -- the scoreboards, see Scores.lua
       taxes = {},  -- what each winner owes the LRS
       displays = {},  -- [monster id] = the display chosen in the model viewer
+      scales = {},  -- [display id] = the size set in the model viewer (Visuals.Scale)
    },
 }
 

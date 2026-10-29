@@ -875,3 +875,5 @@ L["phase lasher"] = true
 L["critter"] = true
 L["Giant Worm"] = true
 L["rat"] = true
+L["Smaller"] = true
+L["Bigger"] = true

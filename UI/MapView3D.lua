@@ -158,6 +158,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
          self:SetFacing(frame.facing or FACING)
          if frame.anim and self.SetAnimation then self:SetAnimation(frame.anim) end  -- (loading resets it)
          if MODEL_ROOM ~= 1 and self.SetModelScale then self:SetModelScale(1 / MODEL_ROOM) end  -- (and this)
+         if self.SetCamDistanceScale then self:SetCamDistanceScale(frame.scale or 1) end  -- (and this)
       end)
       if owner then
          owner.frame = frame
@@ -191,6 +192,11 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    if frame.facing ~= facing then
       frame.facing = facing
       frame.model:SetFacing(facing)
+   end
+   local scale = look ~= "player" and V.Scale(look) or 1
+   if frame.scale ~= scale then
+      frame.scale = scale
+      if frame.model.SetCamDistanceScale then frame.model:SetCamDistanceScale(scale) end
    end
    -- a model is clipped to its frame and a dying one lies down wider than it stands, so
    -- every model gets a frame MODEL_ROOM times larger around the same centre, and is scaled
