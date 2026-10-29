@@ -134,7 +134,7 @@ function inventory:Update()
          button.icon:Hide()
          button.text:SetText("|cff777777" .. Letter(slot) .. ")|r")
       else
-         local icon = V.ObjectIcon(id)
+         local icon = V.ObjectIcon(id, G.ivenarg[slot])
          if icon then
             button.icon:SetTexture(icon)
             button.icon:Show()

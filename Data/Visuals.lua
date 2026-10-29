@@ -137,7 +137,15 @@ V.CURSE = {
    [K.ITCHING] = true, [K.CLUMSINESS] = true, [K.HALFDAM] = true,
 }
 
-function V.ObjectIcon(id)
+-- Potions with an icon of their own (arg is the kind).
+V.POTION_ICON = {
+   [K.PCUREDIANTH] = "INV_Potion_33",  -- Dragonfire Potion: the cure for the daughter
+}
+
+function V.ObjectIcon(id, arg)
+   if id == K.OPOTION and arg and V.POTION_ICON[arg] then
+      return ICONS .. V.POTION_ICON[arg]
+   end
    local visual = V.object[id]
    return visual and visual.icon and (ICONS .. visual.icon)
 end
