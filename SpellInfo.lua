@@ -136,7 +136,7 @@ local INFO = {
       return L["Calls a demon to strike the monster for 150 damage.  It may also do nothing, or turn on you."], "150"
    end,
    [K.SP_WALK_THROUGH_WALLS] = function() return format(L["You can walk through walls for %s turns."], Range(6, 15)) end,
-   [K.SP_ALTER_REALITY] = function() return L["Rebuilds the level, keeping what is on it.  Costs 1 intelligence, and the spell is forgotten."] end,
+   [K.SP_ALTER_REALITY] = function() return L["Bends the world into a new shape.  Whatever is in it comes along, but nothing stays where it was.  Costs 1 intelligence, and the spell is forgotten."] end,
    [K.SP_PERMANENCE] = function() return L["Makes the spells with a time limit permanent.  Costs 1 intelligence, and the spell is forgotten."] end,
 }
 

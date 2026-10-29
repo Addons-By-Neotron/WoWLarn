@@ -979,3 +979,4 @@ L["Makes the spells with a time limit permanent.  Costs 1 intelligence, and the 
 L["1 Mana"] = true
 L["Instant"] = true
 L["The same every time, it only grows with your level."] = true
+L["Bends the world into a new shape.  Whatever is in it comes along, but nothing stays where it was.  Costs 1 intelligence, and the spell is forgotten."] = true
