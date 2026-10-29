@@ -1,6 +1,6 @@
 --[[
 **********************************************************************
-WoWLarn - Side panel: minimap, portraits, stats and effects.
+WoWLarn - Side panel: minimap, character sheet and effects.
 **********************************************************************
 Copyright (C) 2026 NeoTron
 
@@ -34,7 +34,8 @@ local CELL = 3  -- minimap pixels per tile
 local EFFECT_SIZE, EFFECT_COLUMNS = 24, 8
 local STAT_W, STAT_H, HEADING_H = 114, 14, 20
 local SLOT_SIZE = 30
-local MINIMAP_H, PORTRAIT_H, STATS_H = K.MAXY * CELL + 22, 120, 232
+local MINIMAP_H, SHEET_H = K.MAXY * CELL + 22, 322
+local MODEL_TOP, MODEL_H = 26, 108
 
 local function Section(parent, height, title)
    local panel = ns.CreatePanel(parent)
@@ -134,30 +135,26 @@ function side:Create(parent)
    end
    self.minimapKey = {}
 
-   local portraits = Section(frame, PORTRAIT_H, L["Portraits"])
-   portraits:SetPoint("TOPLEFT", minimap, "BOTTOMLEFT", 0, -GAP)
-   portraits:SetPoint("TOPRIGHT", minimap, "BOTTOMRIGHT", 0, -GAP)
-   local player = CreateFrame("PlayerModel", nil, portraits)
-   player:SetPoint("TOPLEFT", 4 + SLOT_SIZE + 4, -16)
-   player:SetPoint("BOTTOMRIGHT", portraits, "BOTTOM", -2, 4)
+   -- One character sheet: the name, the model with the slots of the equipment beside it, the
+   -- bars and the numbers.
+   local stats = Section(frame, SHEET_H, "")
+   stats:SetPoint("TOPLEFT", minimap, "BOTTOMLEFT", 0, -GAP)
+   stats:SetPoint("TOPRIGHT", minimap, "BOTTOMRIGHT", 0, -GAP)
+   self.title = stats:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+   self.title:SetPoint("TOPLEFT", 6, -6)
+   self.title:SetPoint("RIGHT", -6, 0)
+   self.title:SetJustifyH("LEFT")
+   local player = CreateFrame("PlayerModel", nil, stats)
+   player:SetPoint("TOPLEFT", 4 + SLOT_SIZE + 4, -MODEL_TOP)
+   player:SetPoint("TOPRIGHT", -4, -MODEL_TOP)
+   player:SetHeight(MODEL_H)
    pcall(player.SetUnit, player, "player")
    pcall(player.SetPortraitZoom, player, 0.8)
    self.player = player
-   self:CreateSlots(portraits)
-   self.target = CreateFrame("PlayerModel", nil, portraits)
-   self.target:SetPoint("TOPLEFT", portraits, "TOP", 2, -16)
-   self.target:SetPoint("BOTTOMRIGHT", -4, 4)
-
-   local stats = Section(frame, STATS_H, L["Stats"])
-   stats:SetPoint("TOPLEFT", portraits, "BOTTOMLEFT", 0, -GAP)
-   stats:SetPoint("TOPRIGHT", portraits, "BOTTOMRIGHT", 0, -GAP)
-   self.title = stats:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-   self.title:SetPoint("TOPLEFT", 6, -16)
-   self.title:SetPoint("RIGHT", -6, 0)
-   self.title:SetJustifyH("LEFT")
+   self:CreateSlots(stats)
    self.hp = Bar(stats, 0.75, 0.15, 0.15)
-   self.hp:SetPoint("TOPLEFT", 6, -34)
-   self.hp:SetPoint("TOPRIGHT", -6, -34)
+   self.hp:SetPoint("TOPLEFT", 6, -(MODEL_TOP + MODEL_H + 6))
+   self.hp:SetPoint("TOPRIGHT", -6, -(MODEL_TOP + MODEL_H + 6))
    self.spells = Bar(stats, 0.2, 0.35, 0.85)
    self.spells:SetPoint("TOPLEFT", self.hp, "BOTTOMLEFT", 0, -3)
    self.spells:SetPoint("TOPRIGHT", self.hp, "BOTTOMRIGHT", 0, -3)
@@ -292,7 +289,7 @@ function side:CreateSlots(parent)
    for index, slot in ipairs(SLOTS) do
       local button = CreateFrame("Button", nil, parent)
       button:SetSize(SLOT_SIZE, SLOT_SIZE)
-      button:SetPoint("TOPLEFT", 4, -16 - (index - 1) * (SLOT_SIZE + 3))
+      button:SetPoint("TOPLEFT", 4, -MODEL_TOP - (index - 1) * (SLOT_SIZE + 3))
       button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
       button.icon = button:CreateTexture(nil, "ARTWORK")
       button.icon:SetAllPoints()
