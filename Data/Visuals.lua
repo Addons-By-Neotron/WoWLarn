@@ -242,7 +242,7 @@ V.DISPLAY = {
    [K.CUBE] = Displays(11141, 4754, 767, 1306, 11137, 1146, 11140, 11139, 682, 11138, 2569, 358, 1145, 2028),
    [K.YETI] = Displays(3206, 10579, 3207),
    [K.ZOMBIE] = Displays({ 10970, 10979 }),
-   [K.WRAITH] = Displays(7857, 14703, 14368),
+   [K.WRAITH] = Displays(14368, 146),
    [K.POLTERGEIST] = 10728,
    [K.SPIRITNAGA] = 8782,
    [K.VAMPIRE] = 8808,
@@ -255,7 +255,7 @@ V.DISPLAY = {
    [K.PURPLEWORM] = Displays(7549, 13009),  -- (Murk Worm and Rock Worm)
    -- (a negative number is a model file data id, negated: the chests are objects, not creatures)
    [K.MIMIC] = Displays(-196976, -196979, -196982, -196987, -196988, -196989, -197063, -341746, -341870),  -- (treasure chests)
-   [K.METAMORPH] = Displays(4629, 146),  -- (Haunting and Illusionary Phantasms)
+   [K.METAMORPH] = Displays(4629, 7857, 14703),  -- (Haunting Phantasm and the two wraiths)
    [K.FORVALAKA] = Displays(633, 11452),  -- (Shadowmaw panthers)
    [K.ZILLER] = Displays(6087, 2187, 6086, 1531),  -- (Zhevra Runner, Charger, Courser and Tamed Zhevra)
    [K.ICELIZARD] = 8797,  -- (Cold Eye Basilisk)
