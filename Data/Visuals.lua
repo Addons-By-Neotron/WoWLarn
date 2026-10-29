@@ -179,7 +179,8 @@ local function Usable(display)
    end
    probe.display = display
    if display < 0 then probe:SetModel(-display) else probe:SetDisplayInfo(display) end
-   usable[display] = (not probe.GetModelFileID) or Has(probe)
+   -- (until the placeholder is known, the answer waits for OnModelLoaded)
+   usable[display] = (not probe.GetModelFileID) or (missing ~= nil and Has(probe))
    return usable[display]
 end
 
