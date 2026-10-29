@@ -462,6 +462,55 @@ function V.Room(display)
    return (own and own[display]) or V.ROOM[display] or 1
 end
 
+-- What the player says when attacking, hurt and dying, by race (the race file of UnitRace) and
+-- sex (2 male, 3 female): { attack = kit, wound = { kits }, die = kit }, from the sounds
+-- Human/Dwarf/... Player Attack, Wound, WoundCrit and Death.  A race or kind missing here
+-- sounds like the other sex of the race, then like a human of its sex.
+V.PLAYER_SOUND = {
+   Human = {
+      [2] = { attack = 2941, wound = { 2942, 2943 }, die = 2944 },
+      [3] = { attack = 2937, wound = { 2938, 2939 }, die = 2940 },
+   },
+   Dwarf = {
+      [2] = { attack = 2929, wound = { 2930, 2931 }, die = 2932 },
+      [3] = { attack = 2925, wound = { 2926, 2927 }, die = 2928 },
+   },
+   NightElf = {
+      [2] = { attack = 2956, wound = { 2957, 2958 }, die = 2959 },
+      [3] = { attack = 2933, wound = { 2934, 2935 }, die = 2936 },
+   },
+   Gnome = {
+      [2] = { attack = 3275, wound = { 3276, 3277 }, die = 3278 },
+      [3] = { attack = 3269, wound = { 3270, 3271 } },
+   },
+   Orc = {
+      [2] = { attack = 1319, wound = { 1320, 1321 }, die = 1322 },
+      [3] = { attack = 2960, wound = 2961, die = 213 },
+   },
+   Tauren = {
+      [2] = { attack = 1353, wound = { 1354, 1355 }, die = 1356 },
+      [3] = { die = 229 },
+   },
+   Troll = {
+      [2] = { attack = 3307, wound = { 3308, 3309 }, die = 3310 },
+      [3] = { attack = 3301, wound = { 3302, 3303 }, die = 3304 },
+   },
+   Scourge = {
+      [2] = { attack = 1315, wound = { 1316, 1317 }, die = 1318 },
+      [3] = { attack = 1361, wound = { 1362, 1363 }, die = 1364 },
+   },
+}
+
+-- The sound of the player for kind ("attack", "wound" or "die"), see PLAYER_SOUND.
+function V.PlayerSound(kind)
+   local _, race = UnitRace and UnitRace("player")
+   local sex = UnitSex and UnitSex("player") == 3 and 3 or 2
+   local other = sex == 3 and 2 or 3
+   local own = V.PLAYER_SOUND[race]
+   local human = V.PLAYER_SOUND.Human
+   return (own and own[sex][kind]) or (own and own[other][kind]) or human[sex][kind]
+end
+
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
 -- id and the rules stay those of the original monster.
 V.MONSTER_NAME = {

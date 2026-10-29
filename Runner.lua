@@ -163,15 +163,22 @@ end
 
 -- What the monsters sound like (Visuals.MONSTER_SOUND): kind is "attack", "wound", "die" or
 -- "special"; a monster without a sound of its own for it gets the default one.
-local MONSTER_SOUND_DEFAULT = { attack = "bite", wound = "hit", die = "kill", special = "bite" }
+-- (a human man's attack, wound and death sounds, see Visuals.PLAYER_SOUND)
+local HUMAN = ns.Visuals.PLAYER_SOUND.Human[2]
+local MONSTER_SOUND_DEFAULT = { attack = HUMAN.attack, wound = HUMAN.wound, die = HUMAN.die, special = HUMAN.attack }
 function ui:MonsterSound(kind, monster)
    local own = monster and ns.Visuals.MONSTER_SOUND[monster]
    local sound = own and (own[kind] or (kind == "special" and own.attack))
    if sound then
       Play(sound)
    else
-      self:Sound(MONSTER_SOUND_DEFAULT[kind])
+      Play(MONSTER_SOUND_DEFAULT[kind])
    end
+end
+
+-- The voice of the player (Visuals.PlayerSound): kind is "attack", "wound" or "die".
+function ui:PlayerSound(kind)
+   Play(ns.Visuals.PlayerSound(kind))
 end
 
 -- /larn sounds: plays every sound with its name.
@@ -213,11 +220,15 @@ end
 
 -- Model animations of the 2.5D view: kind is "hit", "bite", "wound", "die" or "hurt" (see
 -- map3d:Animate); x, y the tile involved.
-local ANIMATION_SOUND = { hit = "swing", hurt = "hurt" }
+local ANIMATION_SOUND = { hit = "swing", hurt = "hurt" }  -- (the player has a voice: PlayerSound)
 local MONSTER_KIND = { bite = "attack", wound = "wound", die = "die", special = "special" }
 function ui:Animate(kind, x, y, monster, fromY)
    if MONSTER_KIND[kind] then
       self:MonsterSound(MONSTER_KIND[kind], monster or ns.G.mon[x][y])
+   elseif kind == "hit" then
+      self:PlayerSound("attack")
+   elseif kind == "hurt" then
+      self:PlayerSound(ns.G.c[ns.K.HP] <= 0 and "die" or "wound")
    else
       self:Sound(ANIMATION_SOUND[kind])
    end
