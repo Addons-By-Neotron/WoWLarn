@@ -220,6 +220,7 @@ local function Pit()
       for i = 1, K.IVENSIZE do
          if G.iven[i] == K.OWWAND then
             Msg(L["You float right over the pit."])
+            ns.ItemInfo.discover(K.OWWAND)
             return
          end
       end
@@ -529,6 +530,7 @@ function Object.lookForObject()
       for i = 1, K.IVENSIZE do
          if G.iven[i] == K.OWWAND then
             Msg(L["You escape a trap door."])
+            ns.ItemInfo.discover(K.OWWAND)
             return
          end
       end

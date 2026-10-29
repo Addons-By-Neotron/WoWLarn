@@ -1065,6 +1065,12 @@ check(ns.ItemInfo.isDiscovered(K.OVORPAL) and #LOG <= 1, "discovered once")
 local found = false
 for _, line in ipairs(ns.ItemInfo.lines(K.OVORPAL, 0)) do if line:find("behead") then found = true end end
 check(found, "the tooltip tells what the blade does once discovered")
+local hand = table.concat(ns.ItemInfo.lines(K.OHANDofFEAR, 0), "|")
+check(not hand:find("fear"), "the hand of fear tells nothing before it is seen at work")
+G.c[K.NOTHEFT] = 1; LOG = {}
+ns.ItemInfo.discover(K.ONOTHEFT)
+check(table.concat(ns.ItemInfo.lines(K.ONOTHEFT, 0), "|"):find("steal"), "device of theft-prevention explains itself once found out")
+G.c[K.NOTHEFT] = 0
 ns.ItemInfo.discover(K.ODAGGER)
 check(not ns.ItemInfo.isDiscovered(K.ODAGGER), "plain weapons have nothing to discover")
 

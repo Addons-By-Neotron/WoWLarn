@@ -92,6 +92,7 @@ function Sphere.newsphere(x, y, dir, life)
       Sphere.rmsphere(x, y)  -- remove any spheres that are here
    end
 
+   if HasTalisman() and G.playerx == x and G.playery == y then ns.ItemInfo.discover(K.OSPHTALISMAN) end
    if not HasTalisman() then
       -- demons dispel spheres
       local m = mon[x][y]

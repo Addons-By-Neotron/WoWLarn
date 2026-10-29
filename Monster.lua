@@ -244,6 +244,7 @@ function Monster.hitm(x, y, amt, hitmsg)
       if monst == K.WHITEDRAGON or monst == K.REDDRAGON or monst == K.GREENDRAGON
          or monst == K.BRONZEDRAGON or monst == K.PLATINUMDRAGON or monst == K.SILVERDRAGON then
          amt = amt * 3
+         ns.ItemInfo.discover(K.OORBOFDRAGON)
       end
    end
 
@@ -411,6 +412,7 @@ function Monster.spattack(x, xx, yy)
    -- with the cube of undead control, wraiths and vampires do nothing
    if monst == K.WRAITH or monst == K.VAMPIRE then
       if c[K.CUBEofUNDEAD] ~= 0 or c[K.UNDEADPRO] ~= 0 then
+         if c[K.CUBEofUNDEAD] ~= 0 then ns.ItemInfo.discover(K.OCUBEofUNDEAD) end
          return false
       end
    end
@@ -504,7 +506,10 @@ function Monster.spattack(x, xx, yy)
       return false
 
    elseif x == 8 then
-      if c[K.NOTHEFT] ~= 0 then return false end  -- he has a device of no theft
+      if c[K.NOTHEFT] ~= 0 then  -- he has a device of no theft
+         ns.ItemInfo.discover(K.ONOTHEFT)
+         return false
+      end
       if c[K.GOLD] ~= 0 then
          message = L["The %s hit you.  Your purse feels lighter."]
          if c[K.GOLD] > 32767 then
@@ -552,7 +557,10 @@ function Monster.spattack(x, xx, yy)
       return false
 
    elseif x == 14 then
-      if c[K.NOTHEFT] ~= 0 then return false end  -- he has a device of no theft
+      if c[K.NOTHEFT] ~= 0 then  -- he has a device of no theft
+         ns.ItemInfo.discover(K.ONOTHEFT)
+         return false
+      end
       if Player.emptyHanded() then
          message = L["The %s couldn't find anything to steal."]
       else
@@ -629,6 +637,7 @@ function Monster.hitplayer(x, y)
    if c[K.NEGATESPIRIT] ~= 0 or c[K.SPIRITPRO] ~= 0 then
       if mster == K.POLTERGEIST or mster == K.SPIRITNAGA then
          dam = Trunc(dam / 2)
+         if c[K.NEGATESPIRIT] ~= 0 then ns.ItemInfo.discover(K.OSPIRITSCARAB) end
       end
    end
 
@@ -636,6 +645,7 @@ function Monster.hitplayer(x, y)
    if c[K.CUBEofUNDEAD] ~= 0 or c[K.UNDEADPRO] ~= 0 then
       if mster == K.VAMPIRE or mster == K.WRAITH or mster == K.ZOMBIE then
          dam = Trunc(dam / 2)
+         if c[K.CUBEofUNDEAD] ~= 0 then ns.ItemInfo.discover(K.OCUBEofUNDEAD) end
       end
    end
 

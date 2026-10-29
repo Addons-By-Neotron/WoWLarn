@@ -50,8 +50,9 @@ function Display.visibleMonster(x, y)
       return G.mimicmonst
    elseif id == K.INVISIBLESTALKER and c[K.SEEINVISIBLE] == 0 then
       return 0
-   elseif id >= K.DEMONLORD and id <= K.LUCIFER and c[K.EYEOFLARN] == 0 then
-      return 0
+   elseif id >= K.DEMONLORD and id <= K.LUCIFER then
+      if c[K.EYEOFLARN] == 0 then return 0 end
+      ns.ItemInfo.discover(K.OLARNEYE)
    end
    return id
 end

@@ -91,7 +91,10 @@ function Equipment.short(slot)
    local id, arg = iven[slot], ivenarg[slot]
    if id == 0 then return nil end
    if SHORT[id] then return EFFECTS[id](arg) end
-   if EFFECTS[id] then return L["in effect"] end
+   if EFFECTS[id] then
+      if ns.ItemInfo.hasPower(id) and not ns.ItemInfo.isDiscovered(id) then return nil end
+      return L["in effect"]
+   end
    return WornBonus(slot)
 end
 

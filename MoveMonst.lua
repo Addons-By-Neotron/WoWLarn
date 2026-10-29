@@ -241,6 +241,7 @@ local function MoveMT(i, j)
          break
       end
    end
+   local hand = tmp == 1
    if c[K.SCAREMONST] ~= 0 then
       if tmp == 1 then tmp = 2 end
    elseif tmp == 1 and rnd(10) > 4 then
@@ -256,6 +257,7 @@ local function MoveMT(i, j)
    end
 
    if tmp ~= 0 then
+      if hand and ns.Display.visibleMonster(i, j) ~= 0 then ns.ItemInfo.discover(K.OHANDofFEAR) end
       local xl = Clamp(i + rnd(3) - 2, 1, MAXX)
       local yl = Clamp(j + rnd(3) - 2, 1, MAXY)
       local here = item[xl][yl]

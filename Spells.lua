@@ -506,6 +506,7 @@ CAST[K.SP_INVISIBILITY] = function()
       if iven[i] == K.OAMULET then amulets = amulets + 1 + ivenarg[i] end
    end
    c[K.INVISIBILITY] = c[K.INVISIBILITY] + amulets * 128 + 12
+   if amulets > 0 then ns.ItemInfo.discover(K.OAMULET) end
 end
 
 CAST[K.SP_FIREBALL] = function(clev)

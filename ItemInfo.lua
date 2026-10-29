@@ -134,7 +134,21 @@ local POWER = {
    [K.OVORPAL] = L["It can behead the monsters that have a head."],
    [K.OLANCE] = L["It slays what it hits, but is less effective against demons."],
    [K.OSLAYER] = L["It slays demon lords and princes, and they hurt you less."],
+   [K.OHANDofFEAR] = L["Monsters sometimes run in fear.  The scare monster spell needs it."],
+   [K.ONOTHEFT] = L["Thieves can't steal from you."],
+   [K.OSPHTALISMAN] = L["Spheres of annihilation can't harm you."],
+   [K.OORBOFDRAGON] = L["Your blows hurt dragons much more."],
+   [K.OSPIRITSCARAB] = L["Ghostly monsters hurt you less."],
+   [K.OCUBEofUNDEAD] = L["The undead hurt you less, and some will not attack at all."],
+   [K.OAMULET] = L["Your invisibility lasts longer."],
+   [K.OLARNEYE] = L["Demon lords can't hide from you."],
+   [K.OWWAND] = L["You float over pits and trap doors."],
 }
+
+-- True if the object has a power that is found out by seeing it work.
+function ItemInfo.hasPower(id)
+   return POWER[id] ~= nil
+end
 
 local session = {}
 local function Discoveries()
@@ -168,16 +182,14 @@ function ItemInfo.lines(id, arg)
          lines[#lines + 1] = L["You don't know what it does yet."]
       end
    end
-   local effect = ns.Equipment.effect(id, arg)
+   local effect = not POWER[id] and ns.Equipment.effect(id, arg)
    if effect then
       lines[#lines + 1] = effect
       lines[#lines + 1] = L["Works as long as you carry it."]
    end
    if GEMS[id] and G.gemsSold[id] then lines[#lines + 1] = format(L["The bank pays %d gold for it."], arg * 100) end
    if MISC[id] then lines[#lines + 1] = MISC[id] end
-   if POWER[id] then
-      lines[#lines + 1] = ItemInfo.isDiscovered(id) and POWER[id] or L["It may hold powers you have yet to see."]
-   end
+   if POWER[id] and ItemInfo.isDiscovered(id) then lines[#lines + 1] = POWER[id] end
    return lines
 end
 
