@@ -32,9 +32,9 @@ ns.side = side
 local GAP = 4
 local CELL = 3  -- minimap pixels per tile
 local EFFECT_SIZE, EFFECT_COLUMNS = 24, 8
-local STAT_W, STAT_H = 114, 14
+local STAT_W, STAT_H, HEADING_H = 114, 14, 20
 local SLOT_SIZE = 30
-local MINIMAP_H, PORTRAIT_H, STATS_H = K.MAXY * CELL + 22, 120, 212
+local MINIMAP_H, PORTRAIT_H, STATS_H = K.MAXY * CELL + 22, 120, 232
 
 local function Section(parent, height, title)
    local panel = ns.CreatePanel(parent)
@@ -105,7 +105,7 @@ local STAT_COLUMNS = {
       { label = L["Gold"], value = function() return C(K.GOLD) end,
         tip = L["Gold buys things in the town.  The bank keeps it safe, and what you have when the game ends is your score."],
         extra = function() return format(L["In the bank: %d"], C(K.BANKACCOUNT)) end },
-      { label = L["Time left"], value = function() return format(L["%d mobuls"], math.floor((K.TIMELIMIT - G.gtime) / 100)) end,
+      { label = L["Time"], value = function() return format(L["%d mobuls"], math.floor((K.TIMELIMIT - G.gtime) / 100)) end,
         tip = L["Your daughter's illness will not wait.  Bring the potion of cure dianthroritis home before the time runs out."] },
    },
 }
@@ -194,21 +194,33 @@ function side:Create(parent)
    -- the sheet under the bars: a row for each, so each can explain itself
    self.cells = {}
    for column, rows in ipairs(STAT_COLUMNS) do
-      for row, cell in ipairs(rows) do
+      local y = 6
+      for _, cell in ipairs(rows) do
          local frame = CreateFrame("Frame", nil, stats)
-         frame:SetSize(STAT_W, STAT_H)
-         frame:SetPoint("TOPLEFT", self.exp, "BOTTOMLEFT", (column - 1) * (STAT_W + 4), -6 - (row - 1) * STAT_H)
          if cell.heading then
-            frame.label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            frame.label:SetPoint("LEFT")
+            if y > 6 then y = y + 6 end  -- (a gap above a heading that is not the first)
+            frame:SetSize(STAT_W, HEADING_H)
+         else
+            frame:SetSize(STAT_W, STAT_H)
+         end
+         frame:SetPoint("TOPLEFT", self.exp, "BOTTOMLEFT", (column - 1) * (STAT_W + 4), -y)
+         y = y + (cell.heading and HEADING_H or STAT_H)
+         if cell.heading then
+            frame.label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            frame.label:SetPoint("BOTTOMLEFT", 2, 3)
             frame.label:SetText(cell.heading)
+            local line = frame:CreateTexture(nil, "ARTWORK")
+            line:SetPoint("BOTTOMLEFT", 0, 0)
+            line:SetPoint("BOTTOMRIGHT", 0, 0)
+            line:SetHeight(1)
+            Fill(line, 1, 0.82, 0, 0.5)
             frame.cell = false
          else
             frame:EnableMouse(true)
             frame.label = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-            frame.label:SetPoint("LEFT", 4, 0)
+            frame.label:SetPoint("LEFT", 6, 0)
             frame.label:SetText(cell.label)
-            frame.label:SetTextColor(1, 0.82, 0)
+            frame.label:SetTextColor(0.8, 0.8, 0.8)
             frame.value = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
             frame.value:SetPoint("RIGHT", -2, 0)
             frame.value:SetJustifyH("RIGHT")

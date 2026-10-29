@@ -994,3 +994,4 @@ L["Nothing equipped."] = true
 L["Click to change."] = true
 L["Attributes"] = true
 L["Combat"] = true
+L["Time"] = true
