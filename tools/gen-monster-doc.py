@@ -69,7 +69,7 @@ out = ["# Monsters", "",
        "- **Hits:** damage is up to this number, plus the bonus of a special attack.",
        "- **AC:** armor class. Lower is harder to hit. **INT:** how smart it is (chasing range).",
        "- **Look:** the model the monster has now in the addon (a display id, or a list of them), or `-` if none yet.",
-       "- Critters (the lemmings) can replace any monster on a dungeon level, about one in ten, up to a cap per level.",
+       "- Rats (the lemmings) can replace any monster on a dungeon level, about one in ten, up to a cap per level.",
        "- Demon lords are put on dungeon levels 11 to 15 (as many as the level minus 10), demon princes on the volcano",
        "  levels, Lucifer is the boss at the bottom.", ""]
 def pretty(text):

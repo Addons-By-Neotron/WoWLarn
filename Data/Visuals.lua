@@ -197,7 +197,7 @@ end
 -- A monster has a display or a list of displays, one of which each monster gets by chance.
 V.DISPLAY = {
    -- [monster id] = displayID, or a list of them
-   [K.LEMMING] = Displays(2838, 1141, 1418, 134, 328, 1072, 4959),  -- (Snufflenose Gopher, rats, squirrel, rabbit, prairie dog, mouse)
+   [K.LEMMING] = Displays(1141, 1418),  -- (Rat and Dig Rat)
    [K.JACKAL] = Displays({ 10902, 10903 }, 1536, 2710, 2712, 2713, 2714, 1535, 12966),  -- (the hyena)
    [K.CENTIPEDE] = 15533,
    [K.ANT] = 11096,
@@ -350,7 +350,7 @@ V.LOWER = {
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
 -- id and the rules stay those of the original monster.
 V.MONSTER_NAME = {
-   [K.LEMMING] = L["critter"],
+   [K.LEMMING] = L["rat"],
    [K.YELLOWMOLD] = L["fungal spore"],
    [K.ZILLER] = L["zhevra"],
    [K.XVART] = L["bluegill warrior"],
@@ -381,7 +381,7 @@ for id, name in pairs(V.MONSTER_NAME) do
 end
 
 -- Armour class changed from the original: the higher it is, the easier the monster is to hit.
--- The critters (armour class 0) took 10 to 20 swings early on.
+-- The rats (armour class 0) took 10 to 20 swings early on.
 V.MONSTER_AC = {
    [K.LEMMING] = 14,
 }

@@ -8,7 +8,7 @@ ones at difficulty 0; a higher difficulty scales hit points, damage and gold.
 - **Hits:** damage is up to this number, plus the bonus of a special attack.
 - **AC:** armor class. Lower is harder to hit. **INT:** how smart it is (chasing range).
 - **Look:** the model the monster has now in the addon (a display id, or a list of them), or `-` if none yet.
-- Critters (the lemmings) can replace any monster on a dungeon level, about one in ten, up to a cap per level.
+- Rats (the lemmings) can replace any monster on a dungeon level, about one in ten, up to a cap per level.
 - Demon lords are put on dungeon levels 11 to 15 (as many as the level minus 10), demon princes on the volcano
   levels, Lucifer is the boss at the bottom.
 
@@ -16,7 +16,7 @@ ones at difficulty 0; a higher difficulty scales hit points, damage and gold.
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 1 | critter (lemming) | 1-4 | 0 | 14 | 0 | 3 |  | 0 | 1 | 2838, 1141, 1418, 134, 328, 1072, 4959 |
+| 1 | rat (lemming) | 1-4 | 0 | 14 | 0 | 3 |  | 0 | 1 | 1141, 1418 |
 | 2 | gnome | 1-4 | 2 | 10 | 1 | 8 |  | 30 | 2 | 6920-6931 |
 | 3 | hobgoblin | 1-4 | 3 | 13 | 2 | 5 |  | 25 | 2 | 30244, 30261-30267 |
 | 4 | hyena (jackal) | 1-4 | 1 | 7 | 1 | 4 |  | 0 | 1 | 10902-10903, 1536, 2710, 2712, 2713, 2714, 1535, 12966 |

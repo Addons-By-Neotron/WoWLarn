@@ -874,3 +874,4 @@ L["bluegill warrior"] = true
 L["phase lasher"] = true
 L["critter"] = true
 L["Giant Worm"] = true
+L["rat"] = true
