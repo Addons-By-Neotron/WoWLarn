@@ -392,6 +392,15 @@ G.c[K.DEXTERITY] = 10
 ns.Player.take(K.ODEXRING, 2)
 check(G.c[K.DEXTERITY] == 13, "ring of dexterity")
 check(ns.Player.dropObject(1) == false and G.item[G.playerx][G.playery] == K.ODEXRING and G.c[K.DEXTERITY] == 10, "drop gives it back")
+-- Bessman's hammer: +10 strength and dexterity, -10 intelligence, given back as they were taken
+G.item[G.playerx][G.playery], G.iarg[G.playerx][G.playery] = 0, 0
+G.c[K.INTELLIGENCE] = 12
+ns.Player.take(K.OHAMMER, 0)
+check(G.c[K.INTELLIGENCE] == 2, "the hammer takes 10 intelligence")
+G.c[K.INTELLIGENCE] = G.c[K.INTELLIGENCE] + 2  -- (something raises it meanwhile)
+ns.Player.dropObject(1)
+check(G.c[K.INTELLIGENCE] == 14, "dropping the hammer gives back 10, got " .. G.c[K.INTELLIGENCE])
+G.item[G.playerx][G.playery], G.iarg[G.playerx][G.playery] = 0, 0
 check(ns.Player.dropObject(2) == false or true, "dropping nothing is fine")
 check(G.dropflag, "dropflag set")
 -- item names

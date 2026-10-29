@@ -278,7 +278,7 @@ function Player.adjustCValues(id, arg)
    elseif id == K.OHAMMER then
       c[K.DEXTERITY] = c[K.DEXTERITY] - 10
       c[K.STREXTRA] = c[K.STREXTRA] - 10
-      c[K.INTELLIGENCE] = c[K.TMP2]
+      c[K.INTELLIGENCE] = c[K.INTELLIGENCE] + 10
       flag = true
    elseif id == K.OORB then
       c[K.ORB] = c[K.ORB] - 1
@@ -440,8 +440,9 @@ function Player.take(itm, arg)
          elseif itm == K.OHAMMER then
             c[K.DEXTERITY] = c[K.DEXTERITY] + 10
             c[K.STREXTRA] = c[K.STREXTRA] + 10
-            c[K.TMP2] = c[K.INTELLIGENCE]
-            c[K.INTELLIGENCE] = (c[K.TMP2] - 10 <= 0) and 1 or c[K.TMP2] - 10
+            -- FIX: not in the C, which kept the intelligence from before and put it back (losing
+            -- what had changed it meanwhile).  Like any other item, it adds and removes its 10.
+            c[K.INTELLIGENCE] = c[K.INTELLIGENCE] - 10
             stats = true
          elseif itm == K.OORB then
             c[K.ORB] = c[K.ORB] + 1
