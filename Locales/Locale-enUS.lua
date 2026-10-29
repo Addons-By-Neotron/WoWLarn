@@ -992,3 +992,5 @@ L["%s stays %d"] = true
 L["Nothing in your pack fits."] = true
 L["Nothing equipped."] = true
 L["Click to change."] = true
+L["Attributes"] = true
+L["Combat"] = true

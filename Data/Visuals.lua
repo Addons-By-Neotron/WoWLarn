@@ -54,19 +54,30 @@ V.object = {
    [K.OEMERALD] = { icon = "INV_Misc_Gem_Emerald_01" },
    [K.OSAPPHIRE] = { icon = "INV_Misc_Gem_Sapphire_01" },
    [K.OCHEST] = { icon = "INV_Box_01" },
-   [K.ODAGGER] = { icon = "INV_Weapon_ShortBlade_01" },
+   -- weapons and armor: icons of WoW items of the same sort (from wowhead)
+   [K.ODAGGER] = { icon = "INV_Weapon_ShortBlade_05" },       -- Worn Dagger
    [K.OSPEAR] = { icon = "INV_Spear_02" },
-   [K.OFLAIL] = { icon = "INV_Mace_01" },
-   [K.OBATTLEAXE] = { icon = "INV_Axe_01" },
-   [K.OLONGSWORD] = { icon = "INV_Sword_04" },
-   [K.O2SWORD] = { icon = "INV_Sword_27" },
-   [K.OSWORD] = { icon = "INV_Sword_04" },
+   [K.OFLAIL] = { icon = "INV_Mace_01" },                     -- Flail
+   [K.OBATTLEAXE] = { icon = "INV_ThrowingAxe_05" },          -- Battle Axe
+   [K.OLONGSWORD] = { icon = "INV_Sword_23" },                -- Longsword
+   [K.O2SWORD] = { icon = "INV_Sword_40" },                   -- Claymore
+   [K.OSWORD] = { icon = "INV_Sword_22" },                    -- Teebu's Blazing Longsword (the sunsword)
+   [K.OSWORDofSLASHING] = { icon = "INV_Sword_36" },          -- Thrash Blade
+   [K.OSLAYER] = { icon = "INV_Sword_03" },                   -- Demonslayer
+   [K.OVORPAL] = { icon = "INV_Sword_25" },                   -- Dazzling Longsword
+   [K.OHAMMER] = { icon = "INV_Hammer_07" },                  -- Maul
+   [K.OLANCE] = { icon = "INV_Spear_07" },                    -- Dragonslayer's Lance
+   [K.OPSTAFF] = { icon = "INV_Staff_13" },                   -- Staff of Jordan
+   [K.OBELT] = { icon = "INV_Belt_09" },                      -- Belt of Might
    [K.OLEATHER] = { icon = "INV_Chest_Leather_01" },
-   [K.OSTUDLEATHER] = { icon = "INV_Chest_Leather_01" },
-   [K.ORING] = { icon = "INV_Chest_Chain" },
-   [K.OCHAIN] = { icon = "INV_Chest_Chain" },
+   [K.OSTUDLEATHER] = { icon = "INV_Chest_Leather_02" },      -- Bone-studded Leather
+   [K.ORING] = { icon = "INV_Chest_Chain_04" },               -- Striker's Ringmail
+   [K.OCHAIN] = { icon = "INV_Chest_Chain" },                 -- Chainmail Armor
    [K.OSPLINT] = { icon = "INV_Chest_Plate01" },
-   [K.OPLATE] = { icon = "INV_Chest_Plate01" },
+   [K.OPLATE] = { icon = "INV_Chest_Plate10" },               -- Heavy Mithril Breastplate
+   [K.OPLATEARMOR] = { icon = "INV_Chest_Plate10" },
+   [K.OSSPLATE] = { icon = "INV_Chest_Plate10" },
+   [K.OELVENCHAIN] = { icon = "INV_Chest_Chain_11" },         -- Earthfury Ringmail
    [K.OSHIELD] = { icon = "INV_Shield_04" },
 }
 

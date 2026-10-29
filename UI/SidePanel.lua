@@ -32,9 +32,9 @@ ns.side = side
 local GAP = 4
 local CELL = 3  -- minimap pixels per tile
 local EFFECT_SIZE, EFFECT_COLUMNS = 24, 8
-local STAT_W, STAT_H = 68, 15
+local STAT_W, STAT_H = 114, 14
 local SLOT_SIZE = 30
-local MINIMAP_H, PORTRAIT_H, STATS_H = K.MAXY * CELL + 22, 120, 196
+local MINIMAP_H, PORTRAIT_H, STATS_H = K.MAXY * CELL + 22, 120, 212
 
 local function Section(parent, height, title)
    local panel = ns.CreatePanel(parent)
@@ -69,37 +69,45 @@ local function Bar(parent, r, g, b)
    return bar
 end
 
--- What is shown under the bars, and what each thing does (from the way the game uses it).
+-- The character sheet under the bars, in the way of the WoW one: a gold label and a white value,
+-- in two columns with headings.  Each row explains itself in a tooltip.  A value in green is
+-- raised by a spell that is running.
 local function C(index) return G.c[index] end
 local function Strength() return C(K.STRENGTH) + C(K.STREXTRA) end
-local function Number(label, value) return format("%s %d", label, value) end
-local STAT_CELLS = {
-   { text = function() return Number(L["STR"], Strength()) end, title = function() return L["Strength"] end,
-     tip = L["Strength makes your hits stronger."] },
-   { text = function() return Number(L["INT"], C(K.INTELLIGENCE)) end, title = function() return L["Intelligence"] end,
-     tip = L["Intelligence makes your spells more likely to work."] },
-   { text = function() return Number(L["WIS"], C(K.WISDOM)) end, title = function() return L["Wisdom"] end,
-     tip = L["Wisdom makes your strongest spells, like phantasmal forces and finger of death, more likely to work."] },
-   { text = function() return Number(L["CON"], C(K.CONSTITUTION)) end, title = function() return L["Constitution"] end,
-     tip = L["Constitution gives you more hit points when you gain a level."] },
-   { text = function() return Number(L["DEX"], C(K.DEXTERITY)) end, title = function() return L["Dexterity"] end,
-     tip = L["Dexterity helps you hit monsters, and helps you avoid pits and trap doors."] },
-   { text = function() return Number(L["CHA"], C(K.CHARISMA)) end, title = function() return L["Charisma"] end,
-     tip = L["Charisma makes monsters more likely to be awed by you and not attack, and makes charm monster last longer."] },
-   { text = function() return Number(L["AC"], C(K.AC)) end, title = function() return L["Armor class"] end,
-     tip = L["A better armor class makes monsters miss more often and hurt you less."],
-     extra = function() return table.concat(ns.Equipment.summary(), "\n", 1, 1) end },
-   { text = function() return Number(L["WC"], C(K.WCLASS)) end, title = function() return L["Weapon class"] end,
-     tip = L["A better weapon class makes you hit more often and harder."],
-     extra = function() return table.concat(ns.Equipment.summary(), "\n", 2, 2) end },
-   { text = function() return Number(L["Level"], C(K.LEVEL)) end, title = function() return L["Level"] end,
-     tip = L["Your level goes up with experience.  Each level gives you more hit points and mana, and a new pack slot every second level."] },
-   { text = function() return Number(L["Gold"], C(K.GOLD)) end, title = function() return L["Gold"] end,
-     tip = L["Gold buys things in the town.  The bank keeps it safe, and what you have when the game ends is your score."],
-     extra = function() return format(L["In the bank: %d"], C(K.BANKACCOUNT)) end },
-   { wide = true, text = function() return format(L["%d mobuls left"], math.floor((K.TIMELIMIT - G.gtime) / 100)) end,
-     title = function() return L["Time left"] end,
-     tip = L["Your daughter's illness will not wait.  Bring the potion of cure dianthroritis home before the time runs out."] },
+local GREEN = { 0.1, 1, 0.1 }
+local STAT_COLUMNS = {
+   {
+      { heading = L["Attributes"] },
+      { label = L["Strength"], value = Strength, boost = function() return C(K.STREXTRA) > 0 end,
+        tip = L["Strength makes your hits stronger."] },
+      { label = L["Intelligence"], value = function() return C(K.INTELLIGENCE) end,
+        tip = L["Intelligence makes your spells more likely to work."] },
+      { label = L["Wisdom"], value = function() return C(K.WISDOM) end,
+        tip = L["Wisdom makes your strongest spells, like phantasmal forces and finger of death, more likely to work."] },
+      { label = L["Constitution"], value = function() return C(K.CONSTITUTION) end,
+        tip = L["Constitution gives you more hit points when you gain a level."] },
+      { label = L["Dexterity"], value = function() return C(K.DEXTERITY) end, boost = function() return C(K.DEXCOUNT) > 0 end,
+        tip = L["Dexterity helps you hit monsters, and helps you avoid pits and trap doors."] },
+      { label = L["Charisma"], value = function() return C(K.CHARISMA) end,
+        tip = L["Charisma makes monsters more likely to be awed by you and not attack, and makes charm monster last longer."] },
+   },
+   {
+      { heading = L["Combat"] },
+      { label = L["Armor class"], value = function() return C(K.AC) end,
+        tip = L["A better armor class makes monsters miss more often and hurt you less."],
+        extra = function() return table.concat(ns.Equipment.summary(), "\n", 1, 1) end },
+      { label = L["Weapon class"], value = function() return C(K.WCLASS) end,
+        tip = L["A better weapon class makes you hit more often and harder."],
+        extra = function() return table.concat(ns.Equipment.summary(), "\n", 2, 2) end },
+      { heading = L["General"] },
+      { label = L["Level"], value = function() return C(K.LEVEL) end,
+        tip = L["Your level goes up with experience.  Each level gives you more hit points and mana, and a new pack slot every second level."] },
+      { label = L["Gold"], value = function() return C(K.GOLD) end,
+        tip = L["Gold buys things in the town.  The bank keeps it safe, and what you have when the game ends is your score."],
+        extra = function() return format(L["In the bank: %d"], C(K.BANKACCOUNT)) end },
+      { label = L["Time left"], value = function() return format(L["%d mobuls"], math.floor((K.TIMELIMIT - G.gtime) / 100)) end,
+        tip = L["Your daughter's illness will not wait.  Bring the potion of cure dianthroritis home before the time runs out."] },
+   },
 }
 
 function side:Create(parent)
@@ -183,30 +191,42 @@ function side:Create(parent)
    self.exp = Bar(stats, 0.75, 0.6, 0.1)
    self.exp:SetPoint("TOPLEFT", self.spells, "BOTTOMLEFT", 0, -3)
    self.exp:SetPoint("TOPRIGHT", self.spells, "BOTTOMRIGHT", 0, -3)
-   -- the numbers under the bars: a cell for each, so each can explain itself
+   -- the sheet under the bars: a row for each, so each can explain itself
    self.cells = {}
-   for index, cell in ipairs(STAT_CELLS) do
-      local frame = CreateFrame("Frame", nil, stats)
-      local column, row = (index - 1) % 3, math.floor((index - 1) / 3)
-      frame:SetSize(cell.wide and STAT_W * 2 or STAT_W, STAT_H)
-      frame:SetPoint("TOPLEFT", self.exp, "BOTTOMLEFT", column * STAT_W, -6 - row * STAT_H)
-      frame:EnableMouse(true)
-      frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-      frame.text:SetPoint("LEFT")
-      frame.text:SetJustifyH("LEFT")
-      frame.cell = cell
-      frame:SetScript("OnEnter", function(self)
-         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-         GameTooltip:SetText(self.cell.title(), 1, 1, 1)
-         GameTooltip:AddLine(self.cell.tip, nil, nil, nil, true)
-         if self.cell.extra then
-            local extra = self.cell.extra()
-            if extra then GameTooltip:AddLine(extra, 0.6, 0.9, 0.6, true) end
+   for column, rows in ipairs(STAT_COLUMNS) do
+      for row, cell in ipairs(rows) do
+         local frame = CreateFrame("Frame", nil, stats)
+         frame:SetSize(STAT_W, STAT_H)
+         frame:SetPoint("TOPLEFT", self.exp, "BOTTOMLEFT", (column - 1) * (STAT_W + 4), -6 - (row - 1) * STAT_H)
+         if cell.heading then
+            frame.label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            frame.label:SetPoint("LEFT")
+            frame.label:SetText(cell.heading)
+            frame.cell = false
+         else
+            frame:EnableMouse(true)
+            frame.label = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+            frame.label:SetPoint("LEFT", 4, 0)
+            frame.label:SetText(cell.label)
+            frame.label:SetTextColor(1, 0.82, 0)
+            frame.value = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+            frame.value:SetPoint("RIGHT", -2, 0)
+            frame.value:SetJustifyH("RIGHT")
+            frame.cell = cell
+            frame:SetScript("OnEnter", function(self)
+               GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+               GameTooltip:SetText(self.cell.label, 1, 1, 1)
+               GameTooltip:AddLine(self.cell.tip, nil, nil, nil, true)
+               if self.cell.extra then
+                  local extra = self.cell.extra()
+                  if extra then GameTooltip:AddLine(extra, 0.6, 0.9, 0.6, true) end
+               end
+               GameTooltip:Show()
+            end)
+            frame:SetScript("OnLeave", GameTooltip_Hide)
          end
-         GameTooltip:Show()
-      end)
-      frame:SetScript("OnLeave", GameTooltip_Hide)
-      self.cells[index] = frame
+         self.cells[#self.cells + 1] = frame
+      end
    end
 
    local effects = Section(frame, 40, L["Effects"])
@@ -348,7 +368,14 @@ function side:UpdateStats()
    self:UpdateSlots()
 
    for _, frame in ipairs(self.cells) do
-      frame.text:SetText(frame.cell.text())
+      if frame.cell then
+         frame.value:SetText(frame.cell.value())
+         if frame.cell.boost and frame.cell.boost() then
+            frame.value:SetTextColor(GREEN[1], GREEN[2], GREEN[3])
+         else
+            frame.value:SetTextColor(1, 1, 1)
+         end
+      end
    end
 end
 
