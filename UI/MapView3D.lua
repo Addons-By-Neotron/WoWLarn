@@ -159,6 +159,13 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
          if frame.anim and self.SetAnimation then self:SetAnimation(frame.anim) end  -- (loading resets it)
          if MODEL_ROOM ~= 1 and self.SetModelScale then self:SetModelScale(1 / MODEL_ROOM) end  -- (and this)
          if self.SetCamDistanceScale then self:SetCamDistanceScale(frame.scale or 1) end  -- (and this)
+         frame.model.settle = 5  -- (the client sets up the camera of a model a little after it has loaded)
+      end)
+      frame.model:SetScript("OnUpdate", function(self)
+         if self.settle and self.settle > 0 then
+            self.settle = self.settle - 1
+            if self.SetCamDistanceScale then self:SetCamDistanceScale(frame.scale or 1) end
+         end
       end)
       if owner then
          owner.frame = frame
@@ -183,6 +190,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
          frame.model:SetDisplayInfo(look)
       end
       frame.facing, frame.anim = nil, nil
+      frame.model.settle = 5
    end
    anim = anim or ANIM.stand
    if frame.anim ~= anim then
@@ -197,6 +205,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    if frame.scale ~= scale then
       frame.scale = scale
       if frame.model.SetCamDistanceScale then frame.model:SetCamDistanceScale(scale) end
+      frame.model.settle = 5
    end
    -- a model is clipped to its frame and a dying one lies down wider than it stands, so
    -- every model gets a frame MODEL_ROOM times larger around the same centre, and is scaled
