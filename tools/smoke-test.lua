@@ -62,7 +62,7 @@ local function keys(s) for ch in s:gmatch(".") do ui:InjectKey(ch) end end
 ---------------------------------------------------------------- data
 check(#ns.MonsterData == 65, "65 monsters, got " .. #ns.MonsterData)
 check(K.PTREASURE == 20 and K.STRENGTH == 1 and K.OENTRANCE == 54, "shifted constants")
-check(ns.Tables.objectname[K.ODNDSTORE] == "the DND store", "object names")
+check(ns.Tables.objectname[K.ODNDSTORE] == "the DND Store", "object names")
 check(ns.Tables.class[1] == "novice explorer", "class titles")
 check(#ns.HelpPages == 5, "help pages")
 -- Lua 5.1 (unlike LuaJIT and 5.4) rejects a nested opening bracket inside a long string.
@@ -374,7 +374,7 @@ check(G.dead and alas == 1, "one death message, got " .. alas)
 Fresh(3); G.c[K.HP] = 10; ns.Player.losehp(3); check(G.c[K.HP] == 7 and not G.dead, "losehp"); ns.Player.losehp(7); check(G.dead, "dead at 0 hp")
 
 ---------------------------------------------------------------- items
-check(ns.Tables.potionname[K.PHEALING] == "healing" and ns.Tables.scrollname[K.SENCHANTARM] == "enchant armor", "names")
+check(ns.Tables.potionname[K.PHEALING] == "Healing" and ns.Tables.scrollname[K.SENCHANTARM] == "Enchant Armor", "names")
 check(ns.Tables.spelcode[1] == "pro" and ns.Tables.spelname[39] == "Permanence" and #ns.Fortunes > 30, "spell and fortune data")
 Fresh(3)
 for i = 1, K.IVENSIZE do G.iven[i], G.ivenarg[i] = 0, 0 end
@@ -412,9 +412,9 @@ check(ns.Player.dropObject(2) == false or true, "dropping nothing is fine")
 check(G.dropflag, "dropflag set")
 -- item names
 G.iven[1], G.ivenarg[1] = K.OPOTION, K.PHEALING
-check(ns.Player.itemName(1) == "magic potion" or ns.Player.itemName(1):find("potion"), "unknown potion name: " .. ns.Player.itemName(1))
+check(ns.Player.itemName(1) == "magic potion" or ns.Player.itemName(1):find("Potion"), "unknown potion name: " .. ns.Player.itemName(1))
 G.potionknown[K.PHEALING] = 1
-check(ns.Player.itemName(1):find("of healing"), "known potion name")
+check(ns.Player.itemName(1):find("of Healing"), "known potion name")
 G.iven[2], G.ivenarg[2] = K.OLONGSWORD, 2; G.c[K.WIELD] = 2
 check(ns.Player.itemName(2):find("%+2") and ns.Player.itemName(2):find("weapon in hand"), "weapon name: " .. ns.Player.itemName(2))
 -- enchanting
@@ -648,7 +648,7 @@ keys("l"); check(ui.wait == "key", "door asks"); keys("o")
 check(G.item[31][8] == K.OOPENDOOR or G.playerx == 30, "door opened or held")
 if G.item[31][8] == K.OOPENDOOR then keys("C"); check(true) end
 Clear(); G.item[30][8] = K.OOPENDOOR; keys("C"); check(G.item[30][8] == K.OCLOSEDDOOR, "closed the door")
-Clear(); G.item[31][8] = K.OTRAPDOOR; keys("^"); check((last() or ""):find("trapdoor"), "found the trap door: " .. tostring(last()) .. " wait=" .. tostring(ui.wait))
+Clear(); G.item[31][8] = K.OTRAPDOOR; keys("^"); check((last() or ""):find("Trapdoor"), "found the trap door: " .. tostring(last()) .. " wait=" .. tostring(ui.wait))
 -- a chest
 Clear(); G.item[31][8] = K.OCHEST; G.iarg[31][8] = 2; keys("l"); check(ui.wait == "key", "chest asks")
 keys("t"); check(G.iven[1] == K.OCHEST, "took the chest")

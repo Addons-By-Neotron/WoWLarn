@@ -29,11 +29,14 @@ SPELL_DESCRIPTION_FIXES = {
 }
 
 
-def title_case(text):
-    """The first letter of every word, except the small ones in the middle (as ns.TitleCase)."""
+def title_case(text, article=False):
+    """The first letter of every word, except the small ones in the middle (as ns.TitleCase).
+    With article, a leading "a", "an", "some" or "the" stays as it is ("a Dagger")."""
     small = {"of", "the", "a", "an", "and", "to", "in", "on", "for"}
     words = text.split(" ")
-    return " ".join(w if i and w in small else w[:1].upper() + w[1:] for i, w in enumerate(words))
+    keep = {"a", "an", "some", "the", "your"} if article else set()
+    return " ".join(w if (i and w in small) or (i == 0 and w in keep) else w[:1].upper() + w[1:]
+                    for i, w in enumerate(words))
 
 
 def defines(text):
@@ -155,7 +158,7 @@ def tables():
     for i, s in enumerate(strings):
         s = OBJECT_RENAMES.get(i, s)
         if s:
-            out.append(f"   [{i}] = {lua_string(s)},")
+            out.append(f"   [{i}] = {lua_string(title_case(s, True))},")
     out.append("}\n")
 
     body = section(data, "char monstlevel[]", ";")
@@ -169,7 +172,7 @@ def tables():
         names = [n.strip() for n in re.findall(r'"([^"]*)"', body)]
         assert len(names) == count, (var, len(names))
         out.append(f"-- T.{lua}[id]: empty for the unused ids.")
-        out.append(f"T.{lua} = {{" + ", ".join(lua_string(n) for n in names) + "}\n")
+        out.append(f"T.{lua} = {{" + ", ".join(lua_string(title_case(n)) for n in names) + "}\n")
     code = re.findall(r'"(\w+)"', section(data, "char *spelcode[]", "};"))
     names = re.findall(r'"([^"]*)"', re.sub(r"/\*.*?\*/", "", section(data, "char *spelname[]", "};")))
     desc = re.findall(r'"([^"]*)"', re.sub(r"/\*.*?\*/", "", section(data, "char *speldescript[]", "};")))
