@@ -70,6 +70,9 @@ function ItemInfo.quality(id, arg)
    if (id == K.OPOTION and G.potionknown[arg] == 0) or (id == K.OSCROLL and G.scrollknown[arg] == 0) then
       return COMMON  -- (do not give away what it is)
    end
+   if GEMS[id] and not G.gemsSold[id] then
+      return COMMON  -- (a gem is only known for what it is worth once the bank has bought one of its kind)
+   end
    if ENCHANTABLE[id] then  -- armor and weapons go by their enchantment
       local quality = arg < 0 and POOR or arg == 0 and COMMON or arg < 5 and UNCOMMON or RARE
       if AT_LEAST[id] then  -- (a special weapon is a grade better: rare, epic from +5)
@@ -187,7 +190,6 @@ function ItemInfo.lines(id, arg)
       lines[#lines + 1] = effect
       lines[#lines + 1] = L["Works as long as you carry it."]
    end
-   if GEMS[id] and G.gemsSold[id] then lines[#lines + 1] = format(L["The bank pays %d gold for it."], arg * 100) end
    if MISC[id] then lines[#lines + 1] = MISC[id] end
    if POWER[id] and ItemInfo.isDiscovered(id) then lines[#lines + 1] = POWER[id] end
    return lines

@@ -298,12 +298,14 @@ local function GemValue(slot)
    return 0
 end
 
-local function GemRows()
+-- The Eye of Larn is worth what the bank says after it has appraised it (Appraise), not before.
+local function GemRows(eyeKnown)
    local rows = {}
    for slot = 1, K.IVENSIZE do
       if GEMS[iven[slot]] then
+         local price = (iven[slot] == K.OLARNEYE and not eyeKnown) and "?" or format("%6d", GemValue(slot))
          rows[#rows + 1] = { key = Letter(slot), text = ns.Player.itemName(slot),
-            price = format("%6d", GemValue(slot)), icon = iven[slot], arg = ivenarg[slot] }
+            price = price, icon = iven[slot], arg = ivenarg[slot] }
       end
    end
    return rows
@@ -331,6 +333,7 @@ local function Appraise(slot)
    else
       Say(L["It is, of course, your privilege to keep the stone."])
    end
+   return true
 end
 
 -- C: obank(), obank2(), banktitle() and obanksub().
@@ -346,8 +349,9 @@ function Town.bank(branch)
    Interest()  -- credit any needed interest
    if G.level == 8 then c[K.TELEFLAG] = 0 end
 
+   local eyeKnown = false  -- (set once the bank has appraised the Eye of Larn)
    local function Show()
-      store:SetRows(GemRows())
+      store:SetRows(GemRows(eyeKnown))
       local text = format(L["You have %s in the bank."], Gold(c[K.BANKACCOUNT])) .. "   "
          .. format(L["You have %s."], Gold(c[K.GOLD]))
       if c[K.BANKACCOUNT] + c[K.GOLD] >= 500000 then
@@ -360,7 +364,7 @@ function Town.bank(branch)
    for slot = 1, K.IVENSIZE do
       if iven[slot] == K.OLARNEYE then
          Show()
-         Appraise(slot)
+         eyeKnown = Appraise(slot) or false
          break
       end
    end
