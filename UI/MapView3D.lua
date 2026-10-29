@@ -213,6 +213,7 @@ end
 
 map3d.Model = Model  -- (the monster zoo draws with it)
 map3d.MODEL_ASPECT = MODEL_ASPECT
+map3d.Begin, map3d.Finish = Begin, Finish
 
 local function Glyph(layer, text, color, x, y, size)
    layer.usedGlyphs = layer.usedGlyphs + 1
@@ -268,6 +269,26 @@ local function Shadow(layer, wx, wy, radius)
    if ax and bx and cx and dx then
       Quad(layer, SHADOW_COLOR, ax, ay - lift, bx, by - lift, cx, cy - lift, dx, dy - lift, SHADOW)
    end
+end
+
+-- A tile with a creature (a display, or "player") on it, as the map draws them, for the
+-- monster zoo: the centre of the tile is at (sx, sy) in the view of layer, zoom times larger.
+function map3d.DrawTile(layer, look, sx, sy, zoom, floorColor)
+   local angle = ns.mod.db.profile.cameraAngle or 55
+   SIN, COS = math.sin(math.rad(angle)), math.cos(math.rad(angle))
+   CAMERA_BACK, CAMERA_HEIGHT = CAMERA_DISTANCE * COS, CAMERA_DISTANCE * SIN
+   FOCAL = CAMERA_DISTANCE * TILE_PIXELS * zoom / TILE
+   camera.centerX, camera.centerY, camera.x, camera.y = sx, sy, 0, CAMERA_BACK
+   local half = TILE / 2
+   local ax, ay = Project(-half, -half, 0)
+   local bx, by = Project(half, -half, 0)
+   local cx, cy = Project(half, half, 0)
+   local dx, dy = Project(-half, half, 0)
+   if ax and bx and cx and dx then Quad(layer, floorColor, ax, ay, bx, by, cx, cy, dx, dy) end
+   Shadow(layer, 0, 0, TILE * 0.42)
+   local mx, my, scale = Project(0, 0, 0)
+   local width = (look == "player" and TILE * 1.1 or TILE * 0.9) * scale
+   Model(layer, look, mx, my + TILE * (look == "player" and 0.1 or 0.05) * scale, width, FACING)
 end
 
 ----------------------------------------------------------------

@@ -28,6 +28,8 @@ ns.zoo = zoo
 
 local COLUMNS, TILE_W, CELL_W, CELL_H = 13, 50, 64, 118
 local ZOOMS = { 1, 1.5, 2 }
+local SHADOW = "Interface\\AddOns\\WoWLarn\\Media\\Shadow"
+local FLOOR = { 0.28, 0.27, 0.25, 1 }
 
 function zoo:Create()
    local V = ns.Visuals
@@ -44,13 +46,14 @@ function zoo:Create()
    frame:Hide()
    tinsert(UISpecialFrames, "WoWLarnZoo")
    self.frame = frame
-   self.zoom, self.looks = 1, {}
+   self.zoom, self.looks, self.flat = 1, {}, false
 
    -- the models hang on one layer, in the same pool the map uses
    self.layer = CreateFrame("Frame", nil, frame)
    self.layer:SetPoint("TOPLEFT", 8, -8)
    self.layer:SetPoint("BOTTOMRIGHT", -8, 36)
-   self.layer.models, self.layer.usedModels = {}, 0
+   self.layer.quads, self.layer.icons, self.layer.glyphs, self.layer.models = {}, {}, {}, {}
+   self.layer.usedQuads, self.layer.usedIcons, self.layer.usedGlyphs, self.layer.usedModels = 0, 0, 0, 0
 
    self.cells = {}
    for id = 0, K.LUCIFER do  -- (0: the player, for the size to compare with)
@@ -58,7 +61,10 @@ function zoo:Create()
       cell:SetSize(CELL_W, CELL_H)
       cell:SetPoint("TOPLEFT", (id % COLUMNS) * CELL_W, -math.floor(id / COLUMNS) * CELL_H)
       cell.floor = cell:CreateTexture(nil, "BACKGROUND")
-      cell.floor:SetColorTexture(0.25, 0.25, 0.28, 0.9)
+      cell.floor:SetColorTexture(FLOOR[1], FLOOR[2], FLOOR[3], 1)
+      cell.shadow = cell:CreateTexture(nil, "BORDER")
+      cell.shadow:SetTexture(SHADOW)
+      cell.shadow:SetVertexColor(0, 0, 0, 0.6)
       cell.label = cell:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
       cell.label:SetPoint("BOTTOM", 0, 2)
       cell.label:SetWidth(CELL_W - 2)
@@ -77,34 +83,51 @@ function zoo:Create()
       return button
    end
    Button(L["Re-draw"], 70, 8, function() self:Redraw() end)
-   self.zoomButton = Button("x1", 40, 82, function()
+   self.modeButton = Button("2.5D", 50, 82, function()
+      self.flat = not self.flat
+      self.modeButton:SetText(self.flat and "2.5D" or L["Flat"])
+      self:Update()
+   end)
+   self.modeButton:SetText(L["Flat"])
+   self.zoomButton = Button("x1", 40, 136, function()
       local index = 1
       for i, zoom in ipairs(ZOOMS) do if zoom == self.zoom then index = i end end
       self.zoom = ZOOMS[index % #ZOOMS + 1]
       self.zoomButton:SetText("x" .. self.zoom)
       self:Update()
    end)
-   Button(L["Close"], 50, 126, function() frame:Hide() end)
+   Button(L["Close"], 50, 180, function() frame:Hide() end)
    frame:SetScript("OnShow", function() self:Update() end)
 end
 
--- Draws every monster; the models are placed afresh, so a new look shows at once.
+-- Draws every monster, in the 2.5D view of the map or flat; the models are placed afresh, so
+-- a new look shows at once.
 function zoo:Update()
    local V, map3d = ns.Visuals, ns.map3d
    local layer = self.layer
-   layer.usedModels = 0
-   local width = TILE_W * self.zoom
+   map3d.Begin(layer)
+   -- larger, but not larger than the screen
+   self.frame:SetScale(math.min(self.zoom, UIParent:GetWidth() / self.frame:GetWidth(), UIParent:GetHeight() / self.frame:GetHeight()))
+   local width = TILE_W
    for id, cell in pairs(self.cells) do
-      cell.floor:ClearAllPoints()
-      cell.floor:SetSize(width, width * 0.5)
-      cell.floor:SetPoint("BOTTOM", 0, 16)
       local look = id == 0 and "player" or V.MonsterDisplay(id, self.looks[id] or 1)
-      if look then
-         local x, y = (id % COLUMNS) * CELL_W + CELL_W / 2, (math.floor(id / COLUMNS) + 1) * CELL_H - 16 - width * 0.25
-         map3d.Model(layer, look, x, y, width * (id == 0 and 1.2 or 1), 0)
+      local column, row = id % COLUMNS, math.floor(id / COLUMNS)
+      local x, y = column * CELL_W + CELL_W / 2, (row + 1) * CELL_H - 16  -- (the bottom of the tile)
+      cell.floor:SetShown(self.flat)
+      cell.shadow:SetShown(self.flat and look ~= nil and ns.mod.db.profile.shadows ~= false)
+      if self.flat then
+         cell.floor:ClearAllPoints()
+         cell.floor:SetSize(width, width * 0.5)
+         cell.floor:SetPoint("BOTTOM", 0, 16)
+         cell.shadow:ClearAllPoints()
+         cell.shadow:SetSize(width * 0.84, width * 0.42)
+         cell.shadow:SetPoint("BOTTOM", 0, 16 + width * 0.04)
+         if look then map3d.Model(layer, look, x, y - width * 0.25, width * (id == 0 and 1.2 or 1), 0) end
+      elseif look then
+         map3d.DrawTile(layer, look, x, y - width * 0.25, 1, FLOOR)
       end
    end
-   for index = layer.usedModels + 1, #layer.models do layer.models[index]:Hide() end
+   map3d.Finish(layer)
 end
 
 -- Other looks for the monsters that have several.
