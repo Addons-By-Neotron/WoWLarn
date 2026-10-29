@@ -244,7 +244,7 @@ function Monster.hitm(x, y, amt, hitmsg)
       if monst == K.WHITEDRAGON or monst == K.REDDRAGON or monst == K.GREENDRAGON
          or monst == K.BRONZEDRAGON or monst == K.PLATINUMDRAGON or monst == K.SILVERDRAGON then
          amt = amt * 3
-         ns.ItemInfo.discover(K.OORBOFDRAGON)
+         ns.ItemInfo.discover(K.OORBOFDRAGON, G.lastmonst)
       end
    end
 
@@ -266,7 +266,7 @@ function Monster.hitm(x, y, amt, hitmsg)
       if c[K.LANCEDEATH] ~= 0 then amt = 300 end
       if wielded == K.OSLAYER then
          amt = 10000
-         ns.ItemInfo.discover(K.OSLAYER)
+         ns.ItemInfo.discover(K.OSLAYER, G.lastmonst)
       end
    end
 
@@ -412,7 +412,7 @@ function Monster.spattack(x, xx, yy)
    -- with the cube of undead control, wraiths and vampires do nothing
    if monst == K.WRAITH or monst == K.VAMPIRE then
       if c[K.CUBEofUNDEAD] ~= 0 or c[K.UNDEADPRO] ~= 0 then
-         if c[K.CUBEofUNDEAD] ~= 0 then ns.ItemInfo.discover(K.OCUBEofUNDEAD) end
+         if c[K.CUBEofUNDEAD] ~= 0 then ns.ItemInfo.discover(K.OCUBEofUNDEAD, G.lastmonst) end
          return false
       end
    end
@@ -507,7 +507,7 @@ function Monster.spattack(x, xx, yy)
 
    elseif x == 8 then
       if c[K.NOTHEFT] ~= 0 then  -- he has a device of no theft
-         ns.ItemInfo.discover(K.ONOTHEFT)
+         ns.ItemInfo.discover(K.ONOTHEFT, G.lastmonst)
          return false
       end
       if c[K.GOLD] ~= 0 then
@@ -558,7 +558,7 @@ function Monster.spattack(x, xx, yy)
 
    elseif x == 14 then
       if c[K.NOTHEFT] ~= 0 then  -- he has a device of no theft
-         ns.ItemInfo.discover(K.ONOTHEFT)
+         ns.ItemInfo.discover(K.ONOTHEFT, G.lastmonst)
          return false
       end
       if Player.emptyHanded() then
@@ -637,7 +637,7 @@ function Monster.hitplayer(x, y)
    if c[K.NEGATESPIRIT] ~= 0 or c[K.SPIRITPRO] ~= 0 then
       if mster == K.POLTERGEIST or mster == K.SPIRITNAGA then
          dam = Trunc(dam / 2)
-         if c[K.NEGATESPIRIT] ~= 0 then ns.ItemInfo.discover(K.OSPIRITSCARAB) end
+         if c[K.NEGATESPIRIT] ~= 0 then ns.ItemInfo.discover(K.OSPIRITSCARAB, G.lastmonst) end
       end
    end
 
@@ -645,7 +645,7 @@ function Monster.hitplayer(x, y)
    if c[K.CUBEofUNDEAD] ~= 0 or c[K.UNDEADPRO] ~= 0 then
       if mster == K.VAMPIRE or mster == K.WRAITH or mster == K.ZOMBIE then
          dam = Trunc(dam / 2)
-         if c[K.CUBEofUNDEAD] ~= 0 then ns.ItemInfo.discover(K.OCUBEofUNDEAD) end
+         if c[K.CUBEofUNDEAD] ~= 0 then ns.ItemInfo.discover(K.OCUBEofUNDEAD, G.lastmonst) end
       end
    end
 

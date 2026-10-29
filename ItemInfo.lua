@@ -162,10 +162,27 @@ function ItemInfo.isDiscovered(id)
    return Discoveries()[id] or false
 end
 
--- Called when the power of an object has just shown itself.
-function ItemInfo.discover(id)
+-- What is said the first time the power shows itself (the name is that of the monster, if any).
+local SEEN = {
+   [K.OVORPAL] = L["The Vorpal Blade sings through the air!"],
+   [K.OLANCE] = L["Your Lance of Death strikes with deadly force!"],
+   [K.OSLAYER] = L["Slayer cuts down the %s as if it were nothing!"],
+   [K.OHANDofFEAR] = L["The %s stumbles away in fear at the sight of your Hand of Fear!"],
+   [K.ONOTHEFT] = L["The %s can't get at your belongings, thanks to your Device of Theft-Prevention!"],
+   [K.OSPHTALISMAN] = L["The sphere of annihilation passes harmlessly through you, thanks to your Talisman of the Sphere!"],
+   [K.OORBOFDRAGON] = L["Your Orb of Dragon Slaying makes your blow hurt the %s far more!"],
+   [K.OSPIRITSCARAB] = L["Your Scarab of Negate Spirit weakens the %s's attack!"],
+   [K.OCUBEofUNDEAD] = L["Your Cube of Undead Control keeps the %s at bay!"],
+   [K.OAMULET] = L["Your Amulet of Invisibility makes the spell last much longer!"],
+   [K.OLARNEYE] = L["The Eye of Larn lets you see the %s through the dark!"],
+   [K.OWWAND] = L["Your Wand of Wonder lifts you clear of the danger!"],
+}
+
+-- Called when the power of an object has just shown itself; name is the monster it is about.
+function ItemInfo.discover(id, name)
    if not POWER[id] or Discoveries()[id] then return end
    Discoveries()[id] = true
+   ns.ui:Message(SEEN[id], name or "")
    ns.ui:Message(L["You have found out what %s can do!"], ns.Tables.objectname[id])
 end
 

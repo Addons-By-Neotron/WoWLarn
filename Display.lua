@@ -52,7 +52,7 @@ function Display.visibleMonster(x, y)
       return 0
    elseif id >= K.DEMONLORD and id <= K.LUCIFER then
       if c[K.EYEOFLARN] == 0 then return 0 end
-      ns.ItemInfo.discover(K.OLARNEYE)
+      ns.ItemInfo.discover(K.OLARNEYE, G.monster[id].name)
    end
    return id
 end

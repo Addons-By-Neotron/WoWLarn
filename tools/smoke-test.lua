@@ -1061,7 +1061,7 @@ G.c[K.GIANTSTR] = 0
 check(not ns.ItemInfo.isDiscovered(K.OVORPAL), "vorpal blade not discovered at first")
 LOG = {}
 ns.ItemInfo.discover(K.OVORPAL); ns.ItemInfo.discover(K.OVORPAL)
-check(ns.ItemInfo.isDiscovered(K.OVORPAL) and #LOG <= 1, "discovered once")
+check(ns.ItemInfo.isDiscovered(K.OVORPAL) and #LOG <= 2, "discovered once")
 local found = false
 for _, line in ipairs(ns.ItemInfo.lines(K.OVORPAL, 0)) do if line:find("behead") then found = true end end
 check(found, "the tooltip tells what the blade does once discovered")
