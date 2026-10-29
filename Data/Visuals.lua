@@ -151,7 +151,14 @@ end
 -- Whether the client has a display (some are only in the newer clients).  A display is
 -- tried on a model that is never shown; the answer is kept.  One that is not known at once
 -- is tried again when its model has loaded, and the map is drawn again then.
-local usable, probe = {}, nil
+-- A display the client does not know is shown as a placeholder model (it has a model file id
+-- too), so the file of a display that cannot exist is learned first and counts as "not there".
+local usable, probe, missing = {}, nil, nil
+local NO_SUCH_DISPLAY = 99999999
+local function Has(model)
+   local file = model.GetModelFileID and model:GetModelFileID()
+   return file ~= nil and file ~= 0 and file ~= missing
+end
 local function Usable(display)
    if usable[display] ~= nil then return usable[display] end
    if not probe then
@@ -159,16 +166,20 @@ local function Usable(display)
       probe:SetSize(8, 8)
       probe:SetPoint("TOPLEFT", UIParent, "BOTTOMRIGHT", 100, -100)  -- (off screen)
       probe:SetScript("OnModelLoaded", function(model)
-         if model.display and not usable[model.display] then
+         if model.display == NO_SUCH_DISPLAY then
+            missing = model.GetModelFileID and model:GetModelFileID()
+         elseif model.display and not usable[model.display] and Has(model) then
             usable[model.display] = true
             ns.ui:Refresh("map")
          end
       end)
+      probe.display = NO_SUCH_DISPLAY
+      probe:SetDisplayInfo(NO_SUCH_DISPLAY)
+      missing = probe.GetModelFileID and probe:GetModelFileID()
    end
    probe.display = display
    if display < 0 then probe:SetModel(-display) else probe:SetDisplayInfo(display) end
-   local file = probe.GetModelFileID and probe:GetModelFileID()
-   usable[display] = (not probe.GetModelFileID) or (file ~= nil and file ~= 0)
+   usable[display] = (not probe.GetModelFileID) or Has(probe)
    return usable[display]
 end
 
