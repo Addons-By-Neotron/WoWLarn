@@ -672,6 +672,7 @@ do
       G.c[K.INTELLIGENCE], G.c[K.WISDOM], G.c[K.CHARISMA], G.c[K.LEVEL] = 25, 25, 25, 40
       G.c[K.HP], G.c[K.HPMAX] = 5000, 5000
       G.c[K.CONFUSE], G.c[K.BLINDCOUNT], G.c[K.TIMESTOP], G.c[K.HOLDMONST], G.c[K.CANCELLATION] = 0, 0, 0, 0, 0
+      G.c[K.HASTESELF] = 0
    end
    local function Cast(name, dir)
       local code = Code(name)
@@ -787,7 +788,10 @@ do
    -- spheres of annihilation
    Arena(); G.wizard = true; Cast("sphere of annihilation", "l"); G.wizard = false  -- (1 in 23 casts kills the caster)
    check(#G.spheres == 1 and G.c[K.SPHCAST] == 1 and G.item[G.spheres[1].x][G.spheres[1].y] == K.OANNIHILATION, "a sphere is made")
+   local px, py = G.playerx, G.playery
+   G.playerx, G.playery = 60, 15  -- (the sphere wanders at random; keep it from running into the player)
    for _ = 1, 6 do ns.Sphere.movsphere() end
+   G.playerx, G.playery = px, py
    check(#G.spheres == 1, "the sphere moves on")
    local found = 0; for x = 1, K.MAXX do for y = 1, K.MAXY do if G.item[x][y] == K.OANNIHILATION then found = found + 1 end end end
    check(found == 1, "one sphere on the level, found " .. found)
