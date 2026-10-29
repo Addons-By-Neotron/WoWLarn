@@ -65,6 +65,7 @@ local function Facing(dir)
 end
 local function Sign(value) return value > 0 and 1 or value < 0 and -1 or 0 end
 local MODEL_ASPECT = 1.7  -- how much taller than wide a model is drawn
+local SETTLE = 3  -- seconds a model gets its camera scale set again after loading
 local MODEL_ROOM = 1  -- (see Model; above 1 the models are scaled down in larger frames, which proved unreliable)
 local ANIM = { stand = 0, death = 1, walk = 4, wound = 14, attack = 16 }  -- model animations
 local TWEEN = 0.16  -- seconds a step takes
@@ -159,12 +160,11 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
          if frame.anim and self.SetAnimation then self:SetAnimation(frame.anim) end  -- (loading resets it)
          if MODEL_ROOM ~= 1 and self.SetModelScale then self:SetModelScale(1 / MODEL_ROOM) end  -- (and this)
          if self.SetCamDistanceScale then self:SetCamDistanceScale(frame.scale or 1) end  -- (and this)
-         frame.model.settle = 5  -- (the client sets up the camera of a model a little after it has loaded)
+         self.settleUntil = GetTime() + SETTLE  -- (the client sets up the camera of a model after it has loaded)
       end)
       frame.model:SetScript("OnUpdate", function(self)
-         if self.settle and self.settle > 0 then
-            self.settle = self.settle - 1
-            if self.SetCamDistanceScale then self:SetCamDistanceScale(frame.scale or 1) end
+         if self.settleUntil and self.settleUntil > GetTime() and self.SetCamDistanceScale then
+            self:SetCamDistanceScale(frame.scale or 1)
          end
       end)
       if owner then
@@ -190,7 +190,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
          frame.model:SetDisplayInfo(look)
       end
       frame.facing, frame.anim = nil, nil
-      frame.model.settle = 5
+      frame.model.settleUntil = GetTime() + SETTLE
    end
    anim = anim or ANIM.stand
    if frame.anim ~= anim then
@@ -200,12 +200,6 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    if frame.facing ~= facing then
       frame.facing = facing
       frame.model:SetFacing(facing)
-   end
-   local scale = look ~= "player" and V.Scale(look) * V.Room(look) or 1  -- (a larger frame, the camera further back)
-   if frame.scale ~= scale then
-      frame.scale = scale
-      if frame.model.SetCamDistanceScale then frame.model:SetCamDistanceScale(scale) end
-      frame.model.settle = 5
    end
    -- a model is clipped to its frame and a dying one lies down wider than it stands, so
    -- every model gets a frame MODEL_ROOM times larger around the same centre, and is scaled
@@ -218,6 +212,13 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    frame:SetSize(width * k * room, width * k * room * MODEL_ASPECT)
    -- (every time: the client resets the scale when it reloads or restarts the model)
    if k ~= 1 and frame.model.SetModelScale then frame.model:SetModelScale(1 / k) end
+   -- (after the size: the client sets up the camera again when a frame is resized)
+   local scale = look ~= "player" and V.Scale(look) * V.Room(look) or 1  -- (a larger frame, the camera further back)
+   if frame.scale ~= scale then
+      frame.scale = scale
+      if frame.model.SetCamDistanceScale then frame.model:SetCamDistanceScale(scale) end
+      frame.model.settleUntil = GetTime() + SETTLE
+   end
    frame:Show()
 end
 
