@@ -383,7 +383,7 @@ end
 -- Armour class changed from the original: the higher it is, the easier the monster is to hit.
 -- The rats (armour class 0) took 10 to 20 swings early on.
 V.MONSTER_AC = {
-   [K.LEMMING] = 14,
+   [K.LEMMING] = 10,
 }
 for id, ac in pairs(V.MONSTER_AC) do
    ns.MonsterData[id].armorclass = ac

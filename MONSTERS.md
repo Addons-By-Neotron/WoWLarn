@@ -16,7 +16,7 @@ ones at difficulty 0; a higher difficulty scales hit points, damage and gold.
 
 | # | Monster | Depth | HP | AC | Hits | INT | Special attack | Gold | XP | Look |
 |--:|---|---|--:|--:|--:|--:|---|--:|--:|---|
-| 1 | rat (lemming) | 1-4 | 0 | 14 | 0 | 3 |  | 0 | 1 | 1141, 1418 |
+| 1 | rat (lemming) | 1-4 | 0 | 10 | 0 | 3 |  | 0 | 1 | 1141, 1418 |
 | 2 | gnome | 1-4 | 2 | 10 | 1 | 8 |  | 30 | 2 | 6920-6931 |
 | 3 | hobgoblin | 1-4 | 3 | 13 | 2 | 5 |  | 25 | 2 | 30244, 30261-30267 |
 | 4 | hyena (jackal) | 1-4 | 1 | 7 | 1 | 4 |  | 0 | 1 | 10902-10903, 1536, 2710, 2712, 2713, 2714, 1535, 12966 |
