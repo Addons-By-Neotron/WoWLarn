@@ -105,6 +105,9 @@ function Save.unpack(data)
    for id, name in pairs(ns.Visuals.MONSTER_NAME) do  -- (renamed since the game was saved)
       if G.monster[id] then G.monster[id].name = name end
    end
+   for id, ac in pairs(ns.Visuals.MONSTER_AC) do
+      if G.monster[id] then G.monster[id].armorclass = ac end
+   end
    G.gemsSold = G.gemsSold or {}  -- (saves from before this was kept)
    G.levels = {}
    for index, packed in pairs(data.levels) do

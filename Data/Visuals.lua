@@ -380,6 +380,15 @@ for id, name in pairs(V.MONSTER_NAME) do
    ns.MonsterData[id].name = name
 end
 
+-- Armour class changed from the original: the higher it is, the easier the monster is to hit.
+-- The critters (armour class 0) took 10 to 20 swings early on.
+V.MONSTER_AC = {
+   [K.LEMMING] = 14,
+}
+for id, ac in pairs(V.MONSTER_AC) do
+   ns.MonsterData[id].armorclass = ac
+end
+
 -- The display of a monster; look is the number it was given by chance (Draw: G.look).
 function V.MonsterDisplay(id, look)
    local own = ns.mod.db.global.displays

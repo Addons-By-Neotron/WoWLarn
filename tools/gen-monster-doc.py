@@ -40,6 +40,9 @@ ATTACK = {
 # the names the addon uses where they differ, and the looks in Data/Visuals.lua
 visuals = (ROOT / "Data" / "Visuals.lua").read_text()
 renamed = dict((k, v) for k, v in re.findall(r"\[K\.([A-Z]+)\] = L\[\"([^\"]+)\"\]", visuals))
+# armour classes the addon changed from the original (V.MONSTER_AC)
+armor = dict((k, int(v)) for k, v in re.findall(r"\[K\.([A-Z]+)\] = (\d+),", visuals[visuals.index("V.MONSTER_AC = {"):]
+                                                  .split("}")[0]))
 looks = {}
 block = visuals[visuals.index("V.DISPLAY = {"):visuals.index("V.MONSTER_SOUND = {")]
 block = block[:block.rindex("\n}")]  # (the table ends at its closing brace)
@@ -88,6 +91,7 @@ def table(title, selected):
     for r in selected:
         k = key_of(r)
         look = pretty(looks.get(k, "-")) if k else "-"
+        ac = armor.get(k, r["ac"])
         special = ATTACK.get(r["att"], str(r["att"]))
         if r["flags"] & 4:
             special = (special + "; " if special else "") + "no beheading"
@@ -95,7 +99,7 @@ def table(title, selected):
         name = r["name"]
         if k in renamed:
             name = f"{renamed[k]} ({name})"
-        out.append(f"| {r['id']} | {name} | {depth} | {r['hp']} | {r['ac']} | {r['dam']} | {r['intel']} | "
+        out.append(f"| {r['id']} | {name} | {depth} | {r['hp']} | {ac} | {r['dam']} | {r['intel']} | "
                    f"{special} | {r['gold']} | {r['xp']} | {look} |")
     out.append("")
     return out
