@@ -133,7 +133,7 @@ end
 -- Flat tiles or the 2.5D view.
 function mod:ToggleView()
    self.db.profile.view = self.db.profile.view == "3d" and "flat" or "3d"
-   ns.ui:Refresh("map")
+   ns.ui:RefreshNow("map")
    if ns.bar.UpdateView then ns.bar:UpdateView() end
 end
 

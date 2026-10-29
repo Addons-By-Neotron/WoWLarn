@@ -65,7 +65,7 @@ local function BuildOptions()
                values = { flat = L["Flat tiles"], ["3d"] = L["2.5D"] },
                set = function(_, value)
                   mod.db.profile.view = value
-                  ns.ui:Refresh("map")
+                  ns.ui:RefreshNow("map")
                end,
             },
             difficulty = {
@@ -103,7 +103,7 @@ local function BuildOptions()
                get = function() return mod.db.profile.shadows ~= false end,
                set = function(_, value)
                   mod.db.profile.shadows = value
-                  ns.ui:Refresh("map")
+                  ns.ui:RefreshNow("map")
                end,
             },
             races = {
@@ -119,7 +119,7 @@ local function BuildOptions()
                order = 17,
                set = function(_, value)
                   mod.db.profile.ascii = value
-                  ns.ui:Refresh("map")
+                  ns.ui:RefreshNow("map")
                end,
             },
             cameraAngle = {
@@ -131,7 +131,7 @@ local function BuildOptions()
                get = function() return mod.db.profile.cameraAngle or 55 end,
                set = function(_, value)
                   mod.db.profile.cameraAngle = value
-                  ns.ui:Refresh("map")
+                  ns.ui:RefreshNow("map")
                end,
             },
             models = {
@@ -142,7 +142,7 @@ local function BuildOptions()
                get = function() return mod.db.profile.models ~= false end,
                set = function(_, value)
                   mod.db.profile.models = value
-                  ns.ui:Refresh("map")
+                  ns.ui:RefreshNow("map")
                end,
             },
             minimap = {

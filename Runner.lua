@@ -201,6 +201,12 @@ function ui:Refresh(what)
    end
 end
 
+-- Refresh and draw right away, for changes made outside the game loop (options, buttons).
+function ui:RefreshNow(what)
+   self:Refresh(what)
+   if ns.map.cols then self:Flush() end
+end
+
 function ui:Flush()
    local dirty = self.dirty
    if dirty.map then
