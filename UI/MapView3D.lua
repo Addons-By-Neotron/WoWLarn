@@ -215,7 +215,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    -- down by the same factor to look the same size (always, so nothing changes when it dies)
    local k = MODEL_ROOM
    local room = look ~= "player" and V.Room(look) or 1
-   y = y + (V.LOWER[look] or 0) * width
+   y = y + (look ~= "player" and V.Lower(look) or 0) * width
    frame:ClearAllPoints()
    frame:SetPoint("CENTER", layer, "TOPLEFT", x, -(y - width * MODEL_ASPECT / 2))
    frame:SetSize(width * k * room, width * k * room * MODEL_ASPECT)

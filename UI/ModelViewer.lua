@@ -93,6 +93,8 @@ function viewer:Create()
    Button(L["Sync all"], 70, 260, 100, function() self:Sync() end)
    Button(L["< Turn"], 56, 8, 130, function() self:Turn(-math.pi / 12) end)
    Button(L["Turn >"], 56, 68, 130, function() self:Turn(math.pi / 12) end)
+   Button(L["Up"], 40, 130, 130, function() self:Lower(-0.02) end)
+   Button(L["Down"], 48, 174, 130, function() self:Lower(0.02) end)
 
    -- the sounds of the monster (its own, else the default ones), and any sound kit
    local sounds = { { "attack", L["Attack"] }, { "wound", L["Wound"] }, { "die", L["Die"] }, { "special", L["Special"] } }
@@ -223,13 +225,24 @@ function viewer:Turn(by)
    self:Refresh()
 end
 
--- Gives every look of this monster the size, room and turn of the one shown.
+-- Moves the model of this display up or down against its shadow (as a fraction of its width,
+-- positive is down); kept in the saved variables and shown, to be put in V.LOWER.
+function viewer:Lower(by)
+   local lower = math.floor((ns.Visuals.Lower(self.display) + by) * 1000 + 0.5) / 1000
+   ns.mod.db.global.lowers[self.display] = lower
+   ns.mod:Print(format("display %d: lower %.3f", self.display, lower))
+   self:Refresh()
+end
+
+-- Gives every look of this monster the size, room, turn and height of the one shown.
 function viewer:Sync()
    local global = ns.mod.db.global
    local scale, room, turn = ns.Visuals.Scale(self.display), ns.Visuals.Room(self.display), ns.Visuals.Turn(self.display)
+   local lower = ns.Visuals.Lower(self.display)
    local list = ns.Visuals.DisplayList(self.monster)
    for _, display in ipairs(list) do
       global.scales[display], global.rooms[display], global.turns[display] = scale, room, turn
+      global.lowers[display] = lower
    end
    ns.mod:Print(format("%d looks: camera scale %.2f, room %.1f, turn %.0f degrees", #list, scale, room, math.deg(turn)))
    self:Refresh()

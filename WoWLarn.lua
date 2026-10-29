@@ -47,6 +47,7 @@ mod.defaults = {
       displays = {},  -- [monster id] = the display chosen in the model viewer
       scales = {},  -- [display id] = the size set in the model viewer (Visuals.Scale)
       rooms = {},  -- [display id] = the room set in the model viewer (Visuals.Room)
+      lowers = {},  -- [display id] = how far the model is moved down, set in the model viewer (Visuals.Lower)
       turns = {},  -- [display id] = the turn (radians) set in the model viewer (Visuals.Turn)
    },
 }

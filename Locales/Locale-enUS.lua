@@ -886,3 +886,5 @@ L["Wider"] = true
 L["Sync all"] = true
 L["< Turn"] = true
 L["Turn >"] = true
+L["Up"] = true
+L["Down"] = true

@@ -359,6 +359,12 @@ V.LOWER = {
    [1206] = 0.12,  -- snake
 }
 
+-- (what is set in the model viewer, global.lowers, wins)
+function V.Lower(display)
+   local own = ns.mod.db.global.lowers
+   return (own and own[display]) or V.LOWER[display] or 0
+end
+
 -- Models that are too big or too small for their tile, by display id: how far the camera
 -- stands from the model, 1 is the usual; above 1 shrinks the model.  What is set in the model
 -- viewer (global.scales) wins.
