@@ -138,6 +138,16 @@ local function Icon(layer, texture, x, y, width, height)
    icon:Show()
 end
 
+-- Sets how far the camera stands from a model.  The client ignores a value equal to the last one,
+-- even when the model has been loaded again since, so it is set to another value first.
+local function CameraScale(model, scale)
+   if not model.SetCamDistanceScale then return end
+   model:SetCamDistanceScale(scale * 1.001)
+   model:SetCamDistanceScale(scale)
+end
+
+map3d.CameraScale = CameraScale
+
 -- A creature standing on the floor at (x, y) in the view: a model of the unit ("player") or of
 -- a display, width pixels wide and about twice as tall.
 -- owner: a table that keeps its own frame (a dying monster), so the shifting of the pool of
@@ -159,13 +169,11 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
          self:SetFacing(frame.facing or FACING)
          if frame.anim and self.SetAnimation then self:SetAnimation(frame.anim) end  -- (loading resets it)
          if MODEL_ROOM ~= 1 and self.SetModelScale then self:SetModelScale(1 / MODEL_ROOM) end  -- (and this)
-         if self.SetCamDistanceScale then self:SetCamDistanceScale(frame.scale or 1) end  -- (and this)
+         CameraScale(self, frame.scale or 1)  -- (and this)
          self.settleUntil = GetTime() + SETTLE  -- (the client sets up the camera of a model after it has loaded)
       end)
       frame.model:SetScript("OnUpdate", function(self)
-         if self.settleUntil and self.settleUntil > GetTime() and self.SetCamDistanceScale then
-            self:SetCamDistanceScale(frame.scale or 1)
-         end
+         if self.settleUntil and self.settleUntil > GetTime() then CameraScale(self, frame.scale or 1) end
       end)
       if owner then
          owner.frame = frame
@@ -216,7 +224,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    local scale = look ~= "player" and V.Scale(look) * V.Room(look) or 1  -- (a larger frame, the camera further back)
    if frame.scale ~= scale then
       frame.scale = scale
-      if frame.model.SetCamDistanceScale then frame.model:SetCamDistanceScale(scale) end
+      CameraScale(frame.model, scale)
       frame.model.settleUntil = GetTime() + SETTLE
    end
    frame:Show()

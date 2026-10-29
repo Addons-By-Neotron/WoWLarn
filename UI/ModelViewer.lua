@@ -172,7 +172,7 @@ function viewer:Show(display)
       self.model:SetDisplayInfo(self.display)
    end
    self.model:SetFacing(0)
-   if self.model.SetCamDistanceScale then self.model:SetCamDistanceScale(self.scale) end
+   ns.map3d.CameraScale(self.model, self.scale)
    self.edit:SetText(tostring(self.display))
    self:Update()
 end
@@ -182,7 +182,7 @@ end
 function viewer:Resize(factor)
    self.scale = math.floor(self.scale * factor * 100 + 0.5) / 100
    ns.mod.db.global.scales[self.display] = self.scale
-   if self.model.SetCamDistanceScale then self.model:SetCamDistanceScale(self.scale) end
+   ns.map3d.CameraScale(self.model, self.scale)
    ns.mod:Print(format("display %d: camera scale %.2f", self.display, self.scale))
    self:Refresh()
 end
