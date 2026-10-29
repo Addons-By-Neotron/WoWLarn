@@ -211,6 +211,9 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    frame:Show()
 end
 
+map3d.Model = Model  -- (the monster zoo draws with it)
+map3d.MODEL_ASPECT = MODEL_ASPECT
+
 local function Glyph(layer, text, color, x, y, size)
    layer.usedGlyphs = layer.usedGlyphs + 1
    local glyph = layer.glyphs[layer.usedGlyphs]

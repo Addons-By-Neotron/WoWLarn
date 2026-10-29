@@ -143,6 +143,8 @@ function mod:ChatCommand(input)
       ns.scoreboard:Show()
    elseif cmd == "models" then
       ns.modelViewer:Toggle()
+   elseif cmd == "zoo" then
+      ns.zoo:Toggle()
    elseif cmd == "reset" then
       ns.main:ResetPosition()
    elseif cmd == "help" then

@@ -877,3 +877,6 @@ L["Giant Worm"] = true
 L["rat"] = true
 L["Smaller"] = true
 L["Bigger"] = true
+L["you"] = true
+L["Re-draw"] = true
+L["Close"] = true
