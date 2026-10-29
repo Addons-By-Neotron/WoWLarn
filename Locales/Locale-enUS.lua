@@ -883,3 +883,4 @@ L["Close"] = true
 L["Flat"] = true
 L["Narrower"] = true
 L["Wider"] = true
+L["Sync all"] = true

@@ -90,6 +90,7 @@ function viewer:Create()
    Button(L["Bigger"], 52, 72, 100, function() self:Resize(1 / 1.1) end)
    Button(L["Narrower"], 70, 130, 100, function() self:Room(-0.5) end)
    Button(L["Wider"], 52, 204, 100, function() self:Room(0.5) end)
+   Button(L["Sync all"], 70, 260, 100, function() self:Sync() end)
 
    -- the sounds of the monster (its own, else the default ones), and any sound kit
    local sounds = { { "attack", L["Attack"] }, { "wound", L["Wound"] }, { "die", L["Die"] }, { "special", L["Special"] } }
@@ -183,9 +184,20 @@ function viewer:Resize(factor)
    ns.mod.db.global.scales[self.display] = self.scale
    if self.model.SetCamDistanceScale then self.model:SetCamDistanceScale(self.scale) end
    ns.mod:Print(format("display %d: camera scale %.2f", self.display, self.scale))
+   self:Refresh()
+end
+
+-- Shows a changed size or room at once: on the map and in the zoo.
+function viewer:Refresh()
    self:Update()
    if ns.ui.Refresh then ns.ui:Refresh("map") end
-   if ns.zoo.frame and ns.zoo.frame:IsShown() then ns.zoo:Update() end
+   local zoo = ns.zoo
+   if zoo.frame and zoo.frame:IsShown() then
+      for index, display in ipairs(ns.Visuals.DisplayList(self.monster)) do  -- (the zoo shows this look)
+         if display == self.display then zoo.looks[self.monster] = index end
+      end
+      zoo:Update()
+   end
 end
 
 -- Gives the frame of this display more room (wings, tails), or less; kept in the saved
@@ -194,8 +206,19 @@ function viewer:Room(by)
    local room = math.max(1, ns.Visuals.Room(self.display) + by)
    ns.mod.db.global.rooms[self.display] = room
    ns.mod:Print(format("display %d: room %.1f", self.display, room))
-   if ns.ui.Refresh then ns.ui:Refresh("map") end
-   if ns.zoo.frame and ns.zoo.frame:IsShown() then ns.zoo:Update() end
+   self:Refresh()
+end
+
+-- Gives every look of this monster the size and room of the one shown.
+function viewer:Sync()
+   local global = ns.mod.db.global
+   local scale, room = ns.Visuals.Scale(self.display), ns.Visuals.Room(self.display)
+   local list = ns.Visuals.DisplayList(self.monster)
+   for _, display in ipairs(list) do
+      global.scales[display], global.rooms[display] = scale, room
+   end
+   ns.mod:Print(format("%d looks: camera scale %.2f, room %.1f", #list, scale, room))
+   self:Refresh()
 end
 
 function viewer:Step(by)
