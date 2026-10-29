@@ -85,7 +85,8 @@ function inventory:Create(parent)
          if G.iven[self.slot] == 0 then return end
          GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
          ns.ItemInfo.tooltip(G.iven[self.slot], G.ivenarg[self.slot])
-         GameTooltip:AddLine(ns.Player.itemName(self.slot), 0.6, 0.6, 0.6)
+         local full, name = ns.Player.itemName(self.slot), ns.Player.objectName(G.iven[self.slot], G.ivenarg[self.slot])
+         if full ~= name then GameTooltip:AddLine((full:gsub("^" .. name:gsub("%p", "%%%0") .. "%s*", "")), 0.6, 0.6, 0.6) end
          for _, line in ipairs(lines) do GameTooltip:AddLine(line, 1, 1, 1, true) end
          GameTooltip:Show()
       end)

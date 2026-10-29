@@ -116,7 +116,15 @@ local INFO = {
       return format(L["Floods the area, hurting every monster next to you for %d damage."], 32 + lev), tostring(32 + lev)
    end,
    [K.SP_FINGER_OF_DEATH] = function() return L["Kills the monster outright, if it works.  Needs wisdom."], "2000" end,
-   [K.SP_SCARE_MONSTER] = function(lev) return format(L["Monsters won't fight you for %s turns, three times as long with the hand of fear."], Range(1 + lev, 10 + lev)) end,
+   [K.SP_SCARE_MONSTER] = function(lev)
+      for i = 1, K.IVENSIZE do
+         if G.iven[i] == K.OHANDofFEAR then
+            return format(L["Monsters flee in fear for %s turns, three times as long thanks to the hand of fear you carry."],
+               Range(3 * (1 + lev), 3 * (10 + lev)))
+         end
+      end
+      return L["Does nothing without the hand of fear in your pack, which makes monsters flee in fear."]
+   end,
    [K.SP_HOLD_MONSTER] = function(lev) return format(L["Freezes every monster for %s turns."], Range(1 + lev, 10 + lev)) end,
    [K.SP_TIME_STOP] = function(lev) return format(L["Stops time for %s turns.  You can still move."], Range(1 + 2 * lev, 20 + 2 * lev)) end,
    [K.SP_TELEPORT_AWAY] = function() return L["Sends the monster to somewhere else on the level."] end,

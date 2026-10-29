@@ -1028,3 +1028,6 @@ L["It slays demon lords and princes, and they hurt you less."] = true
 L["You have found out what %s can do!"] = true
 L["It may hold powers you have yet to see."] = true
 L["It slays what it hits, but is less effective against demons."] = true
+L["Monsters sometimes run in fear; the scare monster spell needs it"] = true
+L["Monsters flee in fear for %s turns, three times as long thanks to the hand of fear you carry."] = true
+L["Does nothing without the hand of fear in your pack, which makes monsters flee in fear."] = true
