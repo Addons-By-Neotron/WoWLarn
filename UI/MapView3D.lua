@@ -193,7 +193,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
       frame.facing = facing
       frame.model:SetFacing(facing)
    end
-   local scale = look ~= "player" and V.Scale(look) or 1
+   local scale = look ~= "player" and V.Scale(look) * V.Room(look) or 1  -- (a larger frame, the camera further back)
    if frame.scale ~= scale then
       frame.scale = scale
       if frame.model.SetCamDistanceScale then frame.model:SetCamDistanceScale(scale) end
@@ -202,10 +202,11 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    -- every model gets a frame MODEL_ROOM times larger around the same centre, and is scaled
    -- down by the same factor to look the same size (always, so nothing changes when it dies)
    local k = MODEL_ROOM
+   local room = look ~= "player" and V.Room(look) or 1
    y = y + (V.LOWER[look] or 0) * width
    frame:ClearAllPoints()
    frame:SetPoint("CENTER", layer, "TOPLEFT", x, -(y - width * MODEL_ASPECT / 2))
-   frame:SetSize(width * k, width * k * MODEL_ASPECT)
+   frame:SetSize(width * k * room, width * k * room * MODEL_ASPECT)
    -- (every time: the client resets the scale when it reloads or restarts the model)
    if k ~= 1 and frame.model.SetModelScale then frame.model:SetModelScale(1 / k) end
    frame:Show()

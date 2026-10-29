@@ -88,6 +88,8 @@ function viewer:Create()
    Button(L["Clear"], 40, 298, 10, function() self:Assign(nil) end)
    Button(L["Smaller"], 60, 8, 100, function() self:Resize(1.1) end)
    Button(L["Bigger"], 52, 72, 100, function() self:Resize(1 / 1.1) end)
+   Button(L["Narrower"], 70, 130, 100, function() self:Room(-0.5) end)
+   Button(L["Wider"], 52, 204, 100, function() self:Room(0.5) end)
 
    -- the sounds of the monster (its own, else the default ones), and any sound kit
    local sounds = { { "attack", L["Attack"] }, { "wound", L["Wound"] }, { "die", L["Die"] }, { "special", L["Special"] } }
@@ -183,6 +185,17 @@ function viewer:Resize(factor)
    ns.mod:Print(format("display %d: camera scale %.2f", self.display, self.scale))
    self:Update()
    if ns.ui.Refresh then ns.ui:Refresh("map") end
+   if ns.zoo.frame and ns.zoo.frame:IsShown() then ns.zoo:Update() end
+end
+
+-- Gives the frame of this display more room (wings, tails), or less; kept in the saved
+-- variables and shown, to be put in V.ROOM.
+function viewer:Room(by)
+   local room = math.max(1, ns.Visuals.Room(self.display) + by)
+   ns.mod.db.global.rooms[self.display] = room
+   ns.mod:Print(format("display %d: room %.1f", self.display, room))
+   if ns.ui.Refresh then ns.ui:Refresh("map") end
+   if ns.zoo.frame and ns.zoo.frame:IsShown() then ns.zoo:Update() end
 end
 
 function viewer:Step(by)

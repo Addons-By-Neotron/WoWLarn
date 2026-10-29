@@ -370,6 +370,17 @@ function V.Scale(display)
    return (own and own[display]) or V.SCALE[display] or 1
 end
 
+-- Models that reach beyond their tile (wings, tails), by display id: how many times larger a
+-- frame they get, to the sides and up; the model keeps its size (the camera moves back by the
+-- same factor).  What is set in the model viewer (global.rooms) wins.
+V.ROOM = {
+}
+
+function V.Room(display)
+   local own = ns.mod.db.global.rooms
+   return (own and own[display]) or V.ROOM[display] or 1
+end
+
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
 -- id and the rules stay those of the original monster.
 V.MONSTER_NAME = {

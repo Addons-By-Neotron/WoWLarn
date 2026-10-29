@@ -881,3 +881,5 @@ L["you"] = true
 L["Re-draw"] = true
 L["Close"] = true
 L["Flat"] = true
+L["Narrower"] = true
+L["Wider"] = true
