@@ -338,6 +338,7 @@ function Monster.hitmonster(x, y)
          ns.Player.recalc()
       elseif ivenarg[wield] <= -10 then
          Msg(L["Your weapon disintegrates!"])
+         ns.Player.adjustCValues(iven[wield], ivenarg[wield])  -- FIX: not in the C. What it did to the stats goes with it.
          iven[wield], ivenarg[wield] = 0, 0
          c[K.WIELD] = 0
          ns.Player.recalc()

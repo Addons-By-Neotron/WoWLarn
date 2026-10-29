@@ -594,6 +594,7 @@ function Player.enchantWeapon(how)
             ui:Message(L["Your weapon glows a little."])
          else
             ui:Message(L["Your weapon vibrates violently and crumbles into dust!"])
+            Player.adjustCValues(tmp, ivenarg[slot])  -- FIX: not in the C. What it did to the stats goes with it.
             iven[slot], ivenarg[slot] = 0, 0
             c[K.WIELD] = 0
          end
