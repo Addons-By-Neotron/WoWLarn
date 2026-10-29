@@ -40,7 +40,7 @@ ones at difficulty 0; a higher difficulty scales hit points, damage and gold.
 | 12 | floating eye | 3-5 | 7 | 8 | 2 | 3 |  | 0 | 2 | 2421 |
 | 13 | treasure goblin (leprechaun) | 3-5 | 15 | 3 | 0 | 3 | steals gold | 1500 | 40 | 61712, 51994 (else 7109, 7197, 7202, 7203, 7228, 7230, 7234) |
 | 14 | sprite (nymph) | 3-5 | 20 | 3 | 0 | 9 | steals an item | 0 | 40 | 12432, 1825 |
-| 15 | imp (quasit) | 3-5 | 14 | 5 | 3 | 3 |  | 0 | 10 | 4449, 14380, 12345, 1015, 568, 2452, 6810, 118973 (else 4449) |
+| 15 | imp (quasit) | 3-5 | 14 | 5 | 3 | 3 |  | 0 | 10 | 4449 |
 | 16 | rust oozeling (rust monster) | 3-5 | 18 | 5 | 0 | 3 | rusts armor | 0 | 20 | 7763, 15436 |
 | 17 | zombie | 3-5 | 9 | 12 | 3 | 3 |  | 0 | 7 | 10970-10979 |
 

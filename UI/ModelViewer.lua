@@ -179,6 +179,7 @@ function viewer:Show(display)
    ns.map3d.CameraScale(self.model, self.scale)
    self.edit:SetText(tostring(self.display))
    self:Update()
+   self:ShowInZoo()
 end
 
 -- Makes the model of this display smaller (factor above 1) or bigger, in the viewer and in
@@ -195,9 +196,14 @@ end
 function viewer:Refresh()
    self:Update()
    if ns.ui.Refresh then ns.ui:Refresh("map") end
+   self:ShowInZoo()
+end
+
+-- The zoo shows the look that is shown here.
+function viewer:ShowInZoo()
    local zoo = ns.zoo
    if zoo.frame and zoo.frame:IsShown() then
-      for index, display in ipairs(ns.Visuals.DisplayList(self.monster)) do  -- (the zoo shows this look)
+      for index, display in ipairs(ns.Visuals.DisplayList(self.monster)) do
          if display == self.display then zoo.looks[self.monster] = index end
       end
       zoo:Update()
