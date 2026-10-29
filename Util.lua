@@ -40,6 +40,19 @@ function ns.vxy(x, y)
 end
 
 -- C integer division truncates toward zero.
+-- "magic missile" -> "Magic Missile": the first letter of every word, except the small ones
+-- in the middle ("scroll of light").
+local SMALL = { of = true, the = true, a = true, an = true, ["and"] = true, to = true, ["in"] = true, on = true, ["for"] = true }
+function ns.TitleCase(text)
+   local first = true
+   return (text:gsub("%S+", function(word)
+      local lead = first
+      first = false
+      if not lead and SMALL[word] then return word end
+      return (word:gsub("^%l", string.upper))
+   end))
+end
+
 function ns.idiv(a, b)
    local quotient = a / b
    if quotient >= 0 then return floor(quotient) end

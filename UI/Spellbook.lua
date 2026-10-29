@@ -72,7 +72,7 @@ function spellbook:Create(parent)
          if SI.risky(self.index) then GameTooltip:AddLine(L["Risky: it can backfire!"], 1, 0.3, 0.3, true) end
          local need = SI.minLevel(self.index)
          if need > ns.G.c[K.LEVEL] then
-            GameTooltip:AddLine(format(L["Needs character level %d"], need), 1, 0.5, 0, true)
+            GameTooltip:AddLine(L["Might not work at your level"], 1, 0.5, 0, true)
          end
          GameTooltip:Show()
       end)

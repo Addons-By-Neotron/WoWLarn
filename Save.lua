@@ -105,6 +105,7 @@ function Save.unpack(data)
    for id, name in pairs(ns.Visuals.MONSTER_NAME) do  -- (renamed since the game was saved)
       if G.monster[id] then G.monster[id].name = name end
    end
+   for _, monster in pairs(G.monster) do monster.name = ns.TitleCase(monster.name) end
    for id, ac in pairs(ns.Visuals.MONSTER_AC) do
       if G.monster[id] then G.monster[id].armorclass = ac end
    end

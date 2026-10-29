@@ -375,7 +375,7 @@ Fresh(3); G.c[K.HP] = 10; ns.Player.losehp(3); check(G.c[K.HP] == 7 and not G.de
 
 ---------------------------------------------------------------- items
 check(ns.Tables.potionname[K.PHEALING] == "healing" and ns.Tables.scrollname[K.SENCHANTARM] == "enchant armor", "names")
-check(ns.Tables.spelcode[1] == "pro" and ns.Tables.spelname[39] == "permanence" and #ns.Fortunes > 30, "spell and fortune data")
+check(ns.Tables.spelcode[1] == "pro" and ns.Tables.spelname[39] == "Permanence" and #ns.Fortunes > 30, "spell and fortune data")
 Fresh(3)
 for i = 1, K.IVENSIZE do G.iven[i], G.ivenarg[i] = 0, 0 end
 G.c[K.WIELD], G.c[K.WEAR], G.c[K.SHIELD] = 0, 0, 0
@@ -570,7 +570,7 @@ Put(K.ORC, 31, 8)
 LOG = {}
 keys("l")
 local fought = false
-for _, l in ipairs(lines()) do if l:find("You hit the orc") or l:find("You missed the orc") then fought = true end end
+for _, l in ipairs(lines()) do if l:find("You hit the Orc") or l:find("You missed the Orc") then fought = true end end
 check(fought and G.playerx == 30, "bumping a monster attacks it, got " .. table.concat(lines(), " | "))
 for _ = 1, 40 do if G.mon[31][8] ~= 0 and not G.dead then keys("l") end end
 check(G.mon[31][8] == 0 or G.dead, "fight ended")
@@ -663,7 +663,7 @@ do
    ns.mod.db.profile.fast = true
    local T = ns.Tables
    local function Code(name)
-      for i = 1, K.SPNUM do if T.spelname[i] == name then return T.spelcode[i], i end end
+      for i = 1, K.SPNUM do if T.spelname[i]:lower() == name then return T.spelcode[i], i end end
       error("no spell " .. name)
    end
    local function Arena()
@@ -971,7 +971,7 @@ do
    G.iarg[10][5] = 1234; G.item[10][5] = K.OGOLDPILE; G.loot[1105] = { { K.ODAGGER, 2 } }
    local items = 0
    for x = 1, K.MAXX do for y = 1, K.MAXY do if G.item[x][y] ~= 0 then items = items + 1 end end end
-   check(G.monster[K.LEMMING].name == "rat", "a new game has rats")
+   check(G.monster[K.LEMMING].name == "Rat", "a new game has rats")
    local monsters = G.monster[K.KOBOLD].hitpoints
    ns.ui.co = {}  -- (pretend a game is going on)
    ns.Save.store()
@@ -985,7 +985,7 @@ do
    local after = 0
    for x = 1, K.MAXX do for y = 1, K.MAXY do if G.item[x][y] ~= 0 then after = after + 1 end end end
    check(after == items, "same items on the level: " .. after .. " vs " .. items)
-   check(G.monster[K.LEMMING].name == "rat", "lemmings are rats: " .. G.monster[K.LEMMING].name)
+   check(G.monster[K.LEMMING].name == "Rat", "lemmings are rats: " .. G.monster[K.LEMMING].name)
    check(G.levels[1] and G.visited[1] and G.spheres[1].lifetime == 9 and G.monster[K.KOBOLD].hitpoints == monsters, "levels, spheres, monsters")
    ns.Save.clear()
    check(not ns.Save.exists(), "save cleared")

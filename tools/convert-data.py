@@ -29,6 +29,13 @@ SPELL_DESCRIPTION_FIXES = {
 }
 
 
+def title_case(text):
+    """The first letter of every word, except the small ones in the middle (as ns.TitleCase)."""
+    small = {"of", "the", "a", "an", "and", "to", "in", "on", "for"}
+    words = text.split(" ")
+    return " ".join(w if i and w in small else w[:1].upper() + w[1:] for i, w in enumerate(words))
+
+
 def defines(text):
     """(name, int, comment) for every simple numeric #define."""
     result = []
@@ -171,7 +178,7 @@ def tables():
     assert len(code) == 39 and len(names) == 40 and len(desc) == 40, (len(code), len(names), len(desc))
     out.append("-- Spells 1..39 (C: 0..38): three letter code, name and description.")
     out.append("T.spelcode = {" + ", ".join(lua_string(n) for n in code) + "}")
-    out.append("T.spelname = {" + ", ".join(lua_string(n) for n in names[:39]) + "}")
+    out.append("T.spelname = {" + ", ".join(lua_string(title_case(n)) for n in names[:39]) + "}")
     out.append("T.speldescript = {" + ", ".join(lua_string(n) for n in desc[:39]) + "}")
     nums = re.findall(r"\d+", section(data, "char splev[]", "};")[10:])
     out.append("-- T.splev[book level + 1]: the highest spell (C index + 1) a book of that level can teach.")

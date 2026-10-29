@@ -571,6 +571,9 @@ V.MONSTER_NAME = {
 for id, name in pairs(V.MONSTER_NAME) do
    ns.MonsterData[id].name = name
 end
+for _, data in pairs(ns.MonsterData) do
+   data.name = ns.TitleCase(data.name)
+end
 
 -- Armour class changed from the original: the higher it is, the easier the monster is to hit.
 -- The rats (armour class 0) took 10 to 20 swings early on.

@@ -932,3 +932,4 @@ L["A demon hits the monster in a direction for 150, but it may also do nothing, 
 L["Intelligence makes spells work more often"] = true
 L["If it works, the monster sleeps and you get 2-4 free weapon hits on it"] = true
 L["If it works, the monster is stuck and you get 3-5 free weapon hits on it"] = true
+L["Might not work at your level"] = true
