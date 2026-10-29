@@ -519,6 +519,17 @@ function V.PlayerSound(kind)
    return (own and own[sex][kind]) or (own and own[other][kind]) or human[sex][kind]
 end
 
+-- Models that are too wide (or too narrow) the way they face, by display id: how far to turn
+-- them from the way they face the player, in radians.  What is set in the model viewer
+-- (global.turns) wins.
+V.TURN = {
+}
+
+function V.Turn(display)
+   local own = ns.mod.db.global.turns
+   return (own and own[display]) or V.TURN[display] or 0
+end
+
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
 -- id and the rules stay those of the original monster.
 V.MONSTER_NAME = {

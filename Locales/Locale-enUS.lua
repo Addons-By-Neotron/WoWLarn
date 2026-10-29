@@ -884,3 +884,5 @@ L["Flat"] = true
 L["Narrower"] = true
 L["Wider"] = true
 L["Sync all"] = true
+L["< Turn"] = true
+L["Turn >"] = true

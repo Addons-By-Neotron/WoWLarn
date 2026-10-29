@@ -205,6 +205,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
       frame.anim = anim
       if frame.model.SetAnimation then frame.model:SetAnimation(anim) end
    end
+   facing = (facing or FACING) + (look ~= "player" and V.Turn(look) or 0)  -- (some models are too wide as they are)
    if frame.facing ~= facing then
       frame.facing = facing
       frame.model:SetFacing(facing)

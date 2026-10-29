@@ -91,6 +91,8 @@ function viewer:Create()
    Button(L["Narrower"], 70, 130, 100, function() self:Room(-0.5) end)
    Button(L["Wider"], 52, 204, 100, function() self:Room(0.5) end)
    Button(L["Sync all"], 70, 260, 100, function() self:Sync() end)
+   Button(L["< Turn"], 56, 8, 130, function() self:Turn(-math.pi / 12) end)
+   Button(L["Turn >"], 56, 68, 130, function() self:Turn(math.pi / 12) end)
 
    -- the sounds of the monster (its own, else the default ones), and any sound kit
    local sounds = { { "attack", L["Attack"] }, { "wound", L["Wound"] }, { "die", L["Die"] }, { "special", L["Special"] } }
@@ -171,7 +173,7 @@ function viewer:Show(display)
    else
       self.model:SetDisplayInfo(self.display)
    end
-   self.model:SetFacing(0)
+   self.model:SetFacing(ns.Visuals.Turn(self.display))
    ns.map3d.CameraScale(self.model, self.scale)
    self.edit:SetText(tostring(self.display))
    self:Update()
@@ -209,15 +211,27 @@ function viewer:Room(by)
    self:Refresh()
 end
 
--- Gives every look of this monster the size and room of the one shown.
+-- Turns the display (a model that is too wide the way it faces), 15 degrees at a time; kept in
+-- the saved variables and shown, to be put in V.TURN.
+function viewer:Turn(by)
+   local turn = (ns.Visuals.Turn(self.display) + by) % (2 * math.pi)
+   turn = math.floor(turn * 1000 + 0.5) / 1000
+   if turn >= 2 * math.pi - 0.001 then turn = 0 end
+   ns.mod.db.global.turns[self.display] = turn
+   self.model:SetFacing(turn)
+   ns.mod:Print(format("display %d: turn %.0f degrees (%.3f)", self.display, math.deg(turn), turn))
+   self:Refresh()
+end
+
+-- Gives every look of this monster the size, room and turn of the one shown.
 function viewer:Sync()
    local global = ns.mod.db.global
-   local scale, room = ns.Visuals.Scale(self.display), ns.Visuals.Room(self.display)
+   local scale, room, turn = ns.Visuals.Scale(self.display), ns.Visuals.Room(self.display), ns.Visuals.Turn(self.display)
    local list = ns.Visuals.DisplayList(self.monster)
    for _, display in ipairs(list) do
-      global.scales[display], global.rooms[display] = scale, room
+      global.scales[display], global.rooms[display], global.turns[display] = scale, room, turn
    end
-   ns.mod:Print(format("%d looks: camera scale %.2f, room %.1f", #list, scale, room))
+   ns.mod:Print(format("%d looks: camera scale %.2f, room %.1f, turn %.0f degrees", #list, scale, room, math.deg(turn)))
    self:Refresh()
 end
 
