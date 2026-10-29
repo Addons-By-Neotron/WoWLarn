@@ -1046,6 +1046,17 @@ check(safter == snow - 2, "shield off")
 ns.Action.takeOffWhat = "armor"; ns.Action.takeOff()
 check(G.c[K.WEAR] == 0 and G.c[K.SHIELD] == 4, "armor comes off before the shield when asked for")
 
+-- stat breakdown
+Fresh(3)
+G.c[K.STRENGTH], G.c[K.STREXTRA], G.c[K.INTELLIGENCE] = 20, 13, 30
+G.iven[1], G.ivenarg[1] = K.OHAMMER, 0
+G.c[K.GIANTSTR] = 5
+local total, base, mods = ns.Equipment.statBreakdown("STR")
+check(total == 33 and base == 2 and #mods == 2, "strength breakdown " .. total .. " " .. base .. " " .. #mods)
+local itotal, ibase = ns.Equipment.statBreakdown("INT")
+check(itotal == 30 and ibase == 40, "intelligence breakdown")
+G.c[K.GIANTSTR] = 0
+
 -- spell descriptions
 G.c[K.LEVEL], G.c[K.INTELLIGENCE], G.c[K.WISDOM] = 10, 18, 18
 for spell = 1, K.SPNUM do

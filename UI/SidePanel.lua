@@ -34,7 +34,7 @@ local CELL = 3  -- minimap pixels per tile
 local EFFECT_SIZE, EFFECT_COLUMNS = 24, 8
 local STAT_W, STAT_H, HEADING_H = 114, 14, 20
 local SLOT_SIZE = 30
-local MINIMAP_H, SHEET_H = K.MAXY * CELL + 22, 322
+local MINIMAP_H, SHEET_H = K.MAXY * CELL + 22, 352
 local MODEL_TOP, MODEL_H = 26, 108
 
 local function Section(parent, height, title)
@@ -79,17 +79,17 @@ local GREEN = { 0.1, 1, 0.1 }
 local STAT_COLUMNS = {
    {
       { heading = L["Attributes"] },
-      { label = L["Strength"], value = Strength, boost = function() return C(K.STREXTRA) > 0 end,
+      { stat = "STR", label = L["Strength"], value = Strength, boost = function() return C(K.STREXTRA) > 0 end,
         tip = L["Strength makes your hits stronger."] },
-      { label = L["Intelligence"], value = function() return C(K.INTELLIGENCE) end,
+      { stat = "INT", label = L["Intelligence"], value = function() return C(K.INTELLIGENCE) end,
         tip = L["Intelligence makes your spells more likely to work."] },
-      { label = L["Wisdom"], value = function() return C(K.WISDOM) end,
+      { stat = "WIS", label = L["Wisdom"], value = function() return C(K.WISDOM) end,
         tip = L["Wisdom makes your strongest spells, like phantasmal forces and finger of death, more likely to work."] },
-      { label = L["Constitution"], value = function() return C(K.CONSTITUTION) end,
+      { stat = "CON", label = L["Constitution"], value = function() return C(K.CONSTITUTION) end,
         tip = L["Constitution gives you more hit points when you gain a level."] },
-      { label = L["Dexterity"], value = function() return C(K.DEXTERITY) end, boost = function() return C(K.DEXCOUNT) > 0 end,
+      { stat = "DEX", label = L["Dexterity"], value = function() return C(K.DEXTERITY) end, boost = function() return C(K.DEXCOUNT) > 0 end,
         tip = L["Dexterity helps you hit monsters, and helps you avoid pits and trap doors."] },
-      { label = L["Charisma"], value = function() return C(K.CHARISMA) end,
+      { stat = "CHA", label = L["Charisma"], value = function() return C(K.CHARISMA) end,
         tip = L["Charisma makes monsters more likely to be awed by you and not attack, and makes charm monster last longer."] },
    },
    {
@@ -100,6 +100,12 @@ local STAT_COLUMNS = {
       { label = L["Weapon class"], value = function() return C(K.WCLASS) end,
         tip = L["A better weapon class makes you hit more often and harder."],
         extra = function() return table.concat(ns.Equipment.summary(), "\n", 2, 2) end },
+      { label = L["Health regen"], value = function() return format("%d / %d", C(K.REGEN), (ns.Equipment.regenTurns())) end,
+        tip = L["Hit points you regain, and the number of turns between."],
+        extra = function() return format(L["%d every %d turns.  Rings of regeneration add to it."], C(K.REGEN), (ns.Equipment.regenTurns())) end },
+      { label = L["Mana regen"], value = function() return format("1 / %d", select(2, ns.Equipment.regenTurns())) end,
+        tip = L["One point of mana comes back every so many turns."],
+        extra = function() return format(L["1 every %d turns.  Rings of energy make it quicker."], select(2, ns.Equipment.regenTurns())) end },
       { heading = L["General"] },
       { label = L["Level"], value = function() return C(K.LEVEL) end,
         tip = L["Your level goes up with experience.  Each level gives you more hit points and mana, and a new pack slot every second level."] },
@@ -226,6 +232,16 @@ function side:Create(parent)
                GameTooltip:SetOwner(self, "ANCHOR_LEFT")
                GameTooltip:SetText(self.cell.label, 1, 1, 1)
                GameTooltip:AddLine(self.cell.tip, nil, nil, nil, true)
+               if self.cell.stat then
+                  local total, base, mods = ns.Equipment.statBreakdown(self.cell.stat)
+                  GameTooltip:AddDoubleLine(L["Base"], base, 1, 1, 1, 1, 1, 1)
+                  for _, mod in ipairs(mods) do
+                     local good = mod[2] > 0
+                     GameTooltip:AddDoubleLine(mod[1], format("%+d", mod[2]), 0.8, 0.8, 0.8,
+                        good and 0.1 or 1, good and 1 or 0.3, good and 0.1 or 0.3)
+                  end
+                  if #mods > 0 then GameTooltip:AddDoubleLine(L["Total"], total, 1, 0.82, 0, 1, 0.82, 0) end
+               end
                if self.cell.extra then
                   local extra = self.cell.extra()
                   if extra then GameTooltip:AddLine(extra, 0.6, 0.9, 0.6, true) end

@@ -190,3 +190,44 @@ function Equipment.preview(kind, slot)
       return L["Armor class"], c[K.AC], c[K.AC] - now + after, warning
    end
 end
+
+-- What raises or lowers an attribute besides its base value: the things carried (they work
+-- as long as they are in the pack) and the effects that are running.  Returns the total,
+-- the base and a list of { name, amount }.  stat is "STR", "INT", "WIS", "CON", "DEX" or "CHA".
+local STAT_INDEX = {
+   STR = K.STRENGTH, INT = K.INTELLIGENCE, WIS = K.WISDOM, CON = K.CONSTITUTION, DEX = K.DEXTERITY, CHA = K.CHARISMA,
+}
+local ITEM_STAT = {  -- [object] = { stat = function(arg) -> amount }
+   [K.OSTRRING] = { STR = function(arg) return arg + 1 end },
+   [K.ODEXRING] = { DEX = function(arg) return arg + 1 end },
+   [K.OCLEVERRING] = { INT = function(arg) return arg + 1 end },
+   [K.OHAMMER] = { STR = function() return 10 end, DEX = function() return 10 end, INT = function() return -10 end },
+   [K.OSWORDofSLASHING] = { DEX = function() return 5 end },
+   [K.OSLAYER] = { INT = function() return 10 end },
+   [K.OPSTAFF] = { WIS = function() return 10 end },
+}
+
+function Equipment.statBreakdown(stat)
+   local T = ns.Tables
+   local total = c[STAT_INDEX[stat]] + (stat == "STR" and c[K.STREXTRA] or 0)
+   local mods = {}
+   for i = 1, K.IVENSIZE do
+      local entry = ITEM_STAT[iven[i]]
+      local amount = entry and entry[stat] and entry[stat](ivenarg[i])
+      if amount and amount ~= 0 then mods[#mods + 1] = { T.objectname[iven[i]], amount } end
+   end
+   if c[K.HERO] ~= 0 then mods[#mods + 1] = { L["Heroism"], 11 } end
+   if c[K.COKED] ~= 0 then mods[#mods + 1] = { T.objectname[K.OCOKE], 33 } end
+   if stat == "DEX" and c[K.DEXCOUNT] ~= 0 then mods[#mods + 1] = { T.spelname[K.SP_DEXTERITY], 3 } end
+   if stat == "STR" and c[K.STRCOUNT] ~= 0 then mods[#mods + 1] = { T.spelname[K.SP_STRENGTH], 3 } end
+   if stat == "STR" and c[K.GIANTSTR] ~= 0 then mods[#mods + 1] = { T.potionname[K.PGIANTSTR], 21 } end
+   local base = total
+   for _, mod in ipairs(mods) do base = base - mod[2] end
+   return total, base, mods
+end
+
+-- Turns between the regeneration of one hit point (or point of mana), as the game counts them.
+function Equipment.regenTurns()
+   local hard = c[K.HARDGAME]
+   return math.max(1, 22 + hard * 2 - c[K.LEVEL]), math.max(1, 100 + 4 * (hard - c[K.LEVEL] - c[K.ENERGY]))
+end
