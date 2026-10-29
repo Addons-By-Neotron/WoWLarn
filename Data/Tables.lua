@@ -121,7 +121,7 @@ T.objectname = {
    [95] = "some hashish",
    [96] = "some magic mushrooms",
    [97] = "some cocaine",
-   [98] = "Dealer McDope's Pad",
+   [98] = "Grizzik's Questionable Elixirs",
 }
 
 -- Highest monster id that can be created, per tier (C: monstlevel[]).

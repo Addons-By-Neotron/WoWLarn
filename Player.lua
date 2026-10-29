@@ -396,6 +396,7 @@ local PLAIN = {
    [K.OCUBEofUNDEAD] = true, [K.OEMERALD] = true, [K.OCHEST] = true, [K.OCOOKIE] = true,
    [K.OSAPPHIRE] = true, [K.OORB] = true, [K.OHANDofFEAR] = true, [K.OBRASSLAMP] = true,
    [K.OURN] = true, [K.OWWAND] = true, [K.OSPHTALISMAN] = true, [K.ONOTHEFT] = true,
+   [K.OPAD] = true,
 }
 
 -- The name of an inventory slot as shown in the inventory (C: show3 without the letter).
@@ -410,7 +411,7 @@ function Player.objectName(id, arg)
       local kind = T.scrollname[arg]
       if kind and kind ~= "" and G.scrollknown[arg] ~= 0 then name = name .. " of " .. kind end
    elseif not PLAIN[id] then
-      if arg > 0 or G.wizard then
+      if arg > 0 then
          name = name .. " +" .. arg
       elseif arg < 0 then
          name = name .. " " .. arg
