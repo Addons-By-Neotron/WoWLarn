@@ -48,6 +48,7 @@ local COMMANDS = {
    { key = "D", name = L["Discoveries"], icon = "INV_Misc_Book_08" },
    { key = "?", name = L["Help"], icon = "INV_Misc_QuestionMark" },
    { key = "S", name = L["Save and close"], icon = "INV_Misc_Note_01" },
+   { key = "V", name = L["Flat tiles or the 2.5D view"], icon = "INV_Misc_Spyglass_02", view = true },
 }
 
 local function OnEnter(self)
@@ -59,6 +60,10 @@ end
 
 local function OnClick(self)
    ns.main:SetFocus(true)
+   if self.command.view then  -- (works without a game)
+      ns.mod:ToggleView()
+      return
+   end
    ns.ui:InjectKey(self.command.key)
 end
 
@@ -76,7 +81,8 @@ function bar:Create(parent)
       button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
       local label = button:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
       label:SetPoint("BOTTOMRIGHT", -2, 2)
-      label:SetText(command.key)
+      label:SetText(command.view and (ns.mod.db.profile.view == "3d" and "3D" or "2D") or command.key)
+      button.label = label
       button.command = command
       button:SetScript("OnEnter", OnEnter)
       button:SetScript("OnLeave", GameTooltip_Hide)
@@ -85,4 +91,10 @@ function bar:Create(parent)
    end
    self.frame = frame
    return frame
+end
+
+-- The view button shows which view is on.
+function bar:UpdateView()
+   local button = self.buttons and self.buttons.V
+   if button then button.label:SetText(ns.mod.db.profile.view == "3d" and "3D" or "2D") end
 end

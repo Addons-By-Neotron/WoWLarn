@@ -888,3 +888,4 @@ L["< Turn"] = true
 L["Turn >"] = true
 L["Up"] = true
 L["Down"] = true
+L["Flat tiles or the 2.5D view"] = true

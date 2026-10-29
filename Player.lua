@@ -140,6 +140,9 @@ end
 -- afterwards, since nothing stops the game code the way the C exit() in died() does.
 function Player.losehp(x, quiet)
    if G.dead then return end
+--@debug@
+   if G.god then return end
+--@end-debug@
    if not quiet and x > 0 then ns.ui:Message(L["You lose %d hit points."], x) end
    c[K.HP] = c[K.HP] - x
    if x > 0 then ns.ui:Animate("hurt") end
@@ -368,6 +371,13 @@ end
 -- C: died(). Ends the game, unless life protection saves the player (the only case where it
 -- returns normally). Callers must check G.dead afterwards.
 function Player.died(cause)
+--@debug@
+   if G.god then
+      c[K.HP] = c[K.HPMAX]
+      ns.ui:Refresh("stats")
+      return
+   end
+--@end-debug@
    if c[K.LIFEPROT] > 0 and ns.Scores.canBeSaved(cause) then
       c[K.LIFEPROT] = c[K.LIFEPROT] - 1
       c[K.HP] = 1

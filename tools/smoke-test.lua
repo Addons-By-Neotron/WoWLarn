@@ -1009,4 +1009,16 @@ do
    ns.map:Draw()
    check(not ns.map3d.shown, "flat view again")
 end
+-- wizard mode and god mode (debug builds)
+do
+   G.wizard, G.god = false, false
+   ns.Debug.key("=")
+   check(G.wizard, "wizard mode on")
+   ns.Debug.key("_")
+   check(G.c[K.STRENGTH] == 70 and G.spelknow[1] == 1 and G.potionknown[K.MAXPOTION] == 1, "debug kit")
+   ns.Debug.toggleGod()
+   ns.Player.losehp(G.c[K.HPMAX] * 5)
+   check(not G.dead and G.c[K.HP] > 0, "god mode cannot die")
+   G.god, G.wizard = false, false
+end
 print("ALL OK")

@@ -158,6 +158,16 @@ local function Parse()
       ui.repcount = 0
       G.nomove = true
       ui:Message(L["WoWLarn - a port of Ularn 1.5 (the Addiction of Ularn)."])
+   elseif key == "V" then  -- flat tiles or the 2.5D view
+      ui.repcount = 0
+      G.nomove = true
+      ns.mod:ToggleView()
+--@debug@
+   elseif key == "=" or key == "_" or key == "#" or key == "@" or key == "A" then  -- wizard mode
+      ui.repcount = 0
+      G.nomove = true
+      ns.Debug.key(key)
+--@end-debug@
    elseif key == "?" then
       ui.repcount = 0
       G.nomove = true

@@ -83,6 +83,13 @@ function main:Create()
    local close = CreateFrame("Button", nil, title, "UIPanelCloseButton")
    close:SetPoint("RIGHT", 2, 0)
    close:SetScript("OnClick", function() self:Hide() end)
+--@debug@
+   local debug = CreateFrame("Button", nil, title, "UIPanelButtonTemplate")
+   debug:SetSize(54, 18)
+   debug:SetPoint("RIGHT", close, "LEFT", -2, 0)
+   debug:SetText("Debug")
+   debug:SetScript("OnClick", function() ns.debugPanel:Toggle() end)
+--@end-debug@
 
    -- Regions.
    local map = ns.map:Create(frame)

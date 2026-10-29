@@ -60,3 +60,7 @@ UI\Zoo.lua
 UI\ClassPicker.lua
 UI\MainFrame.lua
 Game.lua
+#@debug@
+Debug.lua
+UI\DebugPanel.lua
+#@end-debug@

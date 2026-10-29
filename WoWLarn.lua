@@ -130,6 +130,13 @@ function mod:PrintHelp()
    self:info(L["/larn reset  - reset the window position"])
 end
 
+-- Flat tiles or the 2.5D view.
+function mod:ToggleView()
+   self.db.profile.view = self.db.profile.view == "3d" and "flat" or "3d"
+   ns.ui:Refresh("map")
+   if ns.bar.UpdateView then ns.bar:UpdateView() end
+end
+
 function mod:ChatCommand(input)
    local cmd = strtrim(input or ""):lower()
    if cmd == "" then
@@ -137,8 +144,7 @@ function mod:ChatCommand(input)
    elseif cmd == "config" then
       self:OpenConfig()
    elseif cmd == "view" or cmd == "3d" then
-      self.db.profile.view = self.db.profile.view == "3d" and "flat" or "3d"
-      ns.ui:Refresh("map")
+      self:ToggleView()
    elseif cmd == "sounds" then
       ns.ui:TestSounds()
    elseif cmd == "scores" then
@@ -159,6 +165,12 @@ function mod:ChatCommand(input)
       if not ns.ui:IsActive() then ns.ui:NewGame() end
    elseif cmd == "mapdebug" then
       ns.map:Debug()
+   elseif cmd == "debug" then
+      ns.debugPanel:Toggle()
+   elseif cmd == "wizard" then
+      ns.Debug.toggleWizard()
+   elseif cmd == "god" then
+      ns.Debug.toggleGod()
 --@end-debug@
    else
       self:PrintHelp()

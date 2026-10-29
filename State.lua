@@ -117,6 +117,7 @@ function G.Reset()
    G.facing = 1         -- the last direction the player moved or attacked in (south)
    G.gtime = 0
    G.wizard = false
+   G.god = false        -- debug builds: cannot die (Debug.lua)
    G.dead = false       -- set by Player.died
    G.lastnum = 0        -- cause of the last damage, for the scoreboard
    G.hitflag, G.hit2flag, G.hit3flag = false, false, false
