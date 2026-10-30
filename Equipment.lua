@@ -254,7 +254,7 @@ function Equipment.reportChanges()
    local ui = ns.ui
    local function Permanent(label, was, is)
       if is == was then return end
-      ui:Log(is > was and "loot" or "damage", is > was and L["%s rises for good: %d (now %d)."] or L["%s falls for good: %d (now %d)."], label, math.abs(is - was), is)
+      ui:Log(is > was and "loot" or "damage", is > was and L["%s rises permanently by %d (now %d)."] or L["%s falls permanently by %d (now %d)."], label, math.abs(is - was), is)
    end
    Permanent(L["Maximum health"], before.hp, now.hp)
    Permanent(L["Maximum mana"], before.mana, now.mana)
@@ -266,7 +266,7 @@ function Equipment.reportChanges()
          if is == 0 then
             ui:Log("magic", L["%s is back to normal."], label)
          else
-            ui:Log("magic", is > was and L["%s rises for a while: %d (now %d)."] or L["%s falls for a while: %d (now %d)."],
+            ui:Log("magic", is > was and L["%s rises temporarily by %d (now %d)."] or L["%s falls temporarily by %d (now %d)."],
                label, math.abs(is - was), (select(1, Equipment.statBreakdown(stat))))
          end
       end
