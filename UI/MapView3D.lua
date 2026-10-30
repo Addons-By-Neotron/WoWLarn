@@ -318,13 +318,20 @@ end
 
 function map3d:Create(view)
    self.view = view
-   -- the mouse wheel zooms, as the Zoom option does
+   -- the mouse wheel zooms (shift: tilts the camera), or sizes the tiles of the flat view
    view:EnableMouseWheel(true)
    view:SetScript("OnMouseWheel", function(_, delta)
-      if not self.shown then return end
       local profile = ns.mod.db.profile
-      profile.zoom3d = max(0.5, min(1.5, floor(((profile.zoom3d or 1) + delta * 0.1) * 20 + 0.5) / 20))
-      ns.ui:RefreshNow("map")
+      if not ns.map:Is3D() then
+         profile.tileSize = max(24, min(48, (profile.tileSize or 32) + delta * 4))
+         ns.map:Layout()
+      elseif IsShiftKeyDown() then
+         profile.cameraAngle = max(30, min(80, (profile.cameraAngle or 55) + delta * 5))
+         ns.ui:RefreshNow("map")
+      else
+         profile.zoom3d = max(0.5, min(1.5, floor(((profile.zoom3d or 1) + delta * 0.1) * 20 + 0.5) / 20))
+         ns.ui:RefreshNow("map")
+      end
    end)
    self.layers = {}
    local base = view:GetFrameLevel() + 1
