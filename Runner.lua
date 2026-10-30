@@ -422,7 +422,17 @@ end
 function ui:PickItem(verb, filter, opts)
    opts = opts or {}
    local extra = (opts.gold and L[", . for gold"] or "") .. (opts.none and L[", - for none"] or "")
-   ns.inventory:Open(format(L["What do you want to %s?"], verb), filter)
+   if opts.only and filter then  -- (only the items that fit are shown; none, nothing to ask)
+      local fits = false
+      for slot = 1, ns.K.IVENSIZE do
+         if ns.G.iven[slot] ~= 0 and filter(ns.G.iven[slot]) then fits = true break end
+      end
+      if not fits then
+         self:Message(opts.empty or L["You have nothing to %s."], verb)
+         return nil
+      end
+   end
+   ns.inventory:Open(format(L["What do you want to %s?"], verb), filter, opts.only)
    ns.prompt:Set(format(L["What do you want to %s? [a-z, * for all%s]"], verb, extra))
    local result
    while result == nil do

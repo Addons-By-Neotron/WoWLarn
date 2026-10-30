@@ -249,7 +249,7 @@ end
 
 -- C: readscr(). Reads a scroll or a book from the pack.
 function Action.read()
-   local slot = ns.ui:PickItem(L["read"], Has(READ))
+   local slot = ns.ui:PickItem(L["read"], Has(READ), { only = true, empty = L["You have no scrolls or books to read."] })
    if not slot then return end
    local id = iven[slot]
    if id == K.OSCROLL then
@@ -268,7 +268,8 @@ end
 
 -- C: quaff().
 function Action.quaff()
-   local slot = ns.ui:PickItem(L["quaff"], function(id) return id == K.OPOTION or ns.Object.isElixir(id) end)
+   local slot = ns.ui:PickItem(L["quaff"], function(id) return id == K.OPOTION or ns.Object.isElixir(id) end,
+      { only = true, empty = L["You have no potions to drink."] })
    if not slot then return end
    local id = iven[slot]
    if ns.Object.isElixir(id) then

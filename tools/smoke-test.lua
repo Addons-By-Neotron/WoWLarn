@@ -611,7 +611,12 @@ keys("q"); keys("a"); check(G.c[K.HP] == 1, "can't quaff a dagger")
 keys("q"); keys("c"); check(G.c[K.HP] > 1 and G.iven[3] == 0 and G.potionknown[K.PHEALING] == 1, "quaffed the potion")
 keys("r"); keys("d"); check(G.iven[4] == 0 and G.scrollknown[K.SBLANK] == 1, "read the scroll")
 keys("e"); keys("e"); check(G.iven[5] == 0, "ate the cookie")
-keys("q"); ui:InjectKey("ESC"); check(ui.wait == "key" and (last() or ""):find("aborted"), "Esc cancels")
+LOG = {}
+keys("q"); check(ui.wait == "key" and not ns.inventory:IsShown() and (last() or ""):find("no potions"), "nothing to quaff says so")
+keys("r"); check(ui.wait == "key" and (last() or ""):find("no scrolls"), "nothing to read says so")
+G.iven[3], G.ivenarg[3] = K.OPOTION, K.PHEALING
+keys("q"); check(ns.inventory:IsShown(), "the potions are listed")
+ui:InjectKey("ESC"); check(ui.wait == "key" and (last() or ""):find("aborted"), "Esc cancels")
 G.iven[5], G.ivenarg[5] = K.OHASH, 0; local wisdom = G.c[K.WISDOM]; keys("q"); keys("e"); check(G.iven[5] == 0 and G.c[K.WISDOM] == wisdom + 2, "drank the elixir from the pack")
 keys("i"); check(ui.wait == "key", "inventory waits for a key"); keys(" ")
 keys("g"); check((last() or ""):find("weighs"), "pack weight")

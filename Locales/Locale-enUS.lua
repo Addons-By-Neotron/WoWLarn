@@ -1059,3 +1059,6 @@ L["You wield your %s%s."] = true
 L["You automatically wield your %s%s."] = true
 L["You automatically put on your %s%s."] = true
 L["You automatically put on your shield%s."] = true
+L["You have no scrolls or books to read."] = true
+L["You have no potions to drink."] = true
+L["You have nothing to %s."] = true

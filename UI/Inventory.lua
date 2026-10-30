@@ -101,9 +101,10 @@ function inventory:Create(parent)
 end
 
 -- filter is nil to show everything, or a function(id) that says which items are valid.
-function inventory:Open(title, filter)
+function inventory:Open(title, filter, only)
    if not self.frame then return end
    self.filter = filter
+   self.only = only and filter or nil  -- (show just the items that fit)
    self.title:SetText(title or L["Inventory"])
    self.frame:Show()
    self:Update()
@@ -122,11 +123,20 @@ function inventory:Update()
    if not self.frame or not self.frame:IsShown() then return end
    local filter = self.filter
    local limit = ns.Player.pocketLimit()
-   local used = 0
+   local used, shown = 0, 0
    for slot, button in ipairs(self.rows) do
       local id = G.iven[slot]
       if id ~= 0 then used = used + 1 end
       button.effect:SetText("")
+      -- where the row goes: its own place, or one after the other when only the items that fit show
+      local show = not self.only or (id ~= 0 and filter(id))
+      button:SetShown(show)
+      if show then
+         shown = shown + 1
+         local position = self.only and shown or slot
+         button:ClearAllPoints()
+         button:SetPoint("TOPLEFT", 8 + math.floor((position - 1) / ROWS) * ROW_W, -(HEADER_H + ((position - 1) % ROWS) * ROW_H))
+      end
       if slot > limit and id == 0 then
          -- a slot that opens up with the level: say when
          button.icon:Hide()
@@ -148,6 +158,7 @@ function inventory:Update()
          button.effect:SetText(ns.Equipment.short(slot) or "")
       end
    end
+   self.frame:SetHeight((self.only and math.min(ROWS, math.max(shown, 1)) or ROWS) * ROW_H + HEADER_H + FOOTER_H + 8)
    self.summary:SetText(table.concat(ns.Equipment.summary(), "\n"))
    local pounds = ns.Player.packWeight()
    self.weight:SetText(format(L["Items %d of %d"], used, limit) .. "   "
