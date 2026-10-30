@@ -100,6 +100,7 @@ end
 
 -- A special attack of the monster has happened.
 function Bestiary.special(id, attack)
+   Bestiary.see(id)  -- (a monster that is not seen, like a demon without the Eye of Larn, still counts once it has fought you)
    local entry = Entries()[id]
    if entry and Counts() and attack and SPECIAL[attack] and not entry.specials[attack] then
       entry.specials[attack] = true
@@ -111,6 +112,7 @@ end
 -- damage is only known to the bestiary once it has hurt: before that, all it knows is that the
 -- armor stopped it, so it did less than that.
 function Bestiary.hit(id, damage, ac)
+   Bestiary.see(id)  -- (a monster that is not seen, like a demon without the Eye of Larn, still counts once it has fought you)
    local entry = Entries()[id]
    if not entry or not Counts() then return end
    if damage > 0 then
@@ -123,6 +125,7 @@ end
 
 -- The player has swung at the monster.
 function Bestiary.swing(id)
+   Bestiary.see(id)  -- (a monster that is not seen, like a demon without the Eye of Larn, still counts once it has fought you)
    local entry = Entries()[id]
    if entry and Counts() then
       entry.swings = (entry.swings or 0) + 1
@@ -149,6 +152,7 @@ end
 
 -- The monster has shrugged off a spell (see Spells.noSpell).
 function Bestiary.immune(id, spell)
+   Bestiary.see(id)
    local entry = Entries()[id]
    if not entry or not Counts() then return end
    entry.immune = entry.immune or {}
@@ -185,6 +189,7 @@ function Bestiary.isKnown(id)
 end
 
 function Bestiary.kill(id)
+   Bestiary.see(id)  -- (a monster that is not seen, like a demon without the Eye of Larn, still counts once it has fought you)
    local entry = Entries()[id]
    if entry and Counts() then
       entry.kills = entry.kills + 1

@@ -1157,6 +1157,16 @@ G.c[K.HPMAX] = G.c[K.HPMAX] - 2
 ns.Equipment.reportChanges()
 check(last():find("Maximum health falls permanently"), "maximum health: " .. tostring(last()))
 
+-- a demon you cannot see (no Eye of Larn) is in the bestiary once it has fought you
+do
+   ns.mod.db.global.bestiary = {}
+   ns.Bestiary.hit(K.DEMONLORD, 5, 10)
+   check(ns.Bestiary.entry(K.DEMONLORD) ~= nil, "a demon that hit you is in the bestiary")
+   ns.mod.db.global.bestiary = {}
+   ns.Bestiary.kill(K.DEMONPRINCE)
+   check(ns.Bestiary.entry(K.DEMONPRINCE) and ns.Bestiary.entry(K.DEMONPRINCE).kills == 1, "a demon you killed is in the bestiary")
+end
+
 -- the action bar
 do
    local bar = ns.actionBar
