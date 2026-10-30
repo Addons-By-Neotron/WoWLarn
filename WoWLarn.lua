@@ -130,6 +130,16 @@ function mod:PrintHelp()
    self:info(L["/larn scores  - show the high scores"])
    self:info(L["/larn sounds  - play every sound effect"])
    self:info(L["/larn reset  - reset the window position"])
+--@debug@
+   self:info("Debug build:")
+   self:info("/larn debug  - the debug panel")
+   self:info("/larn wizard  - wizard mode on or off")
+   self:info("/larn god  - god mode on or off")
+   self:info("/larn new  - give this game up and start another")
+   self:info("/larn models  - the model viewer (choose the look of the monsters)")
+   self:info("/larn zoo  - all the monsters in one place")
+   self:info("/larn mapdebug  - what the map is drawing")
+--@end-debug@
 end
 
 -- Flat tiles or the 2.5D view.
