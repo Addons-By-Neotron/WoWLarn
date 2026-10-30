@@ -33,9 +33,9 @@ local GAP = 4
 local CELL = 3  -- minimap pixels per tile
 local EFFECT_SIZE, EFFECT_COLUMNS = 24, 8
 local STAT_W, STAT_H, HEADING_H = 114, 14, 20
-local SLOT_SIZE = 30
-local MINIMAP_H, SHEET_H = K.MAXY * CELL + 22, 352
-local MODEL_TOP, MODEL_H = 26, 108
+local SLOT_SIZE = 26
+local MINIMAP_H, SHEET_H = K.MAXY * CELL + 22, 328
+local MODEL_TOP, MODEL_H = 26, 84
 
 local function Section(parent, height, title)
    local panel = ns.CreatePanel(parent)

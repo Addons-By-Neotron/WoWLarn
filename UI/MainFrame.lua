@@ -27,7 +27,7 @@ local main = {}
 ns.main = main
 
 local FRAME_NAME = "WoWLarnFrame"
-local WIDTH, HEIGHT = 976, 692
+local WIDTH, HEIGHT = 976, 712
 local TITLE_H, SIDE_W, BOTTOM_H, PAD = 22, 240, 170, 6
 
 -- WoW key names the game needs; printable characters arrive through OnChar.
