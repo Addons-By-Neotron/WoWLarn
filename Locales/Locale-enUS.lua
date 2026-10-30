@@ -1054,3 +1054,4 @@ L["The Eye of Larn lets you see the %s through the dark!"] = true
 L["Your Wand of Wonder lifts you clear of the danger!"] = true
 L["Square icons"] = true
 L["Keep the black squares around the icons on the map.  Off, the black is left out so the icons sit on the floor."] = true
+L["You find %s%s"] = true

@@ -53,6 +53,17 @@ function ns.TitleCase(text)
    end))
 end
 
+-- "a Dagger" -> "Dagger", "some Speed" -> "Speed": the name without the article in front.
+-- ns.Article(name) is what was cut off ("a ", "an ", "some " or "the "), or "".
+local ARTICLE = { a = true, an = true, some = true, the = true }
+function ns.Article(name)
+   local first = name:match("^(%l+) ")
+   return first and ARTICLE[first] and (first .. " ") or ""
+end
+function ns.StripArticle(name)
+   return (name:sub(#ns.Article(name) + 1))
+end
+
 function ns.idiv(a, b)
    local quotient = a / b
    if quotient >= 0 then return floor(quotient) end

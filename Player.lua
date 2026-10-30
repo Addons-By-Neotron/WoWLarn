@@ -352,7 +352,7 @@ function Player.stealSomething(x, y)
    for _ = 1, 100 do
       local i = ns.rund(IVENSIZE) + 1
       if iven[i] ~= 0 and c[K.WEAR] ~= i and c[K.WIELD] ~= i and c[K.SHIELD] ~= i then
-         ns.ui:Message("  %s", ns.Tables.objectname[iven[i]] or "?")
+         ns.ui:Message("  %s", ns.StripArticle(ns.Tables.objectname[iven[i]] or "?"))
          Player.adjustCValues(iven[i], ivenarg[i])
          if not loot then
             loot = {}
@@ -403,7 +403,7 @@ local PLAIN = {
 -- Potions and scrolls only show what they are once the player has found out.
 function Player.objectName(id, arg)
    local T = ns.Tables
-   local name = T.objectname[id] or "?"
+   local name = ns.StripArticle(T.objectname[id] or "?")
    if id == K.OPOTION then
       local kind = T.potionname[arg]
       if kind and kind ~= "" and G.potionknown[arg] ~= 0 then name = name .. " of " .. kind end
@@ -580,10 +580,10 @@ function Player.enchantArmor(how)
    if ivenarg[slot] >= 10 then
       if how == K.ENCH_ALTAR then
          ivenarg[slot] = ivenarg[slot] - 1
-         ui:Message(L["Your %s glows briefly."], ns.Tables.objectname[iven[slot]])
+         ui:Message(L["Your %s glows briefly."], ns.StripArticle(ns.Tables.objectname[iven[slot]]))
          return
       elseif ns.rnd(10) <= 9 then
-         ui:Message(L["Your %s vibrates violently and crumbles into dust!"], ns.Tables.objectname[iven[slot]])
+         ui:Message(L["Your %s vibrates violently and crumbles into dust!"], ns.StripArticle(ns.Tables.objectname[iven[slot]]))
          iven[slot], ivenarg[slot] = 0, 0
          c[which] = 0
          Player.recalc()
@@ -591,7 +591,7 @@ function Player.enchantArmor(how)
          return
       end
    end
-   ui:Message(L["Your %s glows for a moment."], ns.Tables.objectname[iven[slot]])
+   ui:Message(L["Your %s glows for a moment."], ns.StripArticle(ns.Tables.objectname[iven[slot]]))
    Player.recalc()
    ui:Refresh("all")
 end

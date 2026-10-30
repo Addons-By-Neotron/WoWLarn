@@ -93,7 +93,7 @@ local function StockName(entry)
    elseif entry[3] == K.OSCROLL then
       return format(L["scroll of %s"], T.scrollname[entry[4]])
    end
-   return T.objectname[entry[3]]
+   return ns.StripArticle(T.objectname[entry[3]])
 end
 
 local function StockRows(page)

@@ -183,7 +183,7 @@ function ItemInfo.discover(id, name)
    if not POWER[id] or Discoveries()[id] then return end
    Discoveries()[id] = true
    ns.ui:Message(SEEN[id], name or "")
-   ns.ui:Message(L["You have found out what %s can do!"], ns.Tables.objectname[id])
+   ns.ui:Message(L["You have found out what %s can do!"], ns.StripArticle(ns.Tables.objectname[id]))
 end
 
 -- The lines of a tooltip: what the item is and does. Returns a list of strings.
@@ -234,5 +234,5 @@ local KIND = {
 }
 
 function ItemInfo.groundName(id)
-   return KIND[id] or ns.Tables.objectname[id] or "?"
+   return KIND[id] or ns.StripArticle(ns.Tables.objectname[id] or "?")
 end

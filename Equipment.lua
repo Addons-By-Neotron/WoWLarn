@@ -142,7 +142,7 @@ function Equipment.summary()
       end
       if EFFECTS[id] and not SHORT[id] and id ~= K.OHAMMER and id ~= K.OSLAYER and id ~= K.OPSTAFF and not seen[id] then
          seen[id] = true
-         artifacts[#artifacts + 1] = ns.Tables.objectname[id]
+         artifacts[#artifacts + 1] = ns.StripArticle(ns.Tables.objectname[id])
       end
    end
 
@@ -217,10 +217,10 @@ function Equipment.statBreakdown(stat)
    for i = 1, K.IVENSIZE do
       local entry = ITEM_STAT[iven[i]]
       local amount = entry and entry[stat] and entry[stat](ivenarg[i])
-      if amount and amount ~= 0 then mods[#mods + 1] = { T.objectname[iven[i]], amount } end
+      if amount and amount ~= 0 then mods[#mods + 1] = { ns.StripArticle(T.objectname[iven[i]]), amount } end
    end
    if c[K.HERO] ~= 0 then mods[#mods + 1] = { L["Heroism"], 11 } end
-   if c[K.COKED] ~= 0 then mods[#mods + 1] = { T.objectname[K.OCOKE], 33 } end
+   if c[K.COKED] ~= 0 then mods[#mods + 1] = { ns.StripArticle(T.objectname[K.OCOKE]), 33 } end
    if stat == "DEX" and c[K.DEXCOUNT] ~= 0 then mods[#mods + 1] = { T.spelname[K.SP_DEXTERITY], 3 } end
    if stat == "STR" and c[K.STRCOUNT] ~= 0 then mods[#mods + 1] = { T.spelname[K.SP_STRENGTH], 3 } end
    if stat == "STR" and c[K.GIANTSTR] ~= 0 then mods[#mods + 1] = { T.potionname[K.PGIANTSTR], 21 } end
