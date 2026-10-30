@@ -596,7 +596,7 @@ function map3d:Draw()
    local angle = ns.mod.db.profile.cameraAngle or 55
    SIN, COS = math.sin(math.rad(angle)), math.cos(math.rad(angle))
    CAMERA_BACK, CAMERA_HEIGHT = CAMERA_DISTANCE * COS, CAMERA_DISTANCE * SIN
-   FOCAL = CAMERA_DISTANCE * TILE_PIXELS / TILE
+   FOCAL = CAMERA_DISTANCE * TILE_PIXELS * (ns.mod.db.profile.zoom3d or 1) / TILE
    camera.centerX = width / 2
    camera.centerY = height * PLAYER_AT
    self.tweening = false

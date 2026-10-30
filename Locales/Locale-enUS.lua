@@ -1075,3 +1075,5 @@ L["Your hands are so clumsy from the brew that the weapon slips away!"] = true
 L["You have nothing to wield."] = true
 L["You have nothing to wear."] = true
 L["You have no cookies to eat."] = true
+L["Zoom"] = true
+L["How close the camera is in the 2.5D view.  Lower shows more of the map."] = true

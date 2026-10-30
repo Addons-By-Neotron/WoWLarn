@@ -144,6 +144,18 @@ local function BuildOptions()
                   ns.ui:RefreshNow("map")
                end,
             },
+            zoom3d = {
+               type = "range",
+               name = L["Zoom"],
+               desc = L["How close the camera is in the 2.5D view.  Lower shows more of the map."],
+               order = 16.6,
+               min = 0.5, max = 1.5, step = 0.05,
+               get = function() return mod.db.profile.zoom3d or 1 end,
+               set = function(_, value)
+                  mod.db.profile.zoom3d = value
+                  ns.ui:RefreshNow("map")
+               end,
+            },
             models = {
                type = "toggle",
                name = L["Creature models"],
