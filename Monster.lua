@@ -406,6 +406,7 @@ function Monster.spattack(x, xx, yy)
       if monst >= DEMONLORD or monst == K.WRAITH or monst == K.VAMPIRE then
          for i = 1, K.IVENSIZE do
             if iven[i] == K.OPSTAFF and rnd(100) < 75 then
+               ns.ItemInfo.discover(K.OPSTAFF, G.lastmonst)
                return false
             end
          end

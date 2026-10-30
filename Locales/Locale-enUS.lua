@@ -1107,3 +1107,5 @@ L["No monsters seen yet."] = true
 L["Damage: about %s per hit without armor"] = true
 L["Your armor stops it (unless it has tricks)"] = true
 L["With your armor: about %s"] = true
+L["It turns aside the special attacks of the mightiest monsters."] = true
+L["Your Staff of Power turns aside the %s's special attack!"] = true
