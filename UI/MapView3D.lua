@@ -43,6 +43,7 @@ local NEAR_ROWS, FAR_ROWS, SIDE_COLUMNS = 4, 13, 14
 local ROWS = NEAR_ROWS + FAR_ROWS + 1
 local MIN_AHEAD = 24
 local SEE_THROUGH = 0.3  -- how solid a wall in front of the player is
+local STEEP = math.sin(math.rad(50)) - 1e-9  -- from this angle up the camera looks over the walls
 local FOG_REACH = 1700  -- ahead at which things are at their darkest
 local floor, max, min = math.floor, math.max, math.min
 local MAXX, MAXY = K.MAXX, K.MAXY
@@ -369,8 +370,9 @@ local function DrawTile(layers, x, y, ground)
    if IsWall(x, y) then
       local color = V.WALL
       local wh = WALL_HEIGHT
-      -- a wall between the camera and the player lets the player show through
-      local alpha = (y > G.playery and math.abs(x - G.playerx) <= 1) and SEE_THROUGH or 1
+      -- a wall between the camera and the player lets the player show through, unless the
+      -- camera is steep enough to look over it
+      local alpha = (SIN < STEEP and y > G.playery and math.abs(x - G.playerx) <= 1) and SEE_THROUGH or 1
       -- a wall is thinner than its tile on the sides that face open floor, so what stands
       -- next to it does not overlap it
       local west = IsWall(x - 1, y) and 0 or WALL_INSET
