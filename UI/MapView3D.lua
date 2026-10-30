@@ -719,7 +719,7 @@ function map3d:StackRows(roundY)
          if kind == FLOOR then
             level = base + (rank - 1)
          else
-            level = base + ROWS + (rank - 1) * 2 + (kind == ACTOR and 1 or 0)
+            level = base + ROWS + (rank - 1) * 3 + (kind == ACTOR and 1 or 0)  -- (the models of a row are a level above it)
          end
          if layer:GetFrameLevel() ~= level then layer:SetFrameLevel(level) end
       end
@@ -766,7 +766,7 @@ function map3d:Draw()
       end
    end
    -- what spells do on the way: a glow and a glyph, above the models
-   self:BeginEffects(view:GetFrameLevel() + 1 + (ROWS + 1) * 3 + 3)
+   self:BeginEffects(view:GetFrameLevel() + 1 + ROWS * 4 + 8)  -- (above the floors, then the walls and models of every row)
    for _, effect in ipairs(ns.map.overlays or {}) do
       local mx, my, scale = Project((effect.x - 0.5) * TILE, (effect.y - 0.5) * TILE, TILE * 0.35)
       if mx and effect.x >= 1 and effect.x <= MAXX and effect.y >= 1 and effect.y <= MAXY then
