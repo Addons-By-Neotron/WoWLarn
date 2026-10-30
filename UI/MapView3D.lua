@@ -218,14 +218,15 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    -- down by the same factor to look the same size (always, so nothing changes when it dies)
    local k = MODEL_ROOM
    local room = look ~= "player" and V.Room(look) or 1
-   y = y + (look ~= "player" and V.Lower(look) or 0) * width
+   local own = look == "player" and V.PlayerScale() or 1  -- (a short race: the model is smaller, so the feet are brought down again)
+   y = y + (look ~= "player" and V.Lower(look) or (1 - 1 / own) / 2 * MODEL_ASPECT * 0.9) * width
    frame:ClearAllPoints()
    frame:SetPoint("CENTER", layer, "TOPLEFT", x, -(y - width * MODEL_ASPECT / 2))
    frame:SetSize(width * k * room, width * k * room * MODEL_ASPECT)
    -- (every time: the client resets the scale when it reloads or restarts the model)
    if k ~= 1 and frame.model.SetModelScale then frame.model:SetModelScale(1 / k) end
    -- (after the size: the client sets up the camera again when a frame is resized)
-   local scale = look ~= "player" and V.Scale(look) * V.Room(look) or 1  -- (a larger frame, the camera further back)
+   local scale = look ~= "player" and V.Scale(look) * V.Room(look) or own  -- (a larger frame, the camera further back)
    if frame.scale ~= scale then
       frame.scale = scale
       CameraScale(frame.model, scale)

@@ -607,6 +607,19 @@ for id, ac in pairs(V.MONSTER_AC) do
    ns.MonsterData[id].armorclass = ac
 end
 
+-- How far the camera stands from the model of the player, by race (the client fits any model
+-- to the frame, so the short races look as tall as the tall ones): above 1 shrinks the model.
+V.RACE_SCALE = {
+   Gnome = 1.45, Mechagnome = 1.45, Goblin = 1.35, Vulpera = 1.5, Dwarf = 1.15, DarkIronDwarf = 1.15,
+   EarthenDwarf = 1.15, Pandaren = 0.95, Orc = 0.97, MagharOrc = 0.97, Troll = 0.95, ZandalariTroll = 0.9,
+   Draenei = 0.92, LightforgedDraenei = 0.92, Tauren = 0.85, HighmountainTauren = 0.85, Worgen = 0.95,
+   KulTiran = 0.95, Dracthyr = 0.95,
+}
+function V.PlayerScale()
+   local token = UnitRace and select(2, UnitRace("player"))
+   return V.RACE_SCALE[token] or 1
+end
+
 -- The display of a monster; look is the number it was given by chance (Draw: G.look).
 function V.MonsterDisplay(id, look)
    local own = ns.mod.db.global.displays
