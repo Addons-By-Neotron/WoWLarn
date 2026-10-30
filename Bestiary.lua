@@ -52,6 +52,14 @@ local SPECIAL = {
    [14] = L["Steals your things"],
    [15] = L["Bites hard"],
    [16] = L["Steals your gear"],
+   -- what a monster does without attacking: numbers of the addon, found out when it happens
+   [101] = L["Dulls the weapon that hits it"],
+   [102] = L["Turns into a dragon when badly hurt"],
+   [103] = L["Multiplies"],
+}
+Bestiary.DULLS, Bestiary.METAMORPHS, Bestiary.MULTIPLIES = 101, 102, 103
+local PASSIVE = {
+   [K.RUSTMONSTER] = 101, [K.DISENCHANTRESS] = 101, [K.CUBE] = 101, [K.METAMORPH] = 102, [K.LEMMING] = 103,
 }
 
 -- The monster as it is in this game (the difficulty changes it), or as it is by default.
@@ -180,8 +188,10 @@ end
 function Bestiary.specials(id)
    local entry, names, listed = Entries()[id], {}, {}
    local seenAttacks = entry and entry.specials or {}
-   if entry and entry.lore and ns.MonsterData[id].attack > 0 then
-      seenAttacks = { [ns.MonsterData[id].attack] = true }
+   if entry and entry.lore then
+      seenAttacks = {}
+      if ns.MonsterData[id].attack > 0 then seenAttacks[ns.MonsterData[id].attack] = true end
+      if PASSIVE[id] then seenAttacks[PASSIVE[id]] = true end
    end
    for attack in pairs(seenAttacks) do
       if not listed[SPECIAL[attack]] then  -- (two attacks can have the same name)
@@ -191,7 +201,7 @@ function Bestiary.specials(id)
    end
    table.sort(names)
    local data = ns.MonsterData[id]
-   return names, data.attack > 0 and #names == 0 and not (entry and entry.lore)
+   return names, (data.attack > 0 or PASSIVE[id] ~= nil) and #names == 0 and not (entry and entry.lore)
 end
 
 -- The monsters seen, from the weakest.

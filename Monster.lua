@@ -342,10 +342,12 @@ function Monster.hitmonster(x, y)
    if flag and (monst == K.RUSTMONSTER or monst == K.DISENCHANTRESS or monst == K.CUBE) and wield > 0 then
       if (ivenarg[wield] > -10 and DULLABLE[iven[wield]]) or ivenarg[wield] > 0 then
          Msg(L["Your weapon is dulled by the %s."], G.lastmonst)
+         ns.Bestiary.special(monst, ns.Bestiary.DULLS)
          ivenarg[wield] = ivenarg[wield] - 1
          ns.Player.recalc()
       elseif ivenarg[wield] <= -10 then
          Msg(L["Your weapon disintegrates!"])
+         ns.Bestiary.special(monst, ns.Bestiary.DULLS)
          ns.Player.adjustCValues(iven[wield], ivenarg[wield])  -- FIX: not in the C. What it did to the stats goes with it.
          iven[wield], ivenarg[wield] = 0, 0
          c[K.WIELD] = 0
@@ -363,9 +365,11 @@ function Monster.hitmonster(x, y)
    end
    if monst == K.METAMORPH and hitp[x][y] < 25 and hitp[x][y] > 0 then
       mon[x][y] = K.BRONZEDRAGON + rund(9)
+      ns.Bestiary.special(monst, ns.Bestiary.METAMORPHS)
    end
    if mon[x][y] == K.LEMMING and rnd(100) <= 40 and not Monster.lemmingsEnough() then
       Monster.createMonster(K.LEMMING)
+      ns.Bestiary.special(K.LEMMING, ns.Bestiary.MULTIPLIES)
    end
    ns.ui:Refresh("all")
 end

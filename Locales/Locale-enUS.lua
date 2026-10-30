@@ -1125,3 +1125,6 @@ L["Not affected by: %s."] = true
 L["Health: %s.  Armor class: %d"] = true
 L["Damage: %s per hit without armor"] = true
 L["Not affected by"] = true
+L["Dulls the weapon that hits it"] = true
+L["Turns into a dragon when badly hurt"] = true
+L["Multiplies"] = true
