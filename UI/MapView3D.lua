@@ -318,6 +318,14 @@ end
 
 function map3d:Create(view)
    self.view = view
+   -- the mouse wheel zooms, as the Zoom option does
+   view:EnableMouseWheel(true)
+   view:SetScript("OnMouseWheel", function(_, delta)
+      if not self.shown then return end
+      local profile = ns.mod.db.profile
+      profile.zoom3d = max(0.5, min(1.5, floor(((profile.zoom3d or 1) + delta * 0.1) * 20 + 0.5) / 20))
+      ns.ui:RefreshNow("map")
+   end)
    self.layers = {}
    local base = view:GetFrameLevel() + 1
    for row = 1, ROWS do
