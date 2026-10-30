@@ -1142,6 +1142,9 @@ ns.Bestiary.hit(K.CENTIPEDE, 0, 9)
 check(ns.Bestiary.entry(K.CENTIPEDE).blocked == 12 and not ns.Bestiary.entry(K.CENTIPEDE).hurt, "an armor that stopped it is all that is known")
 ns.Bestiary.hit(K.CENTIPEDE, 3, 5)
 check(ns.Bestiary.entry(K.CENTIPEDE).hurt, "damage taken is remembered")
+check(ns.Bestiary.toHit(K.CENTIPEDE) == nil, "no idea how well blows land before swinging")
+for _ = 1, 3 do ns.Bestiary.swing(K.CENTIPEDE) end
+check(type(ns.Bestiary.toHit(K.CENTIPEDE)) == "string", "a word for how well blows land after a few swings")
 G.wizard = true
 ns.Bestiary.see(K.ORC)
 G.wizard = false

@@ -324,6 +324,7 @@ function Monster.hitmonster(x, y)
    local tmp = G.monster[monst].armorclass + c[K.LEVEL] + c[K.DEXTERITY]
       + idiv(c[K.WCLASS], 4) - 12 - c[K.HARDGAME]
 
+   ns.Bestiary.swing(monst)
    local flag, damag = false, 0
    -- need at least a random chance to hit
    if rnd(20) < tmp or rnd(71) < 5 then

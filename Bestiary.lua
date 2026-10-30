@@ -89,6 +89,29 @@ function Bestiary.hit(id, damage, ac)
    end
 end
 
+-- The player has swung at the monster.
+function Bestiary.swing(id)
+   local entry = Entries()[id]
+   if entry and Counts() then entry.swings = (entry.swings or 0) + 1 end
+end
+
+-- How well the player's blows land, as a word, once enough have been swung at the monster to
+-- tell (the armor class of the monster is never shown).  From the chance Monster.hitmonster has.
+local SWINGS_TO_KNOW = 3
+function Bestiary.toHit(id)
+   local entry = Entries()[id]
+   if not entry or (entry.swings or 0) < SWINGS_TO_KNOW then return nil end
+   local c = G.c
+   local need = Stats(id).armorclass + c[K.LEVEL] + c[K.DEXTERITY] + math.floor(c[K.WCLASS] / 4) - 12 - c[K.HARDGAME]
+   local chance = math.min(19, math.max(0, need - 1)) / 20  -- rnd(20) < need
+   chance = chance + (1 - chance) * 4 / 71  -- (and the slim chance that always is)
+   if chance >= 0.9 then return L["You hit it almost every time"] end
+   if chance >= 0.7 then return L["You hit it most of the time"] end
+   if chance >= 0.45 then return L["You hit it about half of the time"] end
+   if chance >= 0.2 then return L["You often miss it"] end
+   return L["You hardly ever hit it"]
+end
+
 function Bestiary.kill(id)
    local entry = Entries()[id]
    if entry and Counts() then entry.kills = entry.kills + 1 end

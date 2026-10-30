@@ -129,6 +129,8 @@ function window:Select(id)
    if entry.kills > 0 then lines[#lines + 1] = format(L["Killed: %d"], entry.kills) end
    local low, high = ns.Bestiary.health(id)
    lines[#lines + 1] = format(L["Health: about %s"], Range(low, high))
+   local toHit = ns.Bestiary.toHit(id)
+   if toHit then lines[#lines + 1] = toHit end
    if entry.hurt then
       local nlow, nhigh = ns.Bestiary.damage(id, 0)
       lines[#lines + 1] = format(L["Damage: about %s per hit without armor"], Range(nlow, nhigh))
