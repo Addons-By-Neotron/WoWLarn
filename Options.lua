@@ -112,6 +112,17 @@ local function BuildOptions()
                desc = L["Your character's race adds a few points to the stats of a new game.  Not part of the original game."],
                order = 17.5,
             },
+            textures = {
+               type = "toggle",
+               name = L["Textured ground"],
+               desc = L["Draw the floors and walls with textures (and lava in the volcano) instead of flat colours."],
+               order = 17.1,
+               get = function() return mod.db.profile.textures ~= false end,
+               set = function(_, value)
+                  mod.db.profile.textures = value
+                  ns.ui:RefreshNow("map")
+               end,
+            },
             ascii = {
                type = "toggle",
                name = L["Classic letters"],

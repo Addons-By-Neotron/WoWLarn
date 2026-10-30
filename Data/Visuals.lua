@@ -665,6 +665,64 @@ function V.ClassIcon(class)
    return ICONS .. class.icon
 end
 
+-- Textures of the ground, walls and lava: file data ids, by region and slot.  A tile takes one of
+-- the list by chance (the same one every time).  They are picked from the dungeon and tileset
+-- textures of the game (checked by the listfile, not by eye: /larn tex, in debug builds, steps
+-- through the neighbours of an id to find better ones).  With "Textured ground" off, and in ASCII
+-- mode, the flat colours above are drawn.
+V.TEXTURES = {
+   town = { floor = { 127725 }, wall = { 127095 } },  -- (cobblestone, grey stone)
+   dungeon = { floor = { 127718, 127730 }, wall = { 128406, 128396 } },  -- (stone floors, rock walls)
+   volcano = { floor = { 127717 }, wall = { 128402 }, lava = { 186942, 186943 } },  -- (rock floor, lava rock, lava)
+}
+
+-- The region a level is in: "town", "dungeon" or "volcano".
+function V.Region(level)
+   if level == 0 then return "town" end
+   return level > K.DBOTTOM and "volcano" or "dungeon"
+end
+
+local function Hash(x, y, salt)
+   local h = (x * 73856093 + y * 19349663 + salt * 83492791) % 2147483647
+   h = (h * 1103515245 + 12345) % 2147483647
+   return h / 2147483647
+end
+V.Hash = Hash
+
+-- The texture of a tile: a file data id and the part of it to show { left, right, top, bottom },
+-- or nil if there is none (or the setting is off).
+function V.Texture(level, slot, x, y)
+   local profile = ns.mod.db.profile
+   if profile.textures == false or profile.ascii then return nil end
+   local region = V.Region(level)
+   local own = ns.mod.db.global.textures and ns.mod.db.global.textures[region .. slot]
+   local list = V.TEXTURES[region][slot]
+   local id = own or (list and list[math.floor(Hash(x, y, 1) * #list) + 1])
+   if not id then return nil end
+   -- (a half of it, so that it takes more than a few tiles for the picture to repeat)
+   local u, v = (x + math.floor(Hash(x, y, 2) * 2)) % 2 * 0.5, (y + math.floor(Hash(x, y, 3) * 2)) % 2 * 0.5
+   return id, { u, u + 0.5, v, v + 0.5 }
+end
+
+-- Some of the walls of the volcano are lava instead (nothing changes in the game: it is still a
+-- wall, and keeps the walker out).  The same every time, in clumps; never on the border of the
+-- level.  Returns "lava" or nil.
+function V.WallVariant(level, x, y)
+   if V.Region(level) ~= "volcano" then return nil end
+   if x <= 2 or y <= 2 or x >= K.MAXX - 1 or y >= K.MAXY - 1 then return nil end
+   local clump = Hash(math.floor(x / 3), math.floor(y / 3), level + 11)
+   if clump < 0.28 and Hash(x, y, level + 5) < 0.85 then return "lava" end
+   return nil
+end
+
+-- What a texture is tinted by, to match the colour of the ground of the level (the textures are
+-- bright, and the ground colours are dark and different in each region).
+function V.Tint(level)
+   local g = V.Ground(level)
+   local top = math.max(g[1], g[2], g[3], 0.01)
+   return { g[1] / top * 0.9, g[2] / top * 0.9, g[3] / top * 0.9 }
+end
+
 -- The dungeon ground gets darker and bluer with depth, the volcano redder.
 function V.Ground(level)
    if level == 0 then return V.GROUND.town end

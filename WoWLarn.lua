@@ -50,6 +50,7 @@ mod.defaults = {
       scales = {},  -- [display id] = the size set in the model viewer (Visuals.Scale)
       rooms = {},  -- [display id] = the room set in the model viewer (Visuals.Room)
       lowers = {},  -- [display id] = how far the model is moved down, set in the model viewer (Visuals.Lower)
+      textures = {},  -- [region .. slot] = file data id: set with /larn tex (debug builds), until the next reload
       turns = {},  -- [display id] = the turn (radians) set in the model viewer (Visuals.Turn)
    },
 }
@@ -66,7 +67,7 @@ function mod:OnInitialize()
 
    -- What the model viewer set lasts until the next reload: the game starts from the tables in
    -- Data/Visuals.lua (see Visuals Own).
-   for _, key in ipairs({ "displays", "scales", "rooms", "lowers", "turns" }) do
+   for _, key in ipairs({ "displays", "scales", "rooms", "lowers", "turns", "textures" }) do
       wipe(self.db.global[key])
    end
 
@@ -74,6 +75,28 @@ function mod:OnInitialize()
    self:RegisterChatCommand("larn", "ChatCommand")
    self:RegisterChatCommand("wowlarn", "ChatCommand")
 end
+
+--@debug@
+-- /larn tex floor|wall|lava <id | + | ->: sets the texture of the slot for the region of this
+-- level until the next reload; + and - take the next and the previous file data id (the neighbours
+-- of an id are mostly textures of the same place).  The id is printed, to put in Data/Visuals.lua.
+function mod:TryTexture(cmd)
+   local slot, what = cmd:match("^tex%s+(%a+)%s*(%S*)")
+   local V = ns.Visuals
+   local region = V.Region(ns.G.level or 1)
+   if not slot or not V.TEXTURES[region][slot] then
+      self:Print("/larn tex floor|wall|lava <id|+|->   (region now: " .. region .. ")")
+      return
+   end
+   local key = region .. slot
+   local own = self.db.global.textures
+   local id = own[key] or V.TEXTURES[region][slot][1]
+   if what == "+" then id = id + 1 elseif what == "-" then id = id - 1 elseif tonumber(what) then id = tonumber(what) end
+   own[key] = id
+   self:Print(format("%s %s: %d", region, slot, id))
+   ns.ui:RefreshNow("map")
+end
+--@end-debug@
 
 -- The launcher for the data broker displays (and the minimap button), when the libraries are
 -- there.
@@ -145,6 +168,7 @@ function mod:PrintHelp()
    self:info("/larn models  - the model viewer (choose the look of the monsters)")
    self:info("/larn zoo  - all the monsters in one place")
    self:info("/larn mapdebug  - what the map is drawing")
+   self:info("/larn tex floor|wall|lava <id|+|->  - try textures for this region")
 --@end-debug@
 end
 
@@ -177,6 +201,8 @@ function mod:ChatCommand(input)
    elseif cmd == "help" then
       self:PrintHelp()
 --@debug@
+   elseif cmd:match("^tex") then
+      self:TryTexture(cmd)
    elseif cmd == "new" then
       ns.Debug.newGame()
    elseif cmd == "mapdebug" then

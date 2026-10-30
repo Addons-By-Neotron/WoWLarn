@@ -101,7 +101,10 @@ end
 
 -- A four-cornered piece of the view, corners in order around it (top left, top right, bottom
 -- right, bottom left), in view coordinates with y growing downwards.
-local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture)
+-- texture: a path (the soft round shadows and glows, blended), or a file data id of a piece of
+-- terrain (opaque), with uv = { left, right, top, bottom } the part of it to show.  The quads are
+-- pooled and reused: what it was last used for is set again every time.
+local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture, uv)
    layer.usedQuads = layer.usedQuads + 1
    local quad = layer.quads[layer.usedQuads]
    if not quad then
@@ -110,10 +113,25 @@ local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture)
       quad:SetSize(1, 1)
       layer.quads[layer.usedQuads] = quad
    end
+   local blend = (type(texture) == "number") and "DISABLE" or "BLEND"
+   if quad.blend ~= blend then
+      quad.blend = blend
+      quad:SetBlendMode(blend)
+   end
    if texture then
-      quad:SetTexture(texture)
+      if quad.texture ~= texture then
+         quad.texture = texture
+         quad:SetTexture(texture)
+      end
+      local l, r, t, b = 0, 1, 0, 1
+      if uv then l, r, t, b = uv[1], uv[2], uv[3], uv[4] end
+      if quad.l ~= l or quad.r ~= r or quad.t ~= t or quad.b ~= b then
+         quad.l, quad.r, quad.t, quad.b = l, r, t, b
+         quad:SetTexCoord(l, r, t, b)
+      end
       quad:SetVertexColor(color[1], color[2], color[3], color[4] or 1)
    else
+      quad.texture = nil
       quad:SetColorTexture(color[1], color[2], color[3], color[4] or 1)
       quad:SetVertexColor(1, 1, 1, 1)
    end
@@ -397,6 +415,14 @@ local function IsWall(x, y)
    return x >= 1 and x <= MAXX and y >= 1 and y <= MAXY and ns.Display.remembered(x, y) and G.item[x][y] == K.OWALL
 end
 
+-- A wall that is drawn as a block: not one of those that are lava in the volcano (which are
+-- flat, and walls only for the game).
+local function IsBlock(x, y)
+   return IsWall(x, y) and not V.WallVariant(G.level, x, y)
+end
+
+local TINT = { 1, 1, 1 }  -- what the textures of this level are tinted by, set when drawing
+
 -- The floor tile (x, y), and what stands on it.
 local function DrawTile(layers, x, y, ground)
    local x0, x1, y0, y1 = (x - 1) * TILE, x * TILE, (y - 1) * TILE, y * TILE
@@ -408,20 +434,38 @@ local function DrawTile(layers, x, y, ground)
    local ahead = (aheadFar + aheadNear) / 2
 
    if IsWall(x, y) then
+      if V.WallVariant(G.level, x, y) then  -- lava: flat, and bright whatever the distance
+         local tex, uv = V.Texture(G.level, "lava", x, y)
+         if tex then
+            Quad(layers[FLOOR], Shade({ 1, 0.9, 0.8 }, ahead * 0.4, 1), ax, ay, bx, by, cx, cy, dx, dy, tex, uv)
+         else
+            Quad(layers[FLOOR], Shade(V.GROUND.lava, ahead * 0.4, 1.4), ax, ay, bx, by, cx, cy, dx, dy)
+         end
+         return
+      end
       local color = V.WALL
       local wh = WALL_HEIGHT
       -- a wall between the camera and the player lets the player show through, unless the
       -- camera is steep enough to look over it
       local alpha = (SIN < STEEP and y > G.playery and math.abs(x - G.playerx) <= 1) and SEE_THROUGH or 1
+      -- textured, unless it lets the player show through (opaque textures ignore the alpha)
+      local wallTexture, wallUV
+      if alpha == 1 then wallTexture, wallUV = V.Texture(G.level, "wall", x, y) end
+      if wallTexture then color = TINT end
       -- a wall is thinner than its tile on the sides that face open floor, so what stands
       -- next to it does not overlap it
-      local west = IsWall(x - 1, y) and 0 or WALL_INSET
-      local east = IsWall(x + 1, y) and 0 or WALL_INSET
-      local north = IsWall(x, y - 1) and 0 or WALL_INSET
-      local south = IsWall(x, y + 1) and 0 or WALL_INSET
+      local west = IsBlock(x - 1, y) and 0 or WALL_INSET
+      local east = IsBlock(x + 1, y) and 0 or WALL_INSET
+      local north = IsBlock(x, y - 1) and 0 or WALL_INSET
+      local south = IsBlock(x, y + 1) and 0 or WALL_INSET
       local wx0, wx1, wy0, wy1 = x0 + west, x1 - east, y0 + north, y1 - south
       if west + east + north + south > 0 then  -- the ground around it
-         Quad(layers[FLOOR], Shade(ground, ahead, 0.5), ax, ay, bx, by, cx, cy, dx, dy)
+         local floorTexture, floorUV = V.Texture(G.level, "floor", x, y)
+         if floorTexture then
+            Quad(layers[FLOOR], Shade(TINT, ahead, 0.5), ax, ay, bx, by, cx, cy, dx, dy, floorTexture, floorUV)
+         else
+            Quad(layers[FLOOR], Shade(ground, ahead, 0.5), ax, ay, bx, by, cx, cy, dx, dy)
+         end
       end
       local fax, fay = Project(wx0, wy0, 0)
       local fbx, fby = Project(wx1, wy0, 0)
@@ -432,21 +476,26 @@ local function DrawTile(layers, x, y, ground)
       local tx2, ty2 = Project(wx1, wy1, wh)
       local tx3, ty3 = Project(wx0, wy1, wh)
       if tx0 and tx1 and tx2 and tx3 and fcx and fdx and fax and fbx then
-         Quad(layers[WALL], Shade(color, ahead, 1, alpha), tx0, ty0, tx1, ty1, tx2, ty2, tx3, ty3)
-         if not IsWall(x, y + 1) then  -- the face towards the camera
-            Quad(layers[WALL], Shade(color, ahead, 0.72, alpha), tx3, ty3, tx2, ty2, fcx, fcy, fdx, fdy)
+         Quad(layers[WALL], Shade(color, ahead, 1, alpha), tx0, ty0, tx1, ty1, tx2, ty2, tx3, ty3, wallTexture, wallUV)
+         if not IsBlock(x, y + 1) then  -- the face towards the camera
+            Quad(layers[WALL], Shade(color, ahead, 0.72, alpha), tx3, ty3, tx2, ty2, fcx, fcy, fdx, fdy, wallTexture, wallUV)
          end
-         if camera.x > wx1 and not IsWall(x + 1, y) then  -- the east face
-            Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx1, ty1, tx2, ty2, fcx, fcy, fbx, fby)
-         elseif camera.x < wx0 and not IsWall(x - 1, y) then  -- the west face
-            Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx0, ty0, tx3, ty3, fdx, fdy, fax, fay)
+         if camera.x > wx1 and not IsBlock(x + 1, y) then  -- the east face
+            Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx1, ty1, tx2, ty2, fcx, fcy, fbx, fby, wallTexture, wallUV)
+         elseif camera.x < wx0 and not IsBlock(x - 1, y) then  -- the west face
+            Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx0, ty0, tx3, ty3, fdx, fdy, fax, fay, wallTexture, wallUV)
          end
       end
       return
    end
 
    local checker = ((x + y) % 2 == 0) and 1 or 0.93
-   Quad(layers[FLOOR], Shade(ground, ahead, checker), ax, ay, bx, by, cx, cy, dx, dy)
+   local floorTexture, floorUV = V.Texture(G.level, "floor", x, y)
+   if floorTexture then
+      Quad(layers[FLOOR], Shade(TINT, ahead, checker), ax, ay, bx, by, cx, cy, dx, dy, floorTexture, floorUV)
+   else
+      Quad(layers[FLOOR], Shade(ground, ahead, checker), ax, ay, bx, by, cx, cy, dx, dy)
+   end
 
    if G.know[x][y] == 0 and not (x == G.playerx and y == G.playery) then return end  -- (not in sight)
 
@@ -689,6 +738,7 @@ function map3d:Draw()
    camera.y = (posY - 0.5) * TILE + CAMERA_BACK
    local roundX, roundY = floor(posX + 0.5), floor(posY + 0.5)
    local ground = V.Ground(G.level)
+   TINT = V.Tint(G.level)
    self:SetReach(ns.mod.db.profile.zoom3d or 1)
    self:StackRows(roundY)
 

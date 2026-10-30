@@ -40,6 +40,17 @@ local function Fill(texture, color)
    else
       texture:SetTexture(color[1], color[2], color[3], color[4] or 1)
    end
+   texture:SetTexCoord(0, 1, 0, 1)
+   texture:SetVertexColor(1, 1, 1, 1)
+end
+
+-- A tile of a texture (see Visuals Texture): the file data id, the part of it, tinted; the flat
+-- colour if there is none.
+local function FillTexture(texture, id, uv, tint, color)
+   if not id then return Fill(texture, color) end
+   texture:SetTexture(id)
+   texture:SetTexCoord(uv[1], uv[2], uv[3], uv[4])
+   texture:SetVertexColor(tint[1], tint[2], tint[3], 1)
 end
 
 local function NewCell(frame)
@@ -176,11 +187,18 @@ local function DrawTile(cell, x, y, ground)
    end
    local object = G.item[x][y]
    if object == K.OWALL then
-      Fill(cell.bg, V.WALL)
+      if V.WallVariant(G.level, x, y) then  -- (lava)
+         local id, uv = V.Texture(G.level, "lava", x, y)
+         FillTexture(cell.bg, id, uv, { 1, 1, 1 }, V.GROUND.lava)
+      else
+         local id, uv = V.Texture(G.level, "wall", x, y)
+         FillTexture(cell.bg, id, uv, V.Tint(G.level), V.WALL)
+      end
       HideCell(cell)
       return
    end
-   Fill(cell.bg, ground)
+   local id, uv = V.Texture(G.level, "floor", x, y)
+   FillTexture(cell.bg, id, uv, V.Tint(G.level), ground)
    cell.actor:Hide()
    if G.know[x][y] == 0 and not (x == G.playerx and y == G.playery) then  -- (not in sight)
       HideCell(cell)

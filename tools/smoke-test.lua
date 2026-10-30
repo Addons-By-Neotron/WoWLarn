@@ -1155,6 +1155,29 @@ G.c[K.HPMAX] = G.c[K.HPMAX] - 2
 ns.Equipment.reportChanges()
 check(last():find("Maximum health falls permanently"), "maximum health: " .. tostring(last()))
 
+-- lava in some of the walls of the volcano
+do
+   local V = ns.Visuals
+   check(V.Region(0) == "town" and V.Region(3) == "dungeon" and V.Region(K.DBOTTOM + 1) == "volcano", "regions of the levels")
+   local lava, walls = 0, 0
+   for x = 1, K.MAXX do for y = 1, K.MAXY do
+      walls = walls + 1
+      local a, b = V.WallVariant(K.DBOTTOM + 1, x, y), V.WallVariant(K.DBOTTOM + 1, x, y)
+      check(a == b, "lava is the same every time")
+      if a then
+         lava = lava + 1
+         check(x > 2 and y > 2 and x < K.MAXX - 1 and y < K.MAXY - 1, "no lava on the border")
+      end
+      check(V.WallVariant(3, x, y) == nil and V.WallVariant(0, x, y) == nil, "no lava outside the volcano")
+   end end
+   check(lava > walls * 0.1 and lava < walls * 0.5, "some of the walls are lava: " .. lava .. " of " .. walls)
+   local id, uv = V.Texture(K.DBOTTOM + 1, "lava", 10, 10)
+   check(type(id) == "number" and uv[2] > uv[1], "a texture of lava")
+   ns.mod.db.profile.textures = false
+   check(V.Texture(3, "floor", 5, 5) == nil, "no textures when switched off")
+   ns.mod.db.profile.textures = nil
+end
+
 -- the cone of cold is a cone
 Fresh(3)
 G.playerx, G.playery = 30, 8
