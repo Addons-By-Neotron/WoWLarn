@@ -1137,6 +1137,11 @@ check(low >= 1 and high >= low, "health is a range")
 local dl0, dh0 = ns.Bestiary.damage(K.CENTIPEDE, 0)
 local dl9, dh9 = ns.Bestiary.damage(K.CENTIPEDE, 9)
 check(dh0 > 0 and dh9 == 0, "armor takes damage off: " .. dh0 .. " then " .. dh9)
+ns.Bestiary.hit(K.CENTIPEDE, 0, 12)
+ns.Bestiary.hit(K.CENTIPEDE, 0, 9)
+check(ns.Bestiary.entry(K.CENTIPEDE).blocked == 12 and not ns.Bestiary.entry(K.CENTIPEDE).hurt, "an armor that stopped it is all that is known")
+ns.Bestiary.hit(K.CENTIPEDE, 3, 5)
+check(ns.Bestiary.entry(K.CENTIPEDE).hurt, "damage taken is remembered")
 G.wizard = true
 ns.Bestiary.see(K.ORC)
 G.wizard = false

@@ -24,7 +24,8 @@ local G = ns.G
 -- The bestiary: every monster the player has seen, in any game, with the level it was first
 -- met on, the special attacks seen so far and rough figures for its hit points and damage.
 -- It is kept in the saved variables (global.bestiary) and so builds up over the games.
--- [monster id] = { level = first dungeon level, kills = number killed, specials = { [attack] = true } }
+-- [monster id] = { level = first dungeon level, kills = number killed, specials = { [attack] = true },
+--    hurt = true once it has damaged the player, blocked = the highest armor class it did nothing against }
 local Bestiary = {}
 ns.Bestiary = Bestiary
 
@@ -73,6 +74,19 @@ end
 function Bestiary.special(id, attack)
    local entry = Entries()[id]
    if entry and Counts() and attack and SPECIAL[attack] then entry.specials[attack] = true end
+end
+
+-- The monster has hit the player, for damage (after the armor class ac took its share).  Its
+-- damage is only known to the bestiary once it has hurt: before that, all it knows is that the
+-- armor stopped it, so it did less than that.
+function Bestiary.hit(id, damage, ac)
+   local entry = Entries()[id]
+   if not entry or not Counts() then return end
+   if damage > 0 then
+      entry.hurt = true
+   else
+      entry.blocked = math.max(entry.blocked or 0, ac)
+   end
 end
 
 function Bestiary.kill(id)

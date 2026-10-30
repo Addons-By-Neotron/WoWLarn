@@ -674,6 +674,7 @@ function Monster.hitplayer(x, y)
       hit = true
       dam = dam - ac
       if dam < 0 then dam = 0 end
+      ns.Bestiary.hit(mster, dam, ac)
       Msg(L["The %s hit you for %d damage."], name, dam)
       if dam > 0 then
          ns.Player.losehp(dam, true)
