@@ -1155,6 +1155,19 @@ G.c[K.HPMAX] = G.c[K.HPMAX] - 2
 ns.Equipment.reportChanges()
 check(last():find("Maximum health falls permanently"), "maximum health: " .. tostring(last()))
 
+-- the cone of cold is a cone
+Fresh(3)
+G.playerx, G.playery = 30, 8
+local function Has(tiles, x, y) for _, t in ipairs(tiles) do if t[1] == x and t[2] == y then return true end end return false end
+local cone = ns.Spells.coneTiles(1, 0, 5)
+check(Has(cone, 31, 8) and Has(cone, 35, 8) and Has(cone, 35, 10) and not Has(cone, 36, 8) and not Has(cone, 33, 12) and not Has(cone, 29, 8), "a cone widens as it goes east")
+check(Has(cone, 33, 10) and not Has(cone, 31, 10), "(the cone is narrow near the player)")
+G.item[32][8] = K.OWALL
+local blocked = ns.Spells.coneTiles(1, 0, 5)
+check(not Has(blocked, 32, 8) and not Has(blocked, 34, 8), "a wall stops the cone behind it")
+local diagonal = ns.Spells.coneTiles(1, 1, 5)
+check(Has(diagonal, 33, 11) and Has(diagonal, 34, 10) and not Has(diagonal, 28, 8), "a cone can go diagonally")
+
 -- a mimic is a chest until it fights, then a blob
 Fresh(3)
 G.mon[31][8] = K.MIMIC; G.hitp[31][8] = 50; G.look[31][8] = 7

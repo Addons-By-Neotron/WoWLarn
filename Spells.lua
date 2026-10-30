@@ -219,6 +219,81 @@ local function GoDirect(spell, dam, str, delay, cshow)
 end
 Spells.godirect = GoDirect
 
+-- Not in the C, where the cone of cold is a missile: a cone that widens by half a tile for every
+-- tile it goes, CONE_LENGTH tiles long, and hits everything in it (the walls and doors stop
+-- it).  What it does falls by 3 (more on the hard games) for every tile, as it does for a
+-- missile, but nothing in it soaks up the cold, so what is behind is hit as well.
+local CONE_LENGTH = 5
+Spells.CONE_LENGTH = CONE_LENGTH
+
+local function ConeBlocked(x, y)
+   local it = item[x][y]
+   return it == K.OWALL or it == K.OCLOSEDDOOR or it == K.OSTATUE or it == K.OTHRONE
+end
+
+-- The tiles of a cone from the player towards (dx, dy), nearest first: { x, y, distance }.
+function Spells.coneTiles(dx, dy, length)
+   local px, py = G.playerx, G.playery
+   local norm = math.sqrt(dx * dx + dy * dy)
+   local tiles = {}
+   for x = px - length, px + length do
+      for y = py - length, py + length do
+         local vx, vy = x - px, y - py
+         local along = (vx * dx + vy * dy) / norm
+         local across = math.abs(vx * dy - vy * dx) / norm
+         if x >= 1 and x <= MAXX and y >= 1 and y <= MAXY and along >= 0.9 and along <= length + 0.5
+            and across <= 0.5 + 0.5 * along then
+            -- (the line to the tile has to be clear)
+            local clear = true
+            local steps = math.max(math.abs(vx), math.abs(vy)) * 2
+            for i = 1, steps - 1 do
+               local sx, sy = px + math.floor(vx * i / steps + 0.5), py + math.floor(vy * i / steps + 0.5)
+               if (sx ~= px or sy ~= py) and ConeBlocked(sx, sy) then clear = false break end
+            end
+            if clear and not ConeBlocked(x, y) then
+               tiles[#tiles + 1] = { x, y, math.max(math.abs(vx), math.abs(vy)), across }
+            end
+         end
+      end
+   end
+   table.sort(tiles, function(a, b)
+      if a[3] ~= b[3] then return a[3] < b[3] end
+      return a[4] < b[4]
+   end)
+   return tiles
+end
+
+local function ConeDirect(spell, dam, str, delay, cshow)
+   local ui = ns.ui
+   if IsConfused() then return end
+   local tx, ty = DirSub()
+   if not tx then return end
+   local tiles = Spells.coneTiles(tx - G.playerx, ty - G.playery, CONE_LENGTH)
+   local fade = 3 + idiv(c[K.HARDGAME], 2)
+   if c[K.BLINDCOUNT] == 0 then
+      for _, tile in ipairs(tiles) do ui:Missile(tile[1], tile[2], cshow, delay) end
+   end
+   for _, tile in ipairs(tiles) do
+      local x, y, distance = tile[1], tile[2], tile[3]
+      local m = mon[x][y]
+      local power = dam - fade * (distance - 1)
+      if m ~= 0 and power > 0 then
+         IfBlind(x, y)
+         if m == K.LUCIFER or m >= K.DEMONLORD and rnd(100) < 10 then
+            Msg(L["The %s shrugs off the cold."], G.monster[m].name)
+         elseif NoSpell(spell, m) then
+            G.lasthx, G.lasthy = x, y
+         else
+            Msg(str, G.lastmonst)
+            ns.Monster.hitm(x, y, power)
+            ui:Refresh("map")
+            ui:Nap(500)
+            if G.dead then return end
+         end
+      end
+   end
+end
+
 -- C: omnidirect(). Hits every monster next to the player.
 local function OmniDirect(spell, dam, str)
    if spell < 1 or spell > SPNUM then return end
@@ -518,7 +593,7 @@ CAST[K.SP_FIREBALL] = function(clev)
 end
 
 CAST[K.SP_COLD] = function(clev)
-   GoDirect(K.SP_COLD, rnd(25) + 20 + clev, L["The cone of cold strikes the %s."], 60, "O")
+   ConeDirect(K.SP_COLD, rnd(25) + 20 + clev, L["The cone of cold strikes the %s."], 25, "O")
 end
 
 CAST[K.SP_POLYMORPH] = function()

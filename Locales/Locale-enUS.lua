@@ -1146,3 +1146,6 @@ L["%s falls permanently by %d (now %d)."] = true
 L["%s rises temporarily by %d (now %d)."] = true
 L["%s falls temporarily by %d (now %d)."] = true
 L["The %s drops its disguise!"] = true
+L["In a cone"] = true
+L["Sends a cone of cold %d tiles long that widens as it goes, causing %s frost damage to every monster in it.  It loses %d damage for every tile."] = true
+L["The %s shrugs off the cold."] = true

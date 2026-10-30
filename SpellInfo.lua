@@ -44,12 +44,13 @@ end
 
 -- How a spell reaches what it works on (the right hand side of the tooltip).
 local SELF, LINE, AROUND, NEXT, LEVEL = L["Self"], L["In a line"], L["Around you"], L["Next to you"], L["Whole level"]
+local CONE = L["In a cone"]
 local KIND = {
    [K.SP_PROTECTION] = SELF, [K.SP_MAGIC_MISSILE] = LINE, [K.SP_DEXTERITY] = SELF, [K.SP_SLEEP] = NEXT,
    [K.SP_CHARM_MONSTER] = SELF, [K.SP_SONIC_SPEAR] = LINE, [K.SP_WEB] = NEXT, [K.SP_STRENGTH] = SELF,
    [K.SP_ENLIGHTENMENT] = AROUND, [K.SP_HEALING] = SELF, [K.SP_CURE_BLINDNESS] = SELF,
    [K.SP_CREATE_MONSTER] = AROUND, [K.SP_PHANTASMAL_FORCES] = NEXT, [K.SP_INVISIBILITY] = SELF,
-   [K.SP_FIREBALL] = LINE, [K.SP_COLD] = LINE, [K.SP_POLYMORPH] = NEXT, [K.SP_CANCELLATION] = SELF,
+   [K.SP_FIREBALL] = LINE, [K.SP_COLD] = CONE, [K.SP_POLYMORPH] = NEXT, [K.SP_CANCELLATION] = SELF,
    [K.SP_HASTE_SELF] = SELF, [K.SP_CLOUD_KILL] = AROUND, [K.SP_VAPORIZE_ROCK] = AROUND,
    [K.SP_DEHYDRATION] = NEXT, [K.SP_LIGHTNING] = LINE, [K.SP_DRAIN_LIFE] = NEXT, [K.SP_INVULNERABILITY] = SELF,
    [K.SP_FLOOD] = AROUND, [K.SP_FINGER_OF_DEATH] = NEXT, [K.SP_SCARE_MONSTER] = SELF, [K.SP_HOLD_MONSTER] = SELF,
@@ -97,7 +98,8 @@ local INFO = {
       return Missile(L["Hurls a fireball in a straight line, causing %s fire damage to the monsters in its way.  It loses %d damage for every tile it flies."], 26 + lev, 50 + 2 * lev)
    end,
    [K.SP_COLD] = function(lev)
-      return Missile(L["Sends a blast of cold in a straight line, causing %s frost damage to the monsters in its way.  It loses %d damage for every tile it flies."], 21 + lev, 45 + lev)
+      local fade = 3 + idiv(c[K.HARDGAME], 2)
+      return format(L["Sends a cone of cold %d tiles long that widens as it goes, causing %s frost damage to every monster in it.  It loses %d damage for every tile."], ns.Spells.CONE_LENGTH, Range(21 + lev, 45 + lev), fade), Range(21 + lev, 45 + lev)
    end,
    [K.SP_POLYMORPH] = function() return L["Changes the monster into a random one."] end,
    [K.SP_CANCELLATION] = function(lev) return format(L["Monsters can't use their special abilities for %d turns."], 5 + lev) end,
