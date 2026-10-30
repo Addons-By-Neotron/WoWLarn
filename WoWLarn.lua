@@ -64,6 +64,12 @@ function mod:OnInitialize()
    self.db.RegisterCallback(self, "OnProfileCopied", "ApplyProfile")
    self.db.RegisterCallback(self, "OnProfileReset", "ApplyProfile")
 
+   -- What the model viewer set lasts until the next reload: the game starts from the tables in
+   -- Data/Visuals.lua (see Visuals Own).
+   for _, key in ipairs({ "displays", "scales", "rooms", "lowers", "turns" }) do
+      wipe(self.db.global[key])
+   end
+
    self:SetupOptions()
    self:RegisterChatCommand("larn", "ChatCommand")
    self:RegisterChatCommand("wowlarn", "ChatCommand")

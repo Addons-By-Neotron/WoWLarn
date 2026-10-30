@@ -372,15 +372,20 @@ V.MONSTER_SOUND = {
    -- [K.SNAKE] = { attack = "...", wound = 0, die = { file = 0 } },
 }
 
--- Models that stand too high (or low) on their shadow, by display id: how far to move the
--- model, as a fraction of its width; positive is down, negative up.
+-- What is set in the model viewer takes effect at once and lasts until the next reload: the
+-- values are cleared when the addon loads, so the game starts from the tables in this file
+-- (the values are put there by hand).
+local function Own(name)
+   return ns.mod.db.global[name]
+end
+
 V.LOWER = {
    [1206] = 0.12,  -- snake
 }
 
--- (what is set in the model viewer, global.lowers, wins)
+-- (what is set in the model viewer wins until the next reload, see Own)
 function V.Lower(display)
-   local own = ns.mod.db.global.lowers
+   local own = Own("lowers")
    return (own and own[display]) or V.LOWER[display] or 0
 end
 
@@ -437,13 +442,13 @@ V.SCALE = {
 }
 
 function V.Scale(display)
-   local own = ns.mod.db.global.scales
+   local own = Own("scales")
    return (own and own[display]) or V.SCALE[display] or 1
 end
 
 -- Models that reach beyond their tile (wings, tails), by display id: how many times larger a
 -- frame they get, to the sides and up; the model keeps its size (the camera moves back by the
--- same factor).  What is set in the model viewer (global.rooms) wins.
+-- same factor).  What is set in the model viewer wins until the next reload (see Own).
 V.ROOM = {
    [110] = 2,
    [391] = 2,
@@ -494,7 +499,7 @@ V.ROOM = {
 V.MIN_ROOM = 2
 
 function V.Room(display)
-   local own = ns.mod.db.global.rooms
+   local own = Own("rooms")
    return math.max(V.MIN_ROOM, (own and own[display]) or V.ROOM[display] or 1)
 end
 
@@ -549,12 +554,12 @@ end
 
 -- How far to turn a model in the model viewer and the zoo, by display id, in radians: to see
 -- how wide it is from the side, for its room (the game turns them as it wants).  What is set
--- in the model viewer (global.turns) wins.
+-- in the model viewer wins until the next reload (see Own).
 V.TURN = {
 }
 
 function V.Turn(display)
-   local own = ns.mod.db.global.turns
+   local own = Own("turns")
    return (own and own[display]) or V.TURN[display] or 0
 end
 
@@ -622,7 +627,7 @@ end
 
 -- The display of a monster; look is the number it was given by chance (Draw: G.look).
 function V.MonsterDisplay(id, look)
-   local own = ns.mod.db.global.displays
+   local own = Own("displays")
    local display = (own and own[id]) or V.DISPLAY[id]
    if display == nil then return nil end
    local list = Choices(display)
@@ -632,7 +637,7 @@ end
 -- All the displays a monster can have, the backup too: the one chosen in the model viewer,
 -- or its list.
 function V.DisplayList(id)
-   local own = ns.mod.db.global.displays
+   local own = Own("displays")
    local display = (own and own[id]) or V.DISPLAY[id]
    if type(display) ~= "table" then return display and { display } or {} end
    local list = { unpack(display) }

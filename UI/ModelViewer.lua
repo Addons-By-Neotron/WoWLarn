@@ -21,8 +21,9 @@ local _, ns = ...
 local K = ns.K
 
 -- The model viewer (/larn models): steps through creature displays so one can be chosen for
--- each monster of the game.  The choice is kept in the saved variables (global.displays) and
--- shows in the 2.5D view straight away.
+-- each monster of the game.  What is set here shows in the 2.5D view straight away and lasts
+-- until the next reload (the saved values are cleared when the addon loads, so the game starts
+-- from Data/Visuals.lua); the values are put in Data/Visuals.lua by hand.
 local viewer = {}
 ns.modelViewer = viewer
 
