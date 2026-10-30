@@ -46,10 +46,10 @@ end
 
 -- A tile of a texture (see Visuals Texture): the file data id, the part of it, tinted; the flat
 -- colour if there is none.
-local function FillTexture(texture, id, uv, tint, color)
+local function FillTexture(texture, id, _, tint, color)
    if not id then return Fill(texture, color) end
    texture:SetTexture(id)
-   texture:SetTexCoord(uv[1], uv[2], uv[3], uv[4])
+   texture:SetTexCoord(0, 1, 0, 1)
    texture:SetVertexColor(tint[1], tint[2], tint[3], 1)
 end
 

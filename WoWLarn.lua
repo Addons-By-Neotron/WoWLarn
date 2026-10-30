@@ -50,7 +50,7 @@ mod.defaults = {
       scales = {},  -- [display id] = the size set in the model viewer (Visuals.Scale)
       rooms = {},  -- [display id] = the room set in the model viewer (Visuals.Room)
       lowers = {},  -- [display id] = how far the model is moved down, set in the model viewer (Visuals.Lower)
-      textures = {},  -- [region .. slot] = file data id: set with /larn tex (debug builds), until the next reload
+      textures = {},  -- [level .. slot] = file data id: set with the texture browser (debug builds), until the next reload
       turns = {},  -- [display id] = the turn (radians) set in the model viewer (Visuals.Turn)
    },
 }
@@ -77,23 +77,21 @@ function mod:OnInitialize()
 end
 
 --@debug@
--- /larn tex floor|wall|lava <id | + | ->: sets the texture of the slot for the region of this
--- level until the next reload; + and - take the next and the previous file data id (the neighbours
--- of an id are mostly textures of the same place).  The id is printed, to put in Data/Visuals.lua.
+-- /larn tex floor|wall|lava <id | + | ->: sets the texture of the slot for this level until the
+-- next reload; + and - take the next and the previous file data id.  The texture browser
+-- (/larn debug, Textures) is easier.
 function mod:TryTexture(cmd)
    local slot, what = cmd:match("^tex%s+(%a+)%s*(%S*)")
    local V = ns.Visuals
-   local region = V.Region(ns.G.level or 1)
-   if not slot or not V.TEXTURES[region][slot] then
-      self:Print("/larn tex floor|wall|lava <id|+|->   (region now: " .. region .. ")")
+   local level = ns.G.level or 1
+   if slot ~= "floor" and slot ~= "wall" and slot ~= "lava" then
+      self:Print("/larn tex floor|wall|lava <id|+|->   (level now: " .. level .. ")")
       return
    end
-   local key = region .. slot
-   local own = self.db.global.textures
-   local id = own[key] or V.TEXTURES[region][slot][1]
+   local id = V.Texture(level, slot) or 127718
    if what == "+" then id = id + 1 elseif what == "-" then id = id - 1 elseif tonumber(what) then id = tonumber(what) end
-   own[key] = id
-   self:Print(format("%s %s: %d", region, slot, id))
+   self.db.global.textures[level .. slot] = id
+   self:Print(format("level %d %s: %d", level, slot, id))
    ns.ui:RefreshNow("map")
 end
 --@end-debug@
@@ -168,7 +166,7 @@ function mod:PrintHelp()
    self:info("/larn models  - the model viewer (choose the look of the monsters)")
    self:info("/larn zoo  - all the monsters in one place")
    self:info("/larn mapdebug  - what the map is drawing")
-   self:info("/larn tex floor|wall|lava <id|+|->  - try textures for this region")
+   self:info("/larn tex floor|wall|lava <id|+|->  - try textures for this level")
 --@end-debug@
 end
 

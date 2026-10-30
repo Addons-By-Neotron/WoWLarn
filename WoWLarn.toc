@@ -65,6 +65,8 @@ UI\ClassPicker.lua
 UI\MainFrame.lua
 Game.lua
 #@debug@
+Data\TextureList.lua
 Debug.lua
 UI\DebugPanel.lua
+UI\TextureBrowser.lua
 #@end-debug@

@@ -670,10 +670,14 @@ end
 -- textures of the game (checked by the listfile, not by eye: /larn tex, in debug builds, steps
 -- through the neighbours of an id to find better ones).  With "Textured ground" off, and in ASCII
 -- mode, the flat colours above are drawn.
+-- One floor and one wall texture for each level (several would look messy): the region's, unless
+-- the level has its own in V.LEVEL_TEXTURES[level] = { floor =, wall =, lava = }.
 V.TEXTURES = {
-   town = { floor = { 127725 }, wall = { 127095 } },  -- (cobblestone, grey stone)
-   dungeon = { floor = { 127718, 127730 }, wall = { 128406, 128396 } },  -- (stone floors, rock walls)
-   volcano = { floor = { 127717 }, wall = { 128402 }, lava = { 186942, 186943 } },  -- (rock floor, lava rock, lava)
+   town = { floor = 127725, wall = 127095 },  -- (cobblestone, grey stone)
+   dungeon = { floor = 127718, wall = 128406 },  -- (stone floor, rock wall)
+   volcano = { floor = 127717, wall = 128402, lava = 186942 },  -- (rock floor, lava rock, lava)
+}
+V.LEVEL_TEXTURES = {
 }
 
 -- The region a level is in: "town", "dungeon" or "volcano".
@@ -689,19 +693,14 @@ local function Hash(x, y, salt)
 end
 V.Hash = Hash
 
--- The texture of a tile: a file data id and the part of it to show { left, right, top, bottom },
--- or nil if there is none (or the setting is off).
-function V.Texture(level, slot, x, y)
+-- The texture of a level for a slot ("floor", "wall" or "lava"): a file data id, or nil if there is
+-- none (or the setting is off).
+function V.Texture(level, slot)
    local profile = ns.mod.db.profile
    if profile.textures == false or profile.ascii then return nil end
-   local region = V.Region(level)
-   local own = ns.mod.db.global.textures and ns.mod.db.global.textures[region .. slot]
-   local list = V.TEXTURES[region][slot]
-   local id = own or (list and list[math.floor(Hash(x, y, 1) * #list) + 1])
-   if not id then return nil end
-   -- (a half of it, so that it takes more than a few tiles for the picture to repeat)
-   local u, v = (x + math.floor(Hash(x, y, 2) * 2)) % 2 * 0.5, (y + math.floor(Hash(x, y, 3) * 2)) % 2 * 0.5
-   return id, { u, u + 0.5, v, v + 0.5 }
+   local own = ns.mod.db.global.textures
+   local mine = V.LEVEL_TEXTURES[level]
+   return (own and own[level .. slot]) or (mine and mine[slot]) or V.TEXTURES[V.Region(level)][slot]
 end
 
 -- Some of the walls of the volcano are lava instead (nothing changes in the game: it is still a

@@ -1171,8 +1171,11 @@ do
       check(V.WallVariant(3, x, y) == nil and V.WallVariant(0, x, y) == nil, "no lava outside the volcano")
    end end
    check(lava > walls * 0.1 and lava < walls * 0.5, "some of the walls are lava: " .. lava .. " of " .. walls)
-   local id, uv = V.Texture(K.DBOTTOM + 1, "lava", 10, 10)
-   check(type(id) == "number" and uv[2] > uv[1], "a texture of lava")
+   check(type(V.Texture(K.DBOTTOM + 1, "lava")) == "number", "a texture of lava")
+   check(V.Texture(3, "wall") == V.Texture(3, "wall"), "one wall texture on a level")
+   ns.mod.db.global.textures = { ["3wall"] = 99 }
+   check(V.Texture(3, "wall") == 99 and V.Texture(4, "wall") ~= 99, "a texture of a level")
+   ns.mod.db.global.textures = {}
    ns.mod.db.profile.textures = false
    check(V.Texture(3, "floor", 5, 5) == nil, "no textures when switched off")
    ns.mod.db.profile.textures = nil
