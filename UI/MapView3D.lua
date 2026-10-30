@@ -604,6 +604,32 @@ function map3d:Position()
    return self.toX, self.toY, false
 end
 
+-- Rows are stacked far to near, by how far they are from the spot on the floor under the
+-- camera: the tops of walls lean away from that spot, so past it (a steep camera) the rows
+-- farthest down the view are the farthest away and go at the back.
+function map3d:StackRows(roundY)
+   local order = self.order or {}
+   self.order = order
+   for row = 1, ROWS do
+      order[row] = row
+      local y = roundY - FAR_ROWS + (row - 1)
+      self.distance = self.distance or {}
+      self.distance[row] = math.abs((y - 0.5) * TILE - camera.y)
+   end
+   local distance = self.distance
+   table.sort(order, function(a, b)
+      if distance[a] ~= distance[b] then return distance[a] > distance[b] end
+      return a < b
+   end)
+   local base = self.view:GetFrameLevel() + 1
+   for rank, row in ipairs(order) do
+      for kind, layer in pairs(self.layers[row]) do
+         local level = base + (rank - 1) * 3 + kind
+         if layer:GetFrameLevel() ~= level then layer:SetFrameLevel(level) end
+      end
+   end
+end
+
 function map3d:Draw()
    if not self.layers or not G.class then return end
    self.shown = true
@@ -623,6 +649,7 @@ function map3d:Draw()
    camera.y = (posY - 0.5) * TILE + CAMERA_BACK
    local roundX, roundY = floor(posX + 0.5), floor(posY + 0.5)
    local ground = V.Ground(G.level)
+   self:StackRows(roundY)
 
    for row = 1, ROWS do
       for _, layer in pairs(self.layers[row]) do
