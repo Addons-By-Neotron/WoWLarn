@@ -31,6 +31,7 @@ Scores.lua
 Save.lua
 Equipment.lua
 ItemInfo.lua
+Bestiary.lua
 Create.lua
 Regen.lua
 Display.lua
@@ -55,6 +56,7 @@ UI\MapView3D.lua
 UI\MapView.lua
 UI\Inventory.lua
 UI\Spellbook.lua
+UI\Bestiary.lua
 UI\Store.lua
 UI\Scoreboard.lua
 UI\ModelViewer.lua

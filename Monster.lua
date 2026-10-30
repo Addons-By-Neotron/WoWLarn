@@ -276,6 +276,7 @@ function Monster.hitm(x, y, amt, hitmsg)
    if hpoints <= amt then
       ns.ui:Animate("die", x, y, monst)
       Msg(L["The %s died!"], G.lastmonst)
+      ns.Bestiary.kill(monst)
       ns.Player.raiseExperience(monster[monst].experience)
       mon[x][y], know[x][y] = 0, 0  -- C: disappear(x, y)
 
@@ -420,6 +421,7 @@ function Monster.spattack(x, xx, yy)
 
    local name = G.lastmonst
    local message, damage
+   ns.Bestiary.special(monst, x)
 
    if x == 1 then  -- rust your armor, j is true once rusting has occurred
       local j = false

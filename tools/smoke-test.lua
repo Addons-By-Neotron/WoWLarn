@@ -1118,6 +1118,29 @@ local _, mle = ns.SpellInfo.info(K.SP_MAGIC_MISSILE)
 check(mle == "14-35", "magic missile range at level 10: " .. tostring(mle))
 check(ns.SpellInfo.risky(K.SP_SPHERE_OF_ANNIHILATION) and not ns.SpellInfo.risky(K.SP_HEALING), "risky spells")
 check(ns.SpellInfo.minLevel(K.SP_MAGIC_MISSILE) == 0 and ns.SpellInfo.minLevel(K.SP_PERMANENCE) == 12, "spell levels")
+-- the bestiary
+Fresh(3)
+ns.mod.db.global.bestiary = {}
+G.level = 2
+ns.Bestiary.see(K.CENTIPEDE)
+G.level = 5
+ns.Bestiary.see(K.CENTIPEDE)
+check(ns.Bestiary.entry(K.CENTIPEDE).level == 2 and ns.Bestiary.count() == 1, "a monster is first met once")
+check(ns.Bestiary.entry(K.WHITEDRAGON) == nil, "monsters not seen are not in it")
+local _, unseen = ns.Bestiary.specials(K.CENTIPEDE)
+check(unseen, "a special attack not yet seen is hinted at")
+ns.Bestiary.special(K.CENTIPEDE, 4)
+local seen, unseen2 = ns.Bestiary.specials(K.CENTIPEDE)
+check(#seen == 1 and not unseen2, "a special attack seen is listed")
+local low, high = ns.Bestiary.health(K.CENTIPEDE)
+check(low >= 1 and high >= low, "health is a range")
+local dl0, dh0 = ns.Bestiary.damage(K.CENTIPEDE, 0)
+local dl9, dh9 = ns.Bestiary.damage(K.CENTIPEDE, 9)
+check(dh0 > 0 and dh9 == 0, "armor takes damage off: " .. dh0 .. " then " .. dh9)
+G.wizard = true
+ns.Bestiary.see(K.ORC)
+G.wizard = false
+check(ns.Bestiary.entry(K.ORC) == nil, "cheating games add nothing")
 -- a game that was a wizard once is never scored
 Fresh(3)
 ns.Debug.toggleWizard(); ns.Debug.toggleWizard()

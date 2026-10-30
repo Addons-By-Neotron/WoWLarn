@@ -45,6 +45,7 @@ local COMMANDS = {
    { key = "D", name = L["Discoveries"], icon = "INV_Misc_Book_08" },
    { key = "?", name = L["Help"], icon = "INV_Misc_QuestionMark" },
    { key = "S", name = L["Save and close"], icon = "INV_Misc_Note_01" },
+   { key = "B", name = L["Bestiary"], icon = "INV_Misc_Head_Dragon_01", bestiary = true },
    { key = "V", name = L["Flat tiles or the 2.5D view"], icon = "INV_Misc_Spyglass_02", view = true },
 }
 
@@ -57,6 +58,10 @@ end
 
 local function OnClick(self)
    ns.main:SetFocus(true)
+   if self.command.bestiary then  -- (works without a game)
+      ns.bestiaryWindow:Toggle()
+      return
+   end
    if self.command.view then  -- (works without a game)
       ns.mod:ToggleView()
       return

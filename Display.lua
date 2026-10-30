@@ -54,6 +54,7 @@ function Display.visibleMonster(x, y)
       if c[K.EYEOFLARN] == 0 then return 0 end
       ns.ItemInfo.discover(K.OLARNEYE, G.monster[id].name)
    end
+   ns.Bestiary.see(id)
    return id
 end
 
