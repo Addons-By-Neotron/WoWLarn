@@ -543,8 +543,19 @@ function Monster.spattack(x, xx, yy)
       local i = rund(K.IVENSIZE) + 1
       local m = iven[i]  -- randomly select an item
       if m > 0 and ivenarg[i] > 0 and m ~= K.OSCROLL and m ~= K.OPOTION then
+         local was = ivenarg[i]
          ivenarg[i] = ivenarg[i] - 3
          if ivenarg[i] < 0 then ivenarg[i] = 0 end
+         -- FIX: not in the C, where a disenchanted ring kept all it had given, and took back only
+         -- what was left of it: the rest was a permanent gain.  The ring takes its loss now.
+         local lost = was - ivenarg[i]
+         if m == K.ODEXRING then
+            c[K.DEXTERITY] = c[K.DEXTERITY] - lost
+         elseif m == K.OSTRRING then
+            c[K.STREXTRA] = c[K.STREXTRA] - lost
+         elseif m == K.OCLEVERRING then
+            c[K.INTELLIGENCE] = c[K.INTELLIGENCE] - lost
+         end
          Msg(L["The %s hits you with a spell of disenchantment!"], name)
          Player.recalc()
          ui:Refresh("stats")

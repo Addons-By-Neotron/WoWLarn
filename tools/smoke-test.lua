@@ -1155,6 +1155,20 @@ G.c[K.HPMAX] = G.c[K.HPMAX] - 2
 ns.Equipment.reportChanges()
 check(last():find("Maximum health falls permanently"), "maximum health: " .. tostring(last()))
 
+-- a disenchanted ring takes its loss at once (the C let the player keep it)
+Fresh(3)
+G.c[K.DEXTERITY] = 10
+ns.Player.take(K.ODEXRING, 3)
+check(G.c[K.DEXTERITY] == 14, "the dexterity ring adds")
+G.mon[31][8] = K.DISENCHANTRESS; G.hitp[31][8] = 10
+local ringSlot
+for i = 1, K.IVENSIZE do if G.iven[i] == K.ODEXRING then ringSlot = i end end
+for _ = 1, 200 do
+   if G.ivenarg[ringSlot] == 0 then break end
+   ns.Monster.spattack(9, 31, 8)
+end
+check(G.ivenarg[ringSlot] == 0 and G.c[K.DEXTERITY] == 11, "a disenchanted dexterity ring takes its bonus off at once: " .. G.c[K.DEXTERITY])
+
 -- the bestiary
 Fresh(3)
 ns.mod.db.global.bestiary = {}
