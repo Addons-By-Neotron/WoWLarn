@@ -75,11 +75,11 @@ end
 -- raised by a spell that is running.
 local function C(index) return G.c[index] end
 local function Strength() return C(K.STRENGTH) + C(K.STREXTRA) end
-local GREEN = { 0.1, 1, 0.1 }
+local GREEN, RED = { 0.1, 1, 0.1 }, { 1, 0.3, 0.3 }
 local STAT_COLUMNS = {
    {
       { heading = L["Attributes"] },
-      { stat = "STR", label = L["Strength"], value = Strength, boost = function() return C(K.STREXTRA) > 0 end,
+      { stat = "STR", label = L["Strength"], value = Strength,
         tip = L["Strength makes your hits stronger."] },
       { stat = "INT", label = L["Intelligence"], value = function() return C(K.INTELLIGENCE) end,
         tip = L["Intelligence makes your spells more likely to work."] },
@@ -87,7 +87,7 @@ local STAT_COLUMNS = {
         tip = L["Wisdom makes your strongest spells, like phantasmal forces and finger of death, more likely to work."] },
       { stat = "CON", label = L["Constitution"], value = function() return C(K.CONSTITUTION) end,
         tip = L["Constitution gives you more hit points when you gain a level."] },
-      { stat = "DEX", label = L["Dexterity"], value = function() return C(K.DEXTERITY) end, boost = function() return C(K.DEXCOUNT) > 0 end,
+      { stat = "DEX", label = L["Dexterity"], value = function() return C(K.DEXTERITY) end,
         tip = L["Dexterity helps you hit monsters, and helps you avoid pits and trap doors."] },
       { stat = "CHA", label = L["Charisma"], value = function() return C(K.CHARISMA) end,
         tip = L["Charisma makes monsters more likely to be awed by you and not attack, and makes charm monster last longer."] },
@@ -395,11 +395,12 @@ function side:UpdateStats()
    for _, frame in ipairs(self.cells) do
       if frame.cell then
          frame.value:SetText(frame.cell.value())
-         if frame.cell.boost and frame.cell.boost() then
-            frame.value:SetTextColor(GREEN[1], GREEN[2], GREEN[3])
-         else
-            frame.value:SetTextColor(1, 1, 1)
+         local color = { 1, 1, 1 }
+         if frame.cell.stat then  -- (green: raised by what you carry or a spell, red: lowered)
+            local total, base = ns.Equipment.statBreakdown(frame.cell.stat)
+            if total > base then color = GREEN elseif total < base then color = RED end
          end
+         frame.value:SetTextColor(color[1], color[2], color[3])
       end
    end
 end
