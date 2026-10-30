@@ -28,12 +28,13 @@ local format = string.format
 local window = {}
 ns.bestiaryWindow = window
 
-local LIST_W, ROW_H, ROWS = 190, 18, 20
-local DETAIL_W, MODEL_H = 330, 260
+local LIST_W, ROW_H, ROWS = 190, 18, 26
+local DETAIL_W, MODEL_H = 330, 240
+local MODEL_ROOM = 1.7  -- the models are made for a frame a tile wide: farther away in this larger one
 
 function window:Create()
-   local frame = ns.CreatePanel(UIParent, "WoWLarnBestiary")
-   frame:SetSize(LIST_W + DETAIL_W + 40, 56 + ROWS * ROW_H)
+   local frame = ns.CreatePanel(UIParent, "WoWLarnBestiary", { 0.04, 0.04, 0.06, 0.97 })
+   frame:SetSize(LIST_W + DETAIL_W + 40, 40 + ROWS * ROW_H)
    frame:SetPoint("CENTER", 120, 0)
    frame:SetFrameStrata("FULLSCREEN_DIALOG")  -- (above the main window, whose many layers are all in DIALOG)
    frame:SetToplevel(true)
@@ -73,7 +74,7 @@ function window:Create()
    local model = CreateFrame("PlayerModel", nil, frame)
    model:SetPoint("TOPLEFT", LIST_W + 30, -32)
    model:SetSize(DETAIL_W, MODEL_H)
-   model:SetScript("OnModelLoaded", function(m) m:SetFacing(self.turn or 0) ns.map3d.CameraScale(m, self.scale or 1) end)
+   model:SetScript("OnModelLoaded", function(m) m:SetFacing(self.turn or 0) ns.map3d.CameraScale(m, (self.scale or 1) * MODEL_ROOM) end)
    self.model = model
 
    self.name = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -116,7 +117,7 @@ function window:Select(id)
       self.turn, self.scale = V.Turn(display), V.Scale(display)
       if display < 0 then self.model:SetModel(-display) else self.model:SetDisplayInfo(display) end
       self.model:SetFacing(self.turn)
-      ns.map3d.CameraScale(self.model, self.scale)
+      ns.map3d.CameraScale(self.model, self.scale * MODEL_ROOM)
       self.model:Show()
    else
       self.model:Hide()
