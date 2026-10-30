@@ -32,6 +32,12 @@ local LIST_W, ROW_H, ROWS = 190, 18, 26
 local DETAIL_W, MODEL_H = 330, 240
 local MODEL_ROOM = 1.7  -- the models are made for a frame a tile wide: farther away in this larger one
 
+-- Tall enough for the details of a monster with many special attacks.
+function window:Fit()
+   local needed = 32 + MODEL_H + 6 + self.name:GetStringHeight() + 8 + self.details:GetStringHeight() + 14
+   self.frame:SetHeight(math.max(40 + ROWS * ROW_H, needed))
+end
+
 function window:Create()
    local frame = ns.CreatePanel(UIParent, "WoWLarnBestiary", { 0.04, 0.04, 0.06, 0.97 })
    frame:SetSize(LIST_W + DETAIL_W + 40, 40 + ROWS * ROW_H)
@@ -180,6 +186,7 @@ function window:Select(id)
       lines[#lines + 1] = "|cff999999" .. L["It may have tricks you have yet to see."] .. "|r"
    end
    self.details:SetText(table.concat(lines, "\n"))
+   self:Fit()
    self:UpdateList()
 end
 
@@ -193,6 +200,7 @@ function window:Update()
    else
       self.name:SetText("")
       self.details:SetText(L["No monsters seen yet."])
+   self:Fit()
       self.model:Hide()
       self:UpdateList()
    end
