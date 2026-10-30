@@ -208,7 +208,7 @@ end
 
 -- FIX: not in the C. Lemmings multiply when hit, when they move and when monsters are made,
 -- which fills a level with them.  There are never more than MAX_LEMMINGS on a level.
-local MAX_LEMMINGS = 6
+local MAX_LEMMINGS = 12
 function Monster.lemmingsEnough()
    local count = 0
    for x = 1, K.MAXX do
