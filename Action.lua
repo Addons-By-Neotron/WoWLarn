@@ -112,7 +112,7 @@ function Action.wield()
       Msg(L["You unwield your weapon."])
    elseif iven[slot] == 0 then
       DontHave(slot)
-   elseif iven[slot] == K.OPOTION or iven[slot] == K.OSCROLL then
+   elseif not WIELD[iven[slot]] then  -- (the C let anything but potions and scrolls be wielded, even a belt or a shield)
       CantWield(slot)
    elseif c[K.SHIELD] ~= 0 and iven[slot] == K.O2SWORD then
       Msg(L["But one arm is busy with your shield!"])
