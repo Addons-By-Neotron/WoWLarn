@@ -710,10 +710,17 @@ function map3d:StackRows(roundY)
       if distance[a] ~= distance[b] then return distance[a] > distance[b] end
       return a < b
    end)
+   -- (all the floors at the back: a floor is flat on the ground, so nothing standing on the
+   -- floor of another row is ever behind it; the walls and what stands on the floor, by row)
    local base = self.view:GetFrameLevel() + 1
    for rank, row in ipairs(order) do
       for kind, layer in pairs(self.layers[row]) do
-         local level = base + (rank - 1) * 3 + kind
+         local level
+         if kind == FLOOR then
+            level = base + (rank - 1)
+         else
+            level = base + ROWS + (rank - 1) * 2 + (kind == ACTOR and 1 or 0)
+         end
          if layer:GetFrameLevel() ~= level then layer:SetFrameLevel(level) end
       end
    end
