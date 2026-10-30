@@ -161,9 +161,7 @@ function mod:ChatCommand(input)
       self:PrintHelp()
 --@debug@
    elseif cmd == "new" then
-      ns.ui.co = nil
-      ns.main:Show()
-      if not ns.ui:IsActive() then ns.ui:NewGame() end
+      ns.Debug.newGame()
    elseif cmd == "mapdebug" then
       ns.map:Debug()
    elseif cmd == "debug" then

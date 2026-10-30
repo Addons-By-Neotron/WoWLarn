@@ -1118,4 +1118,8 @@ local _, mle = ns.SpellInfo.info(K.SP_MAGIC_MISSILE)
 check(mle == "14-35", "magic missile range at level 10: " .. tostring(mle))
 check(ns.SpellInfo.risky(K.SP_SPHERE_OF_ANNIHILATION) and not ns.SpellInfo.risky(K.SP_HEALING), "risky spells")
 check(ns.SpellInfo.minLevel(K.SP_MAGIC_MISSILE) == 0 and ns.SpellInfo.minLevel(K.SP_PERMANENCE) == 12, "spell levels")
+-- starting over from a god mode game
+G.god, G.wizard = true, true
+ns.Debug.newGame()
+check(ui.wait == "key" and ns.picker.frame.shown and not G.god and not G.wizard, "a new game starts from the class picker, without god mode")
 print("ALL OK")

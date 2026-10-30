@@ -182,6 +182,7 @@ function panel:Create()
    Button("Create an item (list)", function() self:ToggleList() end)
    Button("Teleport to a level...", function() Key("Z") end)
    Button("Dump the state", ns.Debug.dump)
+   Button("New game (gives this one up)", ns.Debug.newGame)
    Button("Flat / 2.5D view", function() ns.mod:ToggleView() end)
    frame:SetSize(WIDTH, 34 + #buttons * (BUTTON_H + GAP))
 end

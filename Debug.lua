@@ -97,6 +97,19 @@ function Debug.makeItem(id, arg)
    ns.ui:RefreshNow("all")
 end
 
+-- Throws the game away, with no score and no saved game left, and starts a new one (a game in
+-- god mode can neither be lost nor, until now, be given up).
+function Debug.newGame()
+   ns.Save.clear()
+   ns.ui.co = nil
+   ns.ui.wait = nil
+   ns.inventory:Close()
+   ns.spellbook:Close()
+   ns.main:Show()
+   ns.ui:NewGame()
+   Log("a new game")
+end
+
 function Debug.dump()
    Log("level %d at %d,%d  turn %d  hp %d/%d  level %d  experience %d", G.level, G.playerx, G.playery, G.gtime,
       c[K.HP], c[K.HPMAX], c[K.LEVEL], c[K.EXPERIENCE])
