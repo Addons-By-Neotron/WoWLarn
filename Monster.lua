@@ -29,8 +29,6 @@ local rnd, rund, idiv = ns.rnd, ns.rund, ns.idiv
 local Monster = {}
 ns.Monster = Monster
 
-Monster.CURSE_STRENGTH = 2  -- what the sting of the giant centipede takes from your strength, for a while
-local CURSE_STRENGTH = Monster.CURSE_STRENGTH
 
 local c, iven, ivenarg = G.c, G.iven, G.ivenarg
 local item, iarg, know, mon, hitp, stealth = G.item, G.iarg, G.know, G.mon, G.hitp, G.stealth
@@ -473,11 +471,14 @@ function Monster.spattack(x, xx, yy)
       return false
 
    elseif x == 4 then
-      -- (a curse that wears off, not the permanent loss of the original: too harsh at level 2)
-      if c[K.STRENGTH] + c[K.STREXTRA] > 3 + CURSE_STRENGTH then
+      -- A curse that wears off, not the permanent loss of the original (too harsh at level 2):
+      -- each sting takes a point more, and the time runs from the first (the counter of the
+      -- time is DRAINSTRENGTH, and INFEEBLEMENT counts the points).
+      if c[K.STRENGTH] + c[K.STREXTRA] > 3 then
          message = L["The %s stung you!  A curse makes you weaker."]
-         if c[K.DRAINSTRENGTH] == 0 then c[K.STREXTRA] = c[K.STREXTRA] - CURSE_STRENGTH end
-         c[K.DRAINSTRENGTH] = math.max(c[K.DRAINSTRENGTH], 150 + rnd(100))
+         if c[K.DRAINSTRENGTH] == 0 then c[K.DRAINSTRENGTH] = 150 + rnd(100) end
+         c[K.INFEEBLEMENT] = c[K.INFEEBLEMENT] + 1
+         c[K.STREXTRA] = c[K.STREXTRA] - 1
       else
          message = L["The %s stung you!"]
       end

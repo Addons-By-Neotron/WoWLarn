@@ -223,7 +223,7 @@ function Equipment.statBreakdown(stat)
    if c[K.COKED] ~= 0 then mods[#mods + 1] = { ns.StripArticle(T.objectname[K.OCOKE]), 33 } end
    if stat == "DEX" and c[K.DEXCOUNT] ~= 0 then mods[#mods + 1] = { T.spelname[K.SP_DEXTERITY], 3 } end
    if stat == "STR" and c[K.STRCOUNT] ~= 0 then mods[#mods + 1] = { T.spelname[K.SP_STRENGTH], 3 } end
-   if stat == "STR" and c[K.DRAINSTRENGTH] ~= 0 then mods[#mods + 1] = { L["Curse"], -ns.Monster.CURSE_STRENGTH } end
+   if stat == "STR" and c[K.DRAINSTRENGTH] ~= 0 then mods[#mods + 1] = { L["Curse"], -c[K.INFEEBLEMENT] } end
    if stat == "STR" and c[K.GIANTSTR] ~= 0 then mods[#mods + 1] = { T.potionname[K.PGIANTSTR], 21 } end
    local base = total
    for _, mod in ipairs(mods) do base = base - mod[2] end

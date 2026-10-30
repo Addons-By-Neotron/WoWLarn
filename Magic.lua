@@ -37,7 +37,7 @@ local MAXX, MAXY, DBOTTOM, VBOTTOM = K.MAXX, K.MAXY, K.DBOTTOM, K.VBOTTOM
 -- The curses that a scroll of remove curse (or instant healing) lifts.
 local CURSE = {
    K.BLINDCOUNT, K.CONFUSE, K.AGGRAVATE, K.HASTEMONST, K.ITCHING,
-   K.LAUGHING, K.DRAINSTRENGTH, K.CLUMSINESS, K.INFEEBLEMENT, K.HALFDAM,
+   K.LAUGHING, K.DRAINSTRENGTH, K.CLUMSINESS, K.HALFDAM,
 }
 -- What the spell extension scroll doubles.
 local EXTEN = {
