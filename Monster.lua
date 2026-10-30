@@ -238,6 +238,7 @@ function Monster.hitm(x, y, amt, hitmsg)
    end
 
    G.lasthx, G.lasthy = x, y
+   Monster.revealMimic(x, y)  -- (a spell too)
    stealth[x][y] = 1  -- hitting a monster breaks the stealth condition
    c[K.HOLDMONST] = 0  -- ... and the hold monster spell
 
@@ -312,6 +313,15 @@ local DULLABLE = {
 }
 
 -- C: hitmonster(). The player attacks the monster at (x, y).
+-- A mimic looks like a chest until it fights: it drops its disguise (the look of its tile is
+-- made negative, and moves with it).
+function Monster.revealMimic(x, y)
+   if mon[x][y] ~= K.MIMIC or G.look[x][y] < 0 then return end
+   G.look[x][y] = -(G.look[x][y] ~= 0 and G.look[x][y] or rnd(1000))
+   Msg(L["The %s drops its disguise!"], G.monster[K.MIMIC].name)
+   ns.ui:Refresh("map")
+end
+
 function Monster.hitmonster(x, y)
    if c[K.TIMESTOP] ~= 0 then return end  -- not if time stopped
    local monst = mon[x][y]
@@ -319,6 +329,7 @@ function Monster.hitmonster(x, y)
 
    G.hit3flag = true
    IfBlind(x, y)
+   Monster.revealMimic(x, y)
    ns.ui:Animate("hit", x, y)
 
    local tmp = G.monster[monst].armorclass + c[K.LEVEL] + c[K.DEXTERITY]
@@ -634,6 +645,7 @@ function Monster.hitplayer(x, y)
    local name = G.lastmonst
 
    if mster == K.LEMMING then return end
+   Monster.revealMimic(x, y)
    ns.ui:Animate("bite", x, y)
 
    if mster < DEMONLORD and c[K.INVISIBILITY] ~= 0 and rnd(33) < 20 then

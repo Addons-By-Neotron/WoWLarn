@@ -446,7 +446,7 @@ local function DrawTile(layers, x, y, ground)
          look = ns.rnd(1000)
          G.look[x][y] = look
       end
-      local display = models and V.MonsterDisplay(monster, look)
+      local display = models and (G.mon[x][y] == K.MIMIC and V.MimicDisplay(look) or V.MonsterDisplay(monster, look))
       if display then
          -- monsters face the player they are after, and the way they go while they walk
          local toward = DIRECTION[Sign(G.playerx - x)][Sign(G.playery - y)]
@@ -499,7 +499,7 @@ function map3d.MonsterModel(x, y)
       look = ns.rnd(1000)
       G.look[x][y] = look
    end
-   local display = V.MonsterDisplay(monster, look)
+   local display = G.mon[x][y] == K.MIMIC and V.MimicDisplay(look) or V.MonsterDisplay(monster, look)
    if not display then return nil end
    local entry = map3d.anims[x * 100 + y]
    return display, Facing(DIRECTION[Sign(G.playerx - x)][Sign(G.playery - y)]),

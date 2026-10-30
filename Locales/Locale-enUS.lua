@@ -1145,3 +1145,4 @@ L["%s rises permanently by %d (now %d)."] = true
 L["%s falls permanently by %d (now %d)."] = true
 L["%s rises temporarily by %d (now %d)."] = true
 L["%s falls temporarily by %d (now %d)."] = true
+L["The %s drops its disguise!"] = true

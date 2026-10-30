@@ -1155,6 +1155,16 @@ G.c[K.HPMAX] = G.c[K.HPMAX] - 2
 ns.Equipment.reportChanges()
 check(last():find("Maximum health falls permanently"), "maximum health: " .. tostring(last()))
 
+-- a mimic is a chest until it fights, then a blob
+Fresh(3)
+G.mon[31][8] = K.MIMIC; G.hitp[31][8] = 50; G.look[31][8] = 7
+check(ns.Visuals.MimicDisplay(G.look[31][8]) < 0, "a mimic looks like a chest at first")
+ns.Monster.hitmonster(31, 8)
+check(G.look[31][8] < 0 and ns.Visuals.MimicDisplay(G.look[31][8]) > 0, "a mimic that is hit is a blob")
+G.mon[32][8] = K.MIMIC; G.look[32][8] = 0
+ns.Monster.hitplayer(32, 8)
+check(G.look[32][8] < 0, "a mimic that attacks drops its disguise")
+
 -- a disenchanted ring takes its loss at once (the C let the player keep it)
 Fresh(3)
 G.c[K.DEXTERITY] = 10
