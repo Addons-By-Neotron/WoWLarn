@@ -729,7 +729,7 @@ do
    Arena(); Monster(33, 8, K.ORC); Cast("magic missile", "l"); check(G.hitp[33][8] < 100000, "magic missile hits")
    Arena(); Monster(33, 8, K.ORC); Cast("sonic spear", "l"); check(G.hitp[33][8] < 100000, "sonic spear hits")
    Arena(); Monster(33, 8, K.ORC); Cast("fireball", "l"); check(G.hitp[33][8] < 100000, "fireball hits")
-   Arena(); Monster(33, 8, K.ORC); Cast("cold", "l"); check(G.hitp[33][8] < 100000, "cone of cold hits")
+   Arena(); Monster(33, 8, K.ORC); Cast("cone of cold", "l"); check(G.hitp[33][8] < 100000, "cone of cold hits")
    Arena(); Monster(33, 8, K.ORC); Cast("lightning", "l"); check(G.hitp[33][8] < 100000, "lightning hits")
    Arena(); Monster(31, 8, K.ORC); Cast("sleep", "l"); check(G.hitp[31][8] < 100000, "sleep smashes")
    Arena(); Monster(31, 8, K.ORC); Cast("web", "l"); check(G.hitp[31][8] < 100000, "web smashes")
@@ -753,7 +753,7 @@ do
    Arena(); Cast("make a wall", "l"); Cast("make a wall", "l"); check(table.concat(lines(), "|"):find("wall there already"), "no wall on a wall")
 
    -- area spells
-   for _, name in ipairs({ "cloud kill", "flood", "magic fire" }) do
+   for _, name in ipairs({ "cloud kill", "flood", "ring of fire" }) do
       Arena(); Monster(31, 8, K.ORC); Cast(name); check(G.hitp[31][8] < 100000, name .. " hits the neighbours")
    end
    Arena(); G.item[31][8] = K.OWALL; G.item[29][9] = K.OSTATUE; Cast("vaporize rock")

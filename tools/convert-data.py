@@ -29,6 +29,9 @@ ADDED_SPELLS = [
     ("lor", "Monster Lore", "Shows everything there is to know about a monster"),
 ]
 
+# Spells the addon names otherwise than the original (the constants keep the old names).
+SPELL_RENAMES = {"Cold": "Cone of Cold", "Magic Fire": "Ring of Fire"}
+
 SPELL_DESCRIPTION_FIXES = {
     2: "Adds +3 to the caster's dexterity",
     7: "Adds +3 to the caster's strength for a time",
@@ -191,7 +194,8 @@ def tables():
     spell_names = names[:39] + [n for _, n, _ in ADDED_SPELLS]
     desc = desc[:39] + [d for _, _, d in ADDED_SPELLS]
     out.append("T.spelcode = {" + ", ".join(lua_string(n) for n in code) + "}")
-    out.append("T.spelname = {" + ", ".join(lua_string(title_case(n)) for n in spell_names) + "}")
+    spell_names = [SPELL_RENAMES.get(title_case(n), title_case(n)) for n in spell_names]
+    out.append("T.spelname = {" + ", ".join(lua_string(n) for n in spell_names) + "}")
     out.append("T.speldescript = {" + ", ".join(lua_string(n) for n in desc) + "}")
     nums = re.findall(r"\d+", section(data, "char splev[]", "};")[10:])
     out.append("-- T.splev[book level + 1]: the highest spell (C index + 1) a book of that level can teach.")
