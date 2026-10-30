@@ -124,7 +124,7 @@ function Scores.record(cause)
    if type(cause) ~= "number" then cause = 284 end
    c[K.GOLD] = c[K.GOLD] + c[K.BANKACCOUNT]
    c[K.BANKACCOUNT] = 0
-   if G.wizard or cause == QUICKQUIT then return nil end
+   if G.wizard or G.cheated or cause == QUICKQUIT then return nil end  -- (G.cheated: wizard mode was on once)
 
    local board = Board()
    local score = c[K.GOLD]

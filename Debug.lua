@@ -34,14 +34,15 @@ end
 
 function Debug.toggleWizard()
    G.wizard = not G.wizard
-   Log("wizard mode %s%s", G.wizard and "on" or "off", G.wizard and " (this game will not be scored)" or "")
+   if G.wizard then G.cheated = true end  -- (turning it off again does not make the game count)
+   Log("wizard mode %s%s", G.wizard and "on" or "off", G.cheated and " (this game will not be scored)" or "")
    ns.ui:Refresh("all")
    if ns.debugPanel.Update then ns.debugPanel:Update() end
 end
 
 function Debug.toggleGod()
    G.god = not G.god
-   if G.god then G.wizard = true end  -- (no score for a game that cannot be lost)
+   if G.god then G.wizard, G.cheated = true, true end  -- (no score for a game that cannot be lost)
    Log("god mode %s%s", G.god and "on" or "off", G.god and " (wizard mode too: this game will not be scored)" or "")
    if G.god then c[K.HP] = c[K.HPMAX] end
    ns.ui:Refresh("all")
