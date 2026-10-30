@@ -1151,3 +1151,13 @@ L["Sends a cone of cold %d tiles long that widens as it goes, causing %s frost d
 L["The %s shrugs off the cold."] = true
 L["Textured ground"] = true
 L["Draw the floors and walls with textures (and lava in the volcano) instead of flat colours."] = true
+L["Action bar"] = true
+L["Ten slots for spells, potions and scrolls on the keys 1 to 0 (right-click a slot to choose).  Without it, the digits set a repeat count, as in the original game."] = true
+L["Slot %d of the action bar is empty (right-click it to choose)."] = true
+L["You don't know that spell."] = true
+L["You have no %s."] = true
+L["Right-click to choose something else."] = true
+L["Empty slot"] = true
+L["Right-click to choose a spell, potion or scroll."] = true
+L["(clear the slot)"] = true
+L["Slot %d"] = true

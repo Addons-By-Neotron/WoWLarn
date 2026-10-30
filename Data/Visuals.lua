@@ -151,6 +151,18 @@ function V.ObjectModel(id)
    return (own and own[id]) or V.OBJECT_MODELS[id]
 end
 
+-- The icon of a spell by its three letters (for the action bar); the others get a book.
+V.SPELL_ICON = {
+   pro = "Spell_Holy_PowerWordShield", mle = "Spell_Nature_StarFall", sle = "Spell_Nature_Sleep",
+   chm = "Spell_Shadow_Charm", web = "Ability_Ensnare", hel = "Spell_Holy_Heal", inv = "Spell_Nature_Invisibility",
+   bal = "Spell_Fire_FlameBolt", cld = "Spell_Frost_FrostNova", has = "Spell_Nature_Bloodlust",
+   lit = "Spell_Nature_Lightning", drl = "Spell_Shadow_LifeDrain02", ply = "Spell_Nature_Polymorph",
+   hld = "Spell_Frost_ChainsOfIce", tel = "Spell_Arcane_Blink", mfi = "Spell_Fire_Immolation",
+   sph = "Spell_Shadow_ShadowWordDominate", sum = "Spell_Shadow_SummonVoidWalker", fgr = "Spell_Holy_Excorcism",
+   cbl = "Spell_Holy_RemoveCurse", enl = "Spell_Holy_MindVision", stp = "Spell_Frost_Stun", sca = "Spell_Shadow_PsychicScream",
+   lor = "INV_Misc_Book_09",
+}
+
 function V.ObjectIcon(id, arg)
    if id == K.OPOTION and arg and V.POTION_ICON[arg] then
       return ICONS .. V.POTION_ICON[arg]

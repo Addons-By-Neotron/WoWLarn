@@ -40,7 +40,7 @@ mod.defaults = {
       fast = false,  -- skip the delays (naps) between game steps
       window = { point = "CENTER", x = 0, y = 0 },
    },
-   char = {},  -- game = the game being played, see Save.lua
+   char = { actionbar = {} },  -- game = the game being played, see Save.lua; actionbar[1..10] = { spell = "code" } or { object =, arg = } (UI/ActionBar.lua)
    global = {
       scores = { winners = {}, dead = {} },  -- the scoreboards, see Scores.lua
       taxes = {},  -- what each winner owes the LRS

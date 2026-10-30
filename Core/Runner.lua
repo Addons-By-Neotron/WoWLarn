@@ -226,6 +226,7 @@ function ui:Flush()
    if dirty.inv then
       dirty.inv = nil
       ns.inventory:Update()
+      ns.actionBar:Update()
    end
 end
 
@@ -264,6 +265,7 @@ end
 ----------------------------------------------------------------
 
 function ui:GetKey()
+   if self.keys and #self.keys > 0 then return table.remove(self.keys, 1) end  -- (the rest of an action bar slot)
    return Wait(self, "key")
 end
 
@@ -284,6 +286,7 @@ function ui:GetCommand()
    self.repcount = 0
    ns.Equipment.reportChanges()
 
+   self.keys = nil
    while true do
       self.atCommand = true
       local key = self:GetKey()
@@ -293,7 +296,18 @@ function ui:GetCommand()
       else
          key = ARROW_COMMAND[key] or key
          if #key == 1 then
-            if key:match("^%d$") then
+            if key:match("^%d$") and ns.actionBar:Enabled() then
+               -- a slot of the action bar: its first key is the command, the rest answers its questions
+               local keys, message = ns.actionBar:Keys(key == "0" and 10 or tonumber(key))
+               if keys then
+                  self.keys = { unpack(keys, 2) }
+                  self.repcount = 0
+                  self.lastok = keys[1]
+                  return keys[1]
+               elseif message then
+                  self:Message(message)
+               end
+            elseif key:match("^%d$") then
                self.repcount = self.repcount * 10 + tonumber(key)
             else
                if self.repcount > 0 then

@@ -123,6 +123,17 @@ local function BuildOptions()
                   ns.ui:RefreshNow("map")
                end,
             },
+            actionBar = {
+               type = "toggle",
+               name = L["Action bar"],
+               desc = L["Ten slots for spells, potions and scrolls on the keys 1 to 0 (right-click a slot to choose).  Without it, the digits set a repeat count, as in the original game."],
+               order = 17.2,
+               get = function() return mod.db.profile.actionBar ~= false end,
+               set = function(_, value)
+                  mod.db.profile.actionBar = value
+                  ns.actionBar:Update()
+               end,
+            },
             ascii = {
                type = "toggle",
                name = L["Classic letters"],

@@ -506,8 +506,10 @@ ns.mod.db.profile.fast = true
 for x = 1, K.MAXX do for y = 1, K.MAXY do G.item[x][y] = 0 end end  -- clear the field for movement tests
 G.playerx, G.playery = 10, 8
 local t0 = G.gtime
+ns.mod.db.profile.actionBar = false  -- (the digits are the repeat count then)
 keys("3l"); check(G.playerx == 13 and G.playery == 8, "repeat count: x=" .. G.playerx)
 check(G.gtime == t0 + 3, "three turns passed, got " .. (G.gtime - t0))
+ns.mod.db.profile.actionBar = nil
 keys("k"); check(G.playery == 7, "north")
 keys("b"); check(G.playerx == 12 and G.playery == 8, "southwest")
 t0 = G.gtime
@@ -1154,6 +1156,32 @@ check(last():find("back to normal"), "a temporary gain ending is said so: " .. t
 G.c[K.HPMAX] = G.c[K.HPMAX] - 2
 ns.Equipment.reportChanges()
 check(last():find("Maximum health falls permanently"), "maximum health: " .. tostring(last()))
+
+-- the action bar
+do
+   local bar = ns.actionBar
+   G.spelknow[1] = 1
+   G.iven[3], G.ivenarg[3] = K.OPOTION, K.PHEALING
+   bar:Assign(1, { spell = "pro" })
+   bar:Assign(2, { object = K.OPOTION, arg = K.PHEALING })
+   bar:Assign(4, { spell = "fgr" })
+   local k1 = bar:Keys(1)
+   check(k1 and table.concat(k1) == "cpro", "a spell slot gives c and the code")
+   local k2 = bar:Keys(2)
+   local held = k2 and k2[2] and k2[2]:byte() - 96
+   check(k2 and k2[1] == "q" and held and G.iven[held] == K.OPOTION and G.ivenarg[held] == K.PHEALING, "a potion slot gives q and the pack letter")
+   local k3, message = bar:Keys(3)
+   check(k3 == nil and message, "an empty slot says so")
+   G.spelknow[27] = 0
+   check(bar:Keys(4) == nil, "a spell that is not known does nothing")
+   G.c[K.HP] = G.c[K.HPMAX] - 5
+   local before = G.iven[held]
+   keys("2")
+   check(G.iven[held] ~= before or G.ivenarg[held] ~= K.PHEALING, "the key 2 quaffs the potion of the slot")
+   check(ui.wait == "key", "the game waits for a command again")
+   G.spelknow[1] = 0
+   bar:Assign(1, nil); bar:Assign(2, nil); bar:Assign(4, nil)
+end
 
 -- lava in some of the walls of the volcano
 do
