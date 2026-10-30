@@ -100,6 +100,7 @@ function G.Reset()
    FillArray(G.spelknow, K.SPNUM, 0)
    G.spheres = {}  -- the spheres of annihilation of every level, newest first
    G.race = nil
+   G.statSnap = nil  -- the abilities as last reported, see Equipment.reportChanges
    FillArray(G.scrollknown, K.MAXSCROLL, 0)
    FillArray(G.potionknown, K.MAXPOTION, 0)
    G.potionknown[K.PINSTHEAL] = 1  -- the only potion known from the start

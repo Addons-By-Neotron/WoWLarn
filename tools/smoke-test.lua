@@ -673,6 +673,7 @@ do
    end
    local function Arena()
       ns.Create.newCaveLevel(3); Clear()
+      G.statSnap = nil  -- (the stats are set by hand: not worth a line in the log)
       for i = 1, K.SPNUM do G.spelknow[i] = 1 end
       G.c[K.INTELLIGENCE], G.c[K.WISDOM], G.c[K.CHARISMA], G.c[K.LEVEL] = 25, 25, 25, 40
       G.c[K.HP], G.c[K.HPMAX] = 5000, 5000
@@ -1138,6 +1139,22 @@ local _, mle = ns.SpellInfo.info(K.SP_MAGIC_MISSILE)
 check(mle == "14-35", "magic missile range at level 10: " .. tostring(mle))
 check(ns.SpellInfo.risky(K.SP_SPHERE_OF_ANNIHILATION) and not ns.SpellInfo.risky(K.SP_HEALING), "risky spells")
 check(ns.SpellInfo.minLevel(K.SP_MAGIC_MISSILE) == 0 and ns.SpellInfo.minLevel(K.SP_PERMANENCE) == 12, "spell levels")
+-- the log tells what changes for good and what for a while
+Fresh(3)
+ns.Equipment.reportChanges()
+G.c[K.STRENGTH] = G.c[K.STRENGTH] + 1
+ns.Equipment.reportChanges()
+check(last():find("for good"), "a permanent gain is said so: " .. tostring(last()))
+G.c[K.DEXTERITY], G.c[K.DEXCOUNT] = G.c[K.DEXTERITY] + 3, 100
+ns.Equipment.reportChanges()
+check(last():find("for a while"), "a temporary gain is said so: " .. tostring(last()))
+G.c[K.DEXTERITY], G.c[K.DEXCOUNT] = G.c[K.DEXTERITY] - 3, 0
+ns.Equipment.reportChanges()
+check(last():find("back to normal"), "a temporary gain ending is said so: " .. tostring(last()))
+G.c[K.HPMAX] = G.c[K.HPMAX] - 2
+ns.Equipment.reportChanges()
+check(last():find("Maximum health falls for good"), "maximum health: " .. tostring(last()))
+
 -- the bestiary
 Fresh(3)
 ns.mod.db.global.bestiary = {}

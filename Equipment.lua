@@ -219,15 +219,58 @@ function Equipment.statBreakdown(stat)
       local amount = entry and entry[stat] and entry[stat](ivenarg[i])
       if amount and amount ~= 0 then mods[#mods + 1] = { ns.StripArticle(T.objectname[iven[i]]), amount } end
    end
-   if c[K.HERO] ~= 0 then mods[#mods + 1] = { L["Heroism"], 11 } end
-   if c[K.COKED] ~= 0 then mods[#mods + 1] = { ns.StripArticle(T.objectname[K.OCOKE]), 33 } end
-   if stat == "DEX" and c[K.DEXCOUNT] ~= 0 then mods[#mods + 1] = { T.spelname[K.SP_DEXTERITY], 3 } end
-   if stat == "STR" and c[K.STRCOUNT] ~= 0 then mods[#mods + 1] = { T.spelname[K.SP_STRENGTH], 3 } end
-   if stat == "STR" and c[K.DRAINSTRENGTH] ~= 0 then mods[#mods + 1] = { L["Curse"], -c[K.INFEEBLEMENT] } end
-   if stat == "STR" and c[K.GIANTSTR] ~= 0 then mods[#mods + 1] = { T.potionname[K.PGIANTSTR], 21 } end
+   if c[K.HERO] ~= 0 then mods[#mods + 1] = { L["Heroism"], 11, true } end
+   if c[K.COKED] ~= 0 then mods[#mods + 1] = { ns.StripArticle(T.objectname[K.OCOKE]), 33, true } end
+   if stat == "DEX" and c[K.DEXCOUNT] ~= 0 then mods[#mods + 1] = { T.spelname[K.SP_DEXTERITY], 3, true } end
+   if stat == "STR" and c[K.STRCOUNT] ~= 0 then mods[#mods + 1] = { T.spelname[K.SP_STRENGTH], 3, true } end
+   if stat == "STR" and c[K.DRAINSTRENGTH] ~= 0 then mods[#mods + 1] = { L["Curse"], -c[K.INFEEBLEMENT], true } end
+   if stat == "STR" and c[K.GIANTSTR] ~= 0 then mods[#mods + 1] = { T.potionname[K.PGIANTSTR], 21, true } end
    local base = total
    for _, mod in ipairs(mods) do base = base - mod[2] end
    return total, base, mods
+end
+
+-- What has changed for good, and what only for a while, since the last time (the log says so,
+-- in other colours): the abilities without what is worn and what is temporary, the most hit
+-- points and the most mana.  The first time only looks.
+local WATCH = {
+   { "STR", L["Strength"] }, { "INT", L["Intelligence"] }, { "WIS", L["Wisdom"] },
+   { "CON", L["Constitution"] }, { "DEX", L["Dexterity"] }, { "CHA", L["Charisma"] },
+}
+function Equipment.reportChanges()
+   local before = G.statSnap
+   local now = { hp = c[K.HPMAX], mana = c[K.SPELLMAX] }
+   for _, entry in ipairs(WATCH) do
+      local stat = entry[1]
+      local _, base, mods = Equipment.statBreakdown(stat)
+      local timed = 0
+      for _, mod in ipairs(mods) do
+         if mod[3] then timed = timed + mod[2] end
+      end
+      now[stat], now[stat .. "T"] = base, timed
+   end
+   G.statSnap = now
+   if not before then return end
+   local ui = ns.ui
+   local function Permanent(label, was, is)
+      if is == was then return end
+      ui:Log(is > was and "loot" or "damage", is > was and L["%s rises for good: %d (now %d)."] or L["%s falls for good: %d (now %d)."], label, math.abs(is - was), is)
+   end
+   Permanent(L["Maximum health"], before.hp, now.hp)
+   Permanent(L["Maximum mana"], before.mana, now.mana)
+   for _, entry in ipairs(WATCH) do
+      local stat, label = entry[1], entry[2]
+      Permanent(label, before[stat], now[stat])
+      local was, is = before[stat .. "T"], now[stat .. "T"]
+      if is ~= was then
+         if is == 0 then
+            ui:Log("magic", L["%s is back to normal."], label)
+         else
+            ui:Log("magic", is > was and L["%s rises for a while: %d (now %d)."] or L["%s falls for a while: %d (now %d)."],
+               label, math.abs(is - was), (select(1, Equipment.statBreakdown(stat))))
+         end
+      end
+   end
 end
 
 -- Turns between the regeneration of one hit point (or point of mana), as the game counts them.

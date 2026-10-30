@@ -63,6 +63,7 @@ function Debug.kit()
    if not ns.Player.take(K.OLANCE, 0) then Log("no room for the Lance of Death") end
    ns.Player.recalc()
    ns.Player.normalize()
+   G.statSnap = nil  -- (no need to report it)
    Log("debug kit: stats 70, spells and potions and scrolls known, map revealed")
    ns.ui:Refresh("all")
 end

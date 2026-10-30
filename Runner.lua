@@ -282,6 +282,7 @@ function ui:GetCommand()
       return self.lastok
    end
    self.repcount = 0
+   ns.Equipment.reportChanges()
 
    while true do
       self.atCommand = true
