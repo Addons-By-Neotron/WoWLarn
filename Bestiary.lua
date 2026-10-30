@@ -59,6 +59,12 @@ local function Stats(id)
    return (G.monster and G.monster[id]) or ns.MonsterData[id]
 end
 
+-- The window shows it as it is: something has changed.
+local function Changed()
+   local window = ns.bestiaryWindow
+   if window and window.frame and window.frame:IsShown() then window:Update() end
+end
+
 -- A game that has had cheats on does not add to it.
 local function Counts()
    return not (G.wizard or G.cheated)
@@ -73,12 +79,16 @@ function Bestiary.see(id)
    local entries = Entries()
    if entries[id] or not Counts() or not G.level then return end
    entries[id] = { level = G.level, kills = 0, specials = {} }
+   Changed()
 end
 
 -- A special attack of the monster has happened.
 function Bestiary.special(id, attack)
    local entry = Entries()[id]
-   if entry and Counts() and attack and SPECIAL[attack] then entry.specials[attack] = true end
+   if entry and Counts() and attack and SPECIAL[attack] and not entry.specials[attack] then
+      entry.specials[attack] = true
+      Changed()
+   end
 end
 
 -- The monster has hit the player, for damage (after the armor class ac took its share).  Its
@@ -92,12 +102,16 @@ function Bestiary.hit(id, damage, ac)
    else
       entry.blocked = math.max(entry.blocked or 0, ac)
    end
+   Changed()
 end
 
 -- The player has swung at the monster.
 function Bestiary.swing(id)
    local entry = Entries()[id]
-   if entry and Counts() then entry.swings = (entry.swings or 0) + 1 end
+   if entry and Counts() then
+      entry.swings = (entry.swings or 0) + 1
+      Changed()
+   end
 end
 
 -- How well the player's blows land, as a word, once enough have been swung at the monster to
@@ -123,6 +137,7 @@ function Bestiary.immune(id, spell)
    if not entry or not Counts() then return end
    entry.immune = entry.immune or {}
    entry.immune[spell] = true
+   Changed()
 end
 
 -- The spells the monster is known to shrug off, as names: the ones seen, or all of them once
@@ -142,7 +157,10 @@ end
 -- The monster has been studied (the spell of monster lore): all of it is known, exactly.
 function Bestiary.lore(id)
    local entry = Entries()[id]
-   if entry and Counts() then entry.lore = true end
+   if entry and Counts() then
+      entry.lore = true
+      Changed()
+   end
 end
 
 function Bestiary.isKnown(id)
@@ -152,7 +170,10 @@ end
 
 function Bestiary.kill(id)
    local entry = Entries()[id]
-   if entry and Counts() then entry.kills = entry.kills + 1 end
+   if entry and Counts() then
+      entry.kills = entry.kills + 1
+      Changed()
+   end
 end
 
 -- The special attacks seen, as a list of names; and whether the monster has others to find.
