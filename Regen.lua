@@ -103,6 +103,11 @@ function Regen.regen()
       c[K.STREXTRA] = c[K.STREXTRA] - 3
       flag = true
    end
+   if expired(K.DRAINSTRENGTH) then
+      c[K.STREXTRA] = c[K.STREXTRA] + ns.Monster.CURSE_STRENGTH
+      ui:Message(L["The curse on your strength lifts."])
+      flag = true
+   end
    if expired(K.BLINDCOUNT) then
       ui:Message(L["The blindness lifts."])
    end

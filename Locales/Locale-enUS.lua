@@ -1077,3 +1077,5 @@ L["You have nothing to wear."] = true
 L["You have no cookies to eat."] = true
 L["Zoom"] = true
 L["How close the camera is in the 2.5D view.  Lower shows more of the map."] = true
+L["The %s stung you!  A curse makes you weaker."] = true
+L["The curse on your strength lifts."] = true
