@@ -39,13 +39,14 @@ local TILE_PIXELS = 55  -- how wide the tile of the player is on the screen
 local CAMERA_BACK, CAMERA_HEIGHT, FOCAL  -- from the camera angle, see map3d:Draw
 local SIN, COS = 0, 1  -- of the angle
 local PLAYER_AT = 0.62  -- how far down the view the player stands
-local NEAR_ROWS, FAR_ROWS, SIDE_COLUMNS = 4, 13, 14
+local NEAR_ROWS, FAR_ROWS, SIDE_COLUMNS = 4, 13, 14  -- (at a zoom of FULL_ZOOM or more: farther out there are more)
 local ROWS = NEAR_ROWS + FAR_ROWS + 1
+local FULL_ZOOM = 0.8
 local MIN_AHEAD = 24
 local SEE_THROUGH = 0.3  -- how solid a wall in front of the player is
 local STEEP = math.sin(math.rad(50)) - 1e-9  -- from this angle up the camera looks over the walls
 local FOG_REACH = 1700  -- ahead at which things are at their darkest
-local floor, max, min = math.floor, math.max, math.min
+local floor, ceil, max, min = math.floor, math.ceil, math.max, math.min
 local MAXX, MAXY = K.MAXX, K.MAXY
 
 local FACING = 0  -- the facing at which a model looks towards the camera (south)
@@ -335,15 +336,28 @@ function map3d:Create(view)
       end
    end)
    self.layers = {}
+   self:Hide()
+end
+
+-- The layers of the rows there are to draw.
+function map3d:EnsureLayers(rows)
+   local view = self.view
    local base = view:GetFrameLevel() + 1
-   for row = 1, ROWS do
+   for row = #self.layers + 1, rows do
       self.layers[row] = {
          [FLOOR] = NewLayer(view, base + (row - 1) * 3 + FLOOR),
          [WALL] = NewLayer(view, base + (row - 1) * 3 + WALL),
          [ACTOR] = NewLayer(view, base + (row - 1) * 3 + ACTOR),
       }
    end
-   self:Hide()
+end
+
+-- Zoomed out, more tiles fit in the view.
+function map3d:SetReach(zoom)
+   local more = max(1, FULL_ZOOM / zoom)
+   NEAR_ROWS, FAR_ROWS, SIDE_COLUMNS = ceil(4 * more), ceil(13 * more), ceil(14 * more)
+   ROWS = NEAR_ROWS + FAR_ROWS + 1
+   self:EnsureLayers(ROWS)
 end
 
 function map3d:Hide()
@@ -649,12 +663,13 @@ function map3d:Draw()
    camera.y = (posY - 0.5) * TILE + CAMERA_BACK
    local roundX, roundY = floor(posX + 0.5), floor(posY + 0.5)
    local ground = V.Ground(G.level)
+   self:SetReach(ns.mod.db.profile.zoom3d or 1)
    self:StackRows(roundY)
 
-   for row = 1, ROWS do
+   for row = 1, #self.layers do
       for _, layer in pairs(self.layers[row]) do
-         layer:Show()
-         Begin(layer)
+         layer:SetShown(row <= ROWS)
+         if row <= ROWS then Begin(layer) end
       end
    end
    -- Row 1 is the farthest (north), the last row the nearest.
