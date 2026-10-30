@@ -50,6 +50,20 @@ function window:Create()
    self.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
    self.title:SetPoint("TOPLEFT", 12, -10)
 
+   -- the order of the list
+   local function SortButton(text, sort, x)
+      local button = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+      button:SetSize(56, 20)
+      button:SetPoint("TOPRIGHT", x, -6)
+      button:SetText(text)
+      button:SetScript("OnClick", function()
+         ns.mod.db.profile.bestiarySort = sort
+         self:Update()
+      end)
+   end
+   SortButton(L["Name"], "name", -12)
+   SortButton(L["Level"], "level", -72)
+
    local scroll = CreateFrame("ScrollFrame", "WoWLarnBestiaryScroll", frame, "FauxScrollFrameTemplate")
    scroll:SetPoint("TOPLEFT", 8, -32)
    scroll:SetSize(LIST_W, ROWS * ROW_H)
@@ -89,7 +103,7 @@ function window:Create()
 end
 
 function window:UpdateList()
-   local list = ns.Bestiary.list()
+   local list = ns.Bestiary.list(ns.mod.db.profile.bestiarySort)
    FauxScrollFrame_Update(self.scroll, #list, ROWS, ROW_H)
    local offset = FauxScrollFrame_GetOffset(self.scroll)
    for row, button in ipairs(self.rows) do
@@ -125,7 +139,7 @@ function window:Select(id)
    self.name:SetText(ns.TitleCase(data.name))
 
    local lines = {}
-   lines[#lines + 1] = format(L["First met on level %d"], entry.level)
+   lines[#lines + 1] = format(L["Lowest level seen: %d"], entry.level)
    if entry.kills > 0 then lines[#lines + 1] = format(L["Killed: %d"], entry.kills) end
    local low, high = ns.Bestiary.health(id)
    if entry.lore then
@@ -170,7 +184,7 @@ function window:Select(id)
 end
 
 function window:Update()
-   local list = ns.Bestiary.list()
+   local list = ns.Bestiary.list(ns.mod.db.profile.bestiarySort)
    self.title:SetText(format(L["Bestiary: %d of %d monsters seen"], #list, K.MAXMONST + 8))
    if self.selected and not ns.Bestiary.entry(self.selected) then self.selected = nil end
    if not self.selected and list[1] then self.selected = list[1] end

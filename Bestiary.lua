@@ -85,7 +85,15 @@ end
 -- A monster is in view.
 function Bestiary.see(id)
    local entries = Entries()
-   if entries[id] or not Counts() or not G.level then return end
+   local entry = entries[id]
+   if entry then  -- (the shallowest level it has been seen on)
+      if G.level and G.level < entry.level and Counts() then
+         entry.level = G.level
+         Changed()
+      end
+      return
+   end
+   if not Counts() or not G.level then return end
    entries[id] = { level = G.level, kills = 0, specials = {} }
    Changed()
 end
@@ -204,13 +212,19 @@ function Bestiary.specials(id)
    return names, (data.attack > 0 or PASSIVE[id] ~= nil) and #names == 0 and not (entry and entry.lore)
 end
 
--- The monsters seen, from the weakest.
-function Bestiary.list()
-   local list = {}
-   for id in pairs(Entries()) do
+-- The monsters seen: by the shallowest level they were seen on ("level", the default, and then
+-- by name) or by name ("name").
+function Bestiary.list(sort)
+   local entries, list = Entries(), {}
+   for id in pairs(entries) do
       if ns.MonsterData[id] then list[#list + 1] = id end
    end
-   table.sort(list)
+   local function Name(id) return ns.MonsterData[id].name end
+   table.sort(list, function(a, b)
+      if sort ~= "name" and entries[a].level ~= entries[b].level then return entries[a].level < entries[b].level end
+      if Name(a) ~= Name(b) then return Name(a) < Name(b) end
+      return a < b
+   end)
    return list
 end
 

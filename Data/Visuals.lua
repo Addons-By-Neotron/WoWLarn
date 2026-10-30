@@ -586,6 +586,10 @@ V.MONSTER_NAME = {
    [K.LAMANOBE] = L["Timbermaw Warrior"],
    [K.OSEQUIP] = L["dire boar"],
    [K.ROTHE] = L["kodo"],
+   [K.WHITEDRAGON] = L["azure whelp"],  -- (a whelp, not a dragon)
+   [K.SILVERDRAGON] = L["silver drake"],  -- (drake models)
+   [K.GREENDRAGON] = L["green drake"],
+   [K.REDDRAGON] = L["red drake"],
 }
 for id, name in pairs(V.MONSTER_NAME) do
    ns.MonsterData[id].name = name

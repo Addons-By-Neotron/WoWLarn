@@ -1165,6 +1165,14 @@ check(ns.Bestiary.entry(K.CENTIPEDE).hurt, "damage taken is remembered")
 check(ns.Bestiary.toHit(K.CENTIPEDE) == nil, "no idea how well blows land before swinging")
 for _ = 1, 3 do ns.Bestiary.swing(K.CENTIPEDE) end
 check(type(ns.Bestiary.toHit(K.CENTIPEDE)) == "string", "a word for how well blows land after a few swings")
+G.level = 1
+ns.Bestiary.see(K.CENTIPEDE)
+check(ns.Bestiary.entry(K.CENTIPEDE).level == 1, "the lowest level seen is kept")
+G.level = 0
+ns.Bestiary.see(K.ANT)
+local byLevel, byName = ns.Bestiary.list("level"), ns.Bestiary.list("name")
+check(byLevel[1] == K.ANT and byName[1] == K.CENTIPEDE, "the list sorts by level or by name")
+check(ns.MonsterData[K.WHITEDRAGON].name == "Azure Whelp" and ns.MonsterData[K.REDDRAGON].name == "Red Drake", "drakes and the whelp are named so")
 G.wizard = true
 ns.Bestiary.see(K.ORC)
 G.wizard = false
