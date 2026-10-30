@@ -99,7 +99,7 @@ local INFO = {
    end,
    [K.SP_COLD] = function(lev)
       local fade = 3 + idiv(c[K.HARDGAME], 2)
-      return format(L["Sends a cone of cold %d tiles long that widens as it goes, causing %s frost damage to every monster in it.  It loses %d damage for every tile."], ns.Spells.CONE_LENGTH, Range(21 + lev, 45 + lev), fade), Range(21 + lev, 45 + lev)
+      return format(L["Sends a cone of cold %d tiles long that widens as it goes, causing %s frost damage to every monster in it.  It loses %d damage for every tile."], ns.Spells.CONE_LENGTH, Range(11 + idiv(lev, 2), 25 + idiv(lev, 2)), fade), Range(11 + idiv(lev, 2), 25 + idiv(lev, 2))
    end,
    [K.SP_POLYMORPH] = function() return L["Changes the monster into a random one."] end,
    [K.SP_CANCELLATION] = function(lev) return format(L["Monsters can't use their special abilities for %d turns."], 5 + lev) end,
