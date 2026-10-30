@@ -538,6 +538,7 @@ function Player.dropObject(k)
    if not pitflag then
       item[G.playerx][G.playery] = itm
       G.iarg[G.playerx][G.playery] = ivenarg[k]
+      G.named[G.playerx][G.playery] = itm  -- (dropped: the mouse over it tells what it is)
    end
    if c[K.WIELD] == k then c[K.WIELD] = 0 end
    if c[K.WEAR] == k then c[K.WEAR] = 0 end

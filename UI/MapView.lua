@@ -114,6 +114,10 @@ function map:Describe(x, y)
    end
    local object = G.item[x][y]
    if object == 0 or object == K.OWALL then return false end
+   if G.named[x][y] == object then  -- (looked at or dropped: what it is, as the pack would name it)
+      ns.ItemInfo.tooltip(object, G.iarg[x][y])
+      return true
+   end
    GameTooltip:SetText(ns.ItemInfo.groundName(object), 1, 1, 1)
    GameTooltip:Show()
    return true

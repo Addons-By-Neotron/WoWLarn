@@ -31,7 +31,7 @@ local MAXX, MAXY = K.MAXX, K.MAXY
 local G = {}
 ns.G = G
 
-local LEVEL_GRIDS = { "item", "iarg", "know", "hitp", "mon", "stealth", "look", "seen" }
+local LEVEL_GRIDS = { "item", "iarg", "know", "hitp", "mon", "stealth", "look", "seen", "named" }
 
 local function Grid()
    local grid = {}

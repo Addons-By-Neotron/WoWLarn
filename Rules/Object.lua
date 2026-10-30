@@ -359,6 +359,7 @@ function Object.lookForObject()
    local ui = ns.ui
    ns.Display.showcell(x, y)
    ui.repcount = 0
+   G.named[x][y] = id  -- (looked at: the mouse over it tells what it is)
    local name = ns.Tables.objectname[id]
 
    if id == K.OGOLDPILE or id == K.OMAXGOLD or id == K.OKGOLD or id == K.ODGOLD then

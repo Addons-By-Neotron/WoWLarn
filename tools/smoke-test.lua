@@ -1167,6 +1167,16 @@ do
    check(ns.Bestiary.entry(K.DEMONPRINCE) and ns.Bestiary.entry(K.DEMONPRINCE).kills == 1, "a demon you killed is in the bestiary")
 end
 
+-- an item you looked at or dropped is named on the map; others only by kind
+do
+   local x, y = G.playerx, G.playery
+   G.item[x][y], G.iarg[x][y], G.named[x][y] = 0, 0, 0
+   G.iven[9], G.ivenarg[9] = K.OPOTION, K.PHEALING
+   ns.Player.dropObject(9)
+   check(G.item[x][y] == K.OPOTION and G.named[x][y] == K.OPOTION, "a dropped item is named on the map: " .. tostring(G.named[x][y]) .. " item " .. tostring(G.item[x][y]) .. " at " .. x .. "," .. y .. " wait " .. tostring(ui.wait) .. " " .. tostring(last()))
+   G.item[x][y], G.named[x][y] = 0, 0
+end
+
 -- the action bar
 do
    local bar = ns.actionBar
