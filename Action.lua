@@ -43,7 +43,8 @@ end
 
 -- What each command lists as valid (C: whatitem). Any slot can still be picked.
 local WIELD = Set(K.OSWORDofSLASHING, K.OHAMMER, K.OSWORD, K.O2SWORD, K.OSPEAR, K.ODAGGER, K.OBATTLEAXE,
-   K.OLONGSWORD, K.OFLAIL, K.OSLAYER, K.OLANCE, K.OVORPAL)
+   K.OLONGSWORD, K.OFLAIL, K.OSLAYER, K.OLANCE, K.OVORPAL,
+   K.OPSTAFF)  -- (not in the C list, though the table gives it a weapon class; a staff is a weapon)
 local ARMOR = Set(K.OPLATE, K.OCHAIN, K.OLEATHER, K.ORING, K.OSTUDLEATHER, K.OSPLINT, K.OPLATEARMOR,
    K.OSSPLATE, K.OELVENCHAIN)
 local WEAR = Set(K.OPLATE, K.OCHAIN, K.OLEATHER, K.ORING, K.OSTUDLEATHER, K.OSPLINT, K.OPLATEARMOR,
