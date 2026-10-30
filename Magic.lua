@@ -119,6 +119,7 @@ function Magic.readBook(arg)
       i = rnd(tmp ~= 0 and tmp or 1) + 9
    end
    local spell = i + 1  -- spell ids are shifted
+   if arg >= 3 and G.spelknow[K.SP_MONSTER_LORE] == 0 and rnd(8) == 1 then spell = K.SP_MONSTER_LORE end  -- (not in the original: any book may teach it)
    G.spelknow[spell] = 1
    Msg(L["Spell \"%s\":  %s"], T.spelcode[spell], T.spelname[spell])
    Msg("%s.", T.speldescript[spell])

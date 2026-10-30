@@ -846,6 +846,26 @@ do
    ns.Monster.init()
 end
 -- altars, thrones, fountains, the brass lamp and the objects that do nothing
+-- the spell of monster lore studies the monster next to the player
+do
+   ns.Create.newCaveLevel(3); Clear()
+   ns.mod.db.global.bestiary = {}
+   G.wizard, G.cheated = false, false
+   G.spelknow[K.SP_MONSTER_LORE] = 1
+   G.c[K.INTELLIGENCE], G.c[K.LEVEL], G.c[K.HP], G.c[K.HPMAX] = 25, 10, 100, 100
+   G.playerx, G.playery = 30, 8
+   Put(K.GNOME, 31, 8)
+   for _ = 1, 8 do
+      if ns.Bestiary.isKnown(K.GNOME) then break end
+      G.c[K.SPELLS] = 5; keys("c"); keys("lor"); if debug.traceback(ui.co):find("PickDirection") then keys("l") end
+   end
+   check(ns.Bestiary.isKnown(K.GNOME), "monster lore studies the monster " .. tostring(ui.wait) .. " " .. tostring(LOG and LOG[#LOG]) .. " " .. tostring(G.dead) .. tostring(ns.Bestiary.entry(K.GNOME)))
+   check(#ns.Bestiary.resists(K.GNOME) > 0, "all the spells a monster shrugs off are known after lore: the gnome ignores phantasmal forces")
+   local lo, hi = ns.Bestiary.health(K.GNOME)
+   check(lo == hi and lo == G.monster[K.GNOME].hitpoints, "lore gives exact hit points")
+   check(ns.SpellInfo.minLevel(K.SP_MONSTER_LORE) == 4, "lore needs level 4: " .. ns.SpellInfo.minLevel(K.SP_MONSTER_LORE))
+end
+
 do
    local oldfast = ns.mod.db.profile.fast
    ns.mod.db.profile.fast = true

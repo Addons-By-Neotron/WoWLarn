@@ -105,7 +105,7 @@ end
 local SWINGS_TO_KNOW = 3
 function Bestiary.toHit(id)
    local entry = Entries()[id]
-   if not entry or (entry.swings or 0) < SWINGS_TO_KNOW then return nil end
+   if not entry or ((entry.swings or 0) < SWINGS_TO_KNOW and not entry.lore) then return nil end
    local c = G.c
    local need = Stats(id).armorclass + c[K.LEVEL] + c[K.DEXTERITY] + math.floor(c[K.WCLASS] / 4) - 12 - c[K.HARDGAME]
    local chance = math.min(19, math.max(0, need - 1)) / 20  -- rnd(20) < need
@@ -117,6 +117,39 @@ function Bestiary.toHit(id)
    return L["You hardly ever hit it"]
 end
 
+-- The monster has shrugged off a spell (see Spells.noSpell).
+function Bestiary.immune(id, spell)
+   local entry = Entries()[id]
+   if not entry or not Counts() then return end
+   entry.immune = entry.immune or {}
+   entry.immune[spell] = true
+end
+
+-- The spells the monster is known to shrug off, as names: the ones seen, or all of them once
+-- the monster has been studied.
+function Bestiary.resists(id)
+   local entry, T, names = Entries()[id], ns.Tables, {}
+   if not entry then return names end
+   for spell = 1, K.SPNUM do
+      local weird = T.spelweird[id][spell]
+      if weird and weird ~= 0 and (entry.lore or (entry.immune and entry.immune[spell])) then
+         names[#names + 1] = T.spelname[spell]
+      end
+   end
+   return names
+end
+
+-- The monster has been studied (the spell of monster lore): all of it is known, exactly.
+function Bestiary.lore(id)
+   local entry = Entries()[id]
+   if entry and Counts() then entry.lore = true end
+end
+
+function Bestiary.isKnown(id)
+   local entry = Entries()[id]
+   return entry and entry.lore or false
+end
+
 function Bestiary.kill(id)
    local entry = Entries()[id]
    if entry and Counts() then entry.kills = entry.kills + 1 end
@@ -125,7 +158,11 @@ end
 -- The special attacks seen, as a list of names; and whether the monster has others to find.
 function Bestiary.specials(id)
    local entry, names, listed = Entries()[id], {}, {}
-   for attack in pairs(entry and entry.specials or {}) do
+   local seenAttacks = entry and entry.specials or {}
+   if entry and entry.lore and ns.MonsterData[id].attack > 0 then
+      seenAttacks = { [ns.MonsterData[id].attack] = true }
+   end
+   for attack in pairs(seenAttacks) do
       if not listed[SPECIAL[attack]] then  -- (two attacks can have the same name)
          listed[SPECIAL[attack]] = true
          names[#names + 1] = SPECIAL[attack]
@@ -133,7 +170,7 @@ function Bestiary.specials(id)
    end
    table.sort(names)
    local data = ns.MonsterData[id]
-   return names, data.attack > 0 and #names == 0
+   return names, data.attack > 0 and #names == 0 and not (entry and entry.lore)
 end
 
 -- The monsters seen, from the weakest.
@@ -166,6 +203,7 @@ end
 -- About how many hit points the monster has: low, high.
 function Bestiary.health(id)
    local entry = Entries()[id]
+   if entry and entry.lore then return Stats(id).hitpoints, Stats(id).hitpoints end
    return Estimate(Stats(id).hitpoints, id, entry and entry.kills or 0)
 end
 
@@ -178,6 +216,7 @@ function Bestiary.damage(id, ac)
    local high = math.max(0, data.damage + math.max(data.damage, 1) + data.level - ac)
    if high == 0 then return 0, 0 end
    local entry = Entries()[id]
+   if entry and entry.lore then return low, high end
    local kills = entry and entry.kills or 0
    local lowest = Estimate(math.max(low, 1), id, kills)
    local _, highest = Estimate(high, id, kills)

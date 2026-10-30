@@ -128,12 +128,16 @@ function window:Select(id)
    lines[#lines + 1] = format(L["First met on level %d"], entry.level)
    if entry.kills > 0 then lines[#lines + 1] = format(L["Killed: %d"], entry.kills) end
    local low, high = ns.Bestiary.health(id)
-   lines[#lines + 1] = format(L["Health: about %s"], Range(low, high))
+   if entry.lore then
+      lines[#lines + 1] = format(L["Health: %s.  Armor class: %d"], Range(low, high), ns.MonsterData[id].armorclass)
+   else
+      lines[#lines + 1] = format(L["Health: about %s"], Range(low, high))
+   end
    local toHit = ns.Bestiary.toHit(id)
    if toHit then lines[#lines + 1] = toHit end
-   if entry.hurt then
+   if entry.hurt or entry.lore then
       local nlow, nhigh = ns.Bestiary.damage(id, 0)
-      lines[#lines + 1] = format(L["Damage: about %s per hit without armor"], Range(nlow, nhigh))
+      lines[#lines + 1] = format(entry.lore and L["Damage: %s per hit without armor"] or L["Damage: about %s per hit without armor"], Range(nlow, nhigh))
       local ac = G.c and G.c[K.AC] or 0
       if ac > 0 then
          local alow, ahigh = ns.Bestiary.damage(id, ac)
@@ -153,7 +157,12 @@ function window:Select(id)
       lines[#lines + 1] = "|cffffd100" .. L["Special attacks"] .. "|r"
       for _, name in ipairs(specials) do lines[#lines + 1] = "  " .. name end
    end
-   if hidden or (#specials > 0 and data.attack == 12) then
+   local resists = ns.Bestiary.resists(id)
+   if #resists > 0 then
+      lines[#lines + 1] = "|cffffd100" .. L["Not affected by"] .. "|r"
+      for _, name in ipairs(resists) do lines[#lines + 1] = "  " .. name end
+   end
+   if hidden or (#specials > 0 and data.attack == 12 and not entry.lore) then
       lines[#lines + 1] = "|cff999999" .. L["It may have tricks you have yet to see."] .. "|r"
    end
    self.details:SetText(table.concat(lines, "\n"))

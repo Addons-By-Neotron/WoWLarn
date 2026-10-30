@@ -52,6 +52,7 @@ local function NoSpell(spell, monst)
    if spell > SPNUM or spell < 1 or monst > K.MAXMONST + 8 or monst < 1 then return false end
    local reaction = ns.Tables.spelweird[monst][spell]
    if reaction == 0 then return false end
+   ns.Bestiary.immune(monst, spell)
    Msg(ns.Tables.spelmes[reaction], G.monster[monst].name)
    return true
 end
@@ -426,6 +427,9 @@ local function AlterReality()
    ns.ui:Refresh("all")
 end
 
+-- The level (times 3, plus 2) a spell needs, where it is not its number less one.
+Spells.NEED = { [K.SP_MONSTER_LORE] = 14 }  -- (level 4)
+
 -- What each spell does (C: the switch of speldamage()). Each function gets the level of
 -- the caster and returns nothing; the spell number shifts to the K.SP_ ids.
 local CAST = {}
@@ -645,6 +649,34 @@ end
 
 CAST[K.SP_ALTER_REALITY] = AlterReality
 
+-- Monster lore (not in the original): studies the monster next to you and tells all of it,
+-- exactly.  The bestiary keeps what it learned.
+CAST[K.SP_MONSTER_LORE] = function()
+   if IsConfused() then return end
+   local x, y = DirSub()
+   if not x then return end
+   local m = ns.Display.visibleMonster(x, y)
+   if m == 0 then
+      Msg(L["There is nothing there to study."])
+      return
+   end
+   IfBlind(x, y)
+   local B = ns.Bestiary
+   B.see(m)
+   B.lore(m)
+   local data = G.monster[m]
+   local function Range(low, high) return low == high and tostring(low) or string.format("%d-%d", low, high) end
+   Msg(L["The %s: level %d, armor class %d, hit points %d of %d."], G.lastmonst, data.level, data.armorclass, hitp[x][y], data.hitpoints)
+   local low, high = B.damage(m, 0)
+   local armored_low, armored_high = B.damage(m, c[K.AC])
+   Msg(L["It hits for %s, or %s through your armor, and is worth %d experience."], Range(low, high), Range(armored_low, armored_high), data.experience)
+   local specials = B.specials(m)
+   if #specials > 0 then Msg(L["Special attacks: %s."], table.concat(specials, ", ")) end
+   local resists = B.resists(m)
+   if #resists > 0 then Msg(L["Not affected by: %s."], table.concat(resists, ", ")) end
+   ns.ui:Refresh("all")
+end
+
 CAST[K.SP_PERMANENCE] = function()
    ns.Magic.adjustTime(-99999)
    G.spelknow[K.SP_PERMANENCE] = 0  -- forget
@@ -665,7 +697,7 @@ function Spells.speldamage(spell)
       return
    end
    local clev = c[K.LEVEL]
-   if clev * 3 + 2 < spell - 1 then
+   if clev * 3 + 2 < (Spells.NEED[spell] or spell - 1) then
       Msg(L["Nothing happens. You seem inexperienced."])
       return
    end

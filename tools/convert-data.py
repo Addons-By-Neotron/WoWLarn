@@ -23,6 +23,12 @@ OBJECT_RENAMES = {
 
 
 # Spell descriptions the C gets wrong (C index -> text): the code adds +3, not +2.
+# Spells the addon adds to the 39 of the original: (code, name, description).  Their ids follow
+# the others, and no monster reacts to them in T.spelweird.
+ADDED_SPELLS = [
+    ("lor", "Monster Lore", "Shows everything there is to know about a monster"),
+]
+
 SPELL_DESCRIPTION_FIXES = {
     2: "Adds +3 to the caster's dexterity",
     7: "Adds +3 to the caster's strength for a time",
@@ -70,7 +76,7 @@ def constants():
         ("MAXLEVEL", 16), ("MAXVLEVEL", 5), ("NLEVELS", 21), ("DBOTTOM", 15), ("VBOTTOM", 20),
         ("MAXX", 67), ("MAXY", 17), ("MAXPLEVEL", 100), ("MAXSCROLL", 28), ("MAXPOTION", 35),
         ("MAXOBJ", 93), ("MAXMONST", 57), ("IVENSIZE", 26), ("SCORESIZE", 25), ("DNDSIZE", 92),
-        ("SPNUM", 39), ("TIMELIMIT", 40000), ("TAXRATE", 0.05), ("LOGNAMESIZE", 40),
+        ("SPNUM", 39 + len(ADDED_SPELLS)), ("TIMELIMIT", 40000), ("TAXRATE", 0.05), ("LOGNAMESIZE", 40),
     ]:
         lines.append(f"   {name} = {value},")
 
@@ -106,6 +112,7 @@ def constants():
     lines.append("\n   -- Spell ids, shifted +1 (the C has none: it uses the index into spelname[]).")
     data = (ULARN / "data.c").read_text()
     names = re.findall(r'"([^"]*)"', re.sub(r"/\*.*?\*/", "", section(data, "char *spelname[]", "};")))[:39]
+    names += [name for _, name, _ in ADDED_SPELLS]
     for index, name in enumerate(names):
         lines.append(f"   SP_{re.sub('[^A-Z]+', '_', name.upper())} = {index + 1},")
     lines.append("}\n")
@@ -180,16 +187,20 @@ def tables():
         desc[index] = text
     assert len(code) == 39 and len(names) == 40 and len(desc) == 40, (len(code), len(names), len(desc))
     out.append("-- Spells 1..39 (C: 0..38): three letter code, name and description.")
+    code = code + [c for c, _, _ in ADDED_SPELLS]
+    spell_names = names[:39] + [n for _, n, _ in ADDED_SPELLS]
+    desc = desc[:39] + [d for _, _, d in ADDED_SPELLS]
     out.append("T.spelcode = {" + ", ".join(lua_string(n) for n in code) + "}")
-    out.append("T.spelname = {" + ", ".join(lua_string(title_case(n)) for n in names[:39]) + "}")
-    out.append("T.speldescript = {" + ", ".join(lua_string(n) for n in desc[:39]) + "}")
+    out.append("T.spelname = {" + ", ".join(lua_string(title_case(n)) for n in spell_names) + "}")
+    out.append("T.speldescript = {" + ", ".join(lua_string(n) for n in desc) + "}")
     nums = re.findall(r"\d+", section(data, "char splev[]", "};")[10:])
     out.append("-- T.splev[book level + 1]: the highest spell (C index + 1) a book of that level can teach.")
     out.append("T.splev = {" + ", ".join(nums) + "}\n")
     weird = re.sub(r"/\*.*?\*/", "", section(data, "char spelweird[", "\n};"))
     rows = [[int(n) for n in re.findall(r"\d+", r)] for r in re.findall(r"\{([^{}]*)\}", weird[weird.index("= {"):])]
     rows = [r + [0] * (39 - len(r)) for r in rows]  # C zero-fills the missing columns
-    assert all(len(r) == 39 for r in rows) and len(rows) == 57 + 8, (len(rows), set(map(len, rows)))
+    rows = [r + [0] * len(ADDED_SPELLS) for r in rows]
+    assert all(len(r) == 39 + len(ADDED_SPELLS) for r in rows) and len(rows) == 57 + 8, (len(rows), set(map(len, rows)))
     out.append("-- T.spelweird[monster id][spell]: how a monster reacts to a spell (an index into T.spelmes, 0 = no effect).")
     out.append("T.spelweird = {")
     for row in rows:

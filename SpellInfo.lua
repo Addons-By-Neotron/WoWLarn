@@ -56,6 +56,7 @@ local KIND = {
    [K.SP_TIME_STOP] = SELF, [K.SP_TELEPORT_AWAY] = NEXT, [K.SP_MAGIC_FIRE] = AROUND, [K.SP_MAKE_A_WALL] = NEXT,
    [K.SP_SPHERE_OF_ANNIHILATION] = NEXT, [K.SP_GENOCIDE] = LEVEL, [K.SP_SUMMON_DEMON] = NEXT,
    [K.SP_WALK_THROUGH_WALLS] = SELF, [K.SP_ALTER_REALITY] = LEVEL, [K.SP_PERMANENCE] = SELF,
+   [K.SP_MONSTER_LORE] = NEXT,
 }
 
 -- Missiles lose strength with every tile (see GoDirect).
@@ -140,6 +141,7 @@ local INFO = {
    [K.SP_WALK_THROUGH_WALLS] = function() return format(L["You can walk through walls for %s turns."], Range(6, 15)) end,
    [K.SP_ALTER_REALITY] = function() return L["Bends the world into a new shape.  Whatever is in it comes along, but nothing stays where it was.  Costs 1 intelligence, and the spell is forgotten."] end,
    [K.SP_PERMANENCE] = function() return L["Makes the spells with a time limit permanent.  Costs 1 intelligence, and the spell is forgotten."] end,
+   [K.SP_MONSTER_LORE] = function() return L["Studies the monster next to you and tells you all there is to know: its level, armor and hit points, how hard it hits, its special attacks and the spells that do not work on it.  The bestiary keeps it."] end,
 }
 
 function SpellInfo.risky(spell)
@@ -160,5 +162,6 @@ end
 
 -- The character level the spell needs (C: speldamage() checks level * 3 + 2 against the spell).
 function SpellInfo.minLevel(spell)
-   return math.max(0, math.ceil((spell - 3) / 3))
+   local need = ns.Spells.NEED[spell] or spell - 1
+   return math.max(0, math.ceil((need - 2) / 3))
 end
