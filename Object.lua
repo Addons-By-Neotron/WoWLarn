@@ -190,6 +190,7 @@ local ELIXIR = {
       AtLeast3(K.DEXTERITY, 2)
       c[K.HALFDAM] = c[K.HALFDAM] + 300 + ns.rnd(200)
       c[K.CLUMSINESS] = c[K.CLUMSINESS] + ns.rnd(1800) + 200
+      G.drugClumsy = true  -- (so that dropping the weapon is known for what it comes from)
    end,
    [K.OCOKE] = function()
       Msg(L["Fel energy surges through you!  Your nose begins to bleed!"])
@@ -200,6 +201,14 @@ local ELIXIR = {
       c[K.COKED] = c[K.COKED] + 10
    end,
 }
+
+-- Drinking one finds out what it does (ItemInfo.discover).
+for id, effect in pairs(ELIXIR) do
+   ELIXIR[id] = function()
+      effect()
+      ns.ItemInfo.discover(id)
+   end
+end
 
 function Object.isElixir(id)
    return ELIXIR[id] ~= nil

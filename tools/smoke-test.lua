@@ -1051,6 +1051,16 @@ check(safter == snow - 2, "shield off")
 ns.Action.takeOffWhat = "armor"; ns.Action.takeOff()
 check(G.c[K.WEAR] == 0 and G.c[K.SHIELD] == 4, "armor comes off before the shield when asked for")
 
+-- elixirs: two tiers of discovery
+Fresh(3)
+check(not table.concat(ns.ItemInfo.lines(K.OCOKE, 0), "|"):find("surge"), "the elixir tells nothing before it is drunk")
+ns.Object.drinkElixir(K.OCOKE)
+check(ns.ItemInfo.isDiscovered(K.OCOKE) and table.concat(ns.ItemInfo.lines(K.OCOKE, 0), "|"):find("surge"), "drinking finds out the first tier")
+check(not table.concat(ns.ItemInfo.lines(K.OCOKE, 0), "|"):find("crash"), "the crash is not known yet")
+ns.ItemInfo.discoverAfter(K.OCOKE, "crash")
+check(table.concat(ns.ItemInfo.lines(K.OCOKE, 0), "|"):find("crash"), "the crash is found out second")
+G.c[K.COKED] = 0
+
 -- auto equip on pickup
 Fresh(3)
 G.c[K.WIELD], G.c[K.WEAR], G.c[K.SHIELD] = 0, 0, 0

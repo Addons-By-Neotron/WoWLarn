@@ -83,6 +83,7 @@ function Regen.regen()
       flag = true
    end
    if expired(K.COKED) then
+      ns.ItemInfo.discoverAfter(K.OCOKE, L["The fel tonic wears off, and you crash hard!"])
       for i = 1, 6 do c[i] = c[i] - 34 end
       flag = true
    end
@@ -165,9 +166,11 @@ function Regen.regen()
    if c[K.CLUMSINESS] ~= 0 then
       if c[K.WIELD] ~= 0 and c[K.CLUMSINESS] > 1 and G.item[G.playerx][G.playery] == 0 and rnd(100) < 33 then
          ns.Player.dropObject(c[K.WIELD])  -- drop your weapon
+         if G.drugClumsy then ns.ItemInfo.discoverAfter(K.OHASH, L["Your hands are so clumsy from the brew that the weapon slips away!"]) end
       end
       if expired(K.CLUMSINESS) then
          ui:Message(L["You now feel less awkward."])
+         G.drugClumsy = nil
       end
    end
 

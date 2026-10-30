@@ -146,6 +146,18 @@ local POWER = {
    [K.OAMULET] = L["Your invisibility lasts longer."],
    [K.OLARNEYE] = L["Demon lords can't hide from you."],
    [K.OWWAND] = L["You float over pits and trap doors."],
+   -- the elixirs of the goblin alchemist: found out by drinking one
+   [K.OSPEED] = L["You move much faster and take half the damage for a long while, but it saps your attributes for good."],
+   [K.OSHROOMS] = L["It raises your wisdom and charisma for good, but confuses you and speeds up the monsters for a while."],
+   [K.OACID] = L["It raises your wisdom and intelligence for good and lets you sense what is near, but confuses you, heals the monsters and draws them to you."],
+   [K.OHASH] = L["It raises your intelligence and wisdom for good and halves the damage you take, but speeds up the monsters and costs you dexterity and constitution."],
+   [K.OCOKE] = L["A huge surge of every attribute for a few turns, and more charisma for good."],
+}
+
+-- What comes after, once it has been seen too (two tiers: the elixir itself, and what it leaves).
+local AFTER = {
+   [K.OHASH] = L["Afterwards you stay clumsy for a long time, and may drop your weapon."],
+   [K.OCOKE] = L["When it wears off you crash, and come out a little worse than you went in."],
 }
 
 -- True if the object has a power that is found out by seeing it work.
@@ -182,8 +194,17 @@ local SEEN = {
 function ItemInfo.discover(id, name)
    if not POWER[id] or Discoveries()[id] then return end
    Discoveries()[id] = true
-   ns.ui:Message(SEEN[id], name or "")
+   if SEEN[id] then ns.ui:Message(SEEN[id], name or "") end
    ns.ui:Message(L["You have found out what %s can do!"], ns.StripArticle(ns.Tables.objectname[id]))
+end
+
+-- The second tier: what an elixir leaves behind, when it shows.
+function ItemInfo.discoverAfter(id, message)
+   local key = id .. ":after"
+   if not AFTER[id] or Discoveries()[key] then return end
+   Discoveries()[key] = true
+   ns.ui:Message(message)
+   ns.ui:Message(L["You have found out what comes after %s!"], ns.StripArticle(ns.Tables.objectname[id]))
 end
 
 -- The lines of a tooltip: what the item is and does. Returns a list of strings.
@@ -209,6 +230,7 @@ function ItemInfo.lines(id, arg)
    end
    if MISC[id] then lines[#lines + 1] = MISC[id] end
    if POWER[id] and ItemInfo.isDiscovered(id) then lines[#lines + 1] = POWER[id] end
+   if AFTER[id] and Discoveries()[id .. ":after"] then lines[#lines + 1] = AFTER[id] end
    return lines
 end
 
