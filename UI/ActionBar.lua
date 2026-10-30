@@ -233,8 +233,9 @@ function bar:Create(parent)
    local frame = CreateFrame("Frame", nil, parent)
    frame:SetSize(SLOTS * (SIZE + SPACING) - SPACING, SIZE)
    frame:SetPoint("BOTTOM", 0, 6)
-   frame:SetFrameStrata("HIGH")  -- (the models of the 2.5D view are frames too, with levels of their own)
-   frame:SetFrameLevel(parent:GetFrameLevel() + 60)
+   -- (the models of the 2.5D view are frames too, and its effects layer is at +1000 of the view)
+   frame:SetFrameStrata("DIALOG")
+   frame:SetFrameLevel(parent:GetFrameLevel() + 1100)
    self.frame, self.buttons = frame, {}
    for number = 1, SLOTS do
       local button = CreateFrame("Button", nil, frame)
