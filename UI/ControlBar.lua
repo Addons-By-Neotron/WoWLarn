@@ -33,9 +33,6 @@ local BUTTON_SIZE, SPACING, COLUMNS = 36, 4, 9
 local COMMANDS = {
    { key = "i", name = L["Inventory"], icon = "INV_Misc_Bag_08" },
    { key = "I", name = L["Sort inventory"], icon = "INV_Misc_Note_02" },
-   { key = "w", name = L["Wield weapon"], icon = "INV_Sword_04" },
-   { key = "W", name = L["Wear armor"], icon = "INV_Chest_Chain" },
-   { key = "T", name = L["Take off armor"], icon = "INV_Shirt_01" },
    { key = "d", name = L["Drop item"], icon = "INV_Misc_Coin_01" },
    { key = "q", name = L["Quaff potion"], icon = "INV_Potion_54" },
    { key = "r", name = L["Read scroll"], icon = "INV_Scroll_03" },

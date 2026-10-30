@@ -1046,6 +1046,26 @@ check(safter == snow - 2, "shield off")
 ns.Action.takeOffWhat = "armor"; ns.Action.takeOff()
 check(G.c[K.WEAR] == 0 and G.c[K.SHIELD] == 4, "armor comes off before the shield when asked for")
 
+-- auto equip on pickup
+Fresh(3)
+G.c[K.WIELD], G.c[K.WEAR], G.c[K.SHIELD] = 0, 0, 0
+for i = 1, K.IVENSIZE do G.iven[i], G.ivenarg[i] = 0, 0 end
+ns.Player.take(K.ODAGGER, 1)
+check(G.c[K.WIELD] == 1 and G.c[K.WCLASS] == 4, "a dagger is wielded when the hand is empty")
+ns.Player.take(K.OLONGSWORD, 0)
+check(G.c[K.WIELD] == 1, "a second weapon is not swapped in")
+ns.Player.take(K.OLEATHER, 0)
+check(G.c[K.WEAR] == 3 and G.c[K.AC] == 2, "armor is worn when none is")
+ns.Player.take(K.OSHIELD, 0)
+check(G.c[K.SHIELD] == 4, "a shield is worn when none is")
+ns.Player.take(K.OPLATE, 0)
+check(G.c[K.WEAR] == 3, "better armor is not swapped in")
+Fresh(3)
+G.c[K.WIELD], G.c[K.WEAR], G.c[K.SHIELD] = 0, 0, 0
+for i = 1, K.IVENSIZE do G.iven[i], G.ivenarg[i] = 0, 0 end
+ns.Player.take(K.ODAGGER, -5)
+check(G.c[K.WIELD] == 0, "a weapon that adds nothing is left in the pack")
+
 -- stat breakdown
 Fresh(3)
 G.c[K.STRENGTH], G.c[K.STREXTRA], G.c[K.INTELLIGENCE] = 20, 13, 30

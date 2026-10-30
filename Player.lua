@@ -494,6 +494,7 @@ function Player.take(itm, arg)
          ui:Message(L["You pick up: %s"], ns.ItemInfo.link(itm, arg))
          ui:Refresh("inv")
          if stats then Player.recalc() end
+         ns.Action.autoEquip(i)  -- (a weapon or armor for an empty slot is put on)
          Player.normalize()
          ui:Refresh("stats")
          if c[K.BLINDCOUNT] == 0 and eyeflag then

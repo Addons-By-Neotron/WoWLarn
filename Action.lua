@@ -75,6 +75,33 @@ local function Enchantment(arg)
    return ""
 end
 
+-- A weapon, armor or shield picked up while the slot is empty is put on at once (not in the
+-- C).  Only if it adds something, and if the other hand is free for the two-handed sword.
+function Action.autoEquip(slot)
+   local id, arg = iven[slot], ivenarg[slot]
+   local name = ns.StripArticle(ns.Tables.objectname[id] or "?")
+   if WIELD[id] and c[K.WIELD] == 0 then
+      if id == K.O2SWORD and c[K.SHIELD] ~= 0 then return end
+      if (ns.Player.WEAPON_WC[id] or 0) + arg <= 0 then return end
+      c[K.WIELD] = slot
+      c[K.LANCEDEATH] = id == K.OLANCE and 1 or 0
+      Msg(L["You automatically wield your %s%s."], name, Enchantment(arg))
+   elseif ARMOR[id] and c[K.WEAR] == 0 then
+      if (ns.Player.ARMOR_AC[id] or 0) + arg <= 0 then return end
+      c[K.WEAR] = slot
+      Msg(L["You automatically put on your %s%s."], name, Enchantment(arg))
+   elseif id == K.OSHIELD and c[K.SHIELD] == 0 then
+      if c[K.WIELD] > 0 and iven[c[K.WIELD]] == K.O2SWORD then return end
+      if 2 + arg <= 0 then return end
+      c[K.SHIELD] = slot
+      Msg(L["You automatically put on your shield%s."], Enchantment(arg))
+   else
+      return
+   end
+   ns.Player.recalc()
+   ns.ui:Refresh("all")
+end
+
 -- C: wield().
 function Action.wield()
    local slot = ns.ui:PickItem(L["wield"], Has(WIELD), { none = true })

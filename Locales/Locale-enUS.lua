@@ -1055,3 +1055,7 @@ L["Your Wand of Wonder lifts you clear of the danger!"] = true
 L["Square icons"] = true
 L["Keep the black squares around the icons on the map.  Off, the black is left out so the icons sit on the floor."] = true
 L["You find %s%s"] = true
+L["You wield your %s%s."] = true
+L["You automatically wield your %s%s."] = true
+L["You automatically put on your %s%s."] = true
+L["You automatically put on your shield%s."] = true
