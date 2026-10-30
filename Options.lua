@@ -122,6 +122,16 @@ local function BuildOptions()
                   ns.ui:RefreshNow("map")
                end,
             },
+            opaqueIcons = {
+               type = "toggle",
+               name = L["Square icons"],
+               desc = L["Keep the black squares around the icons on the map.  Off, the black is left out so the icons sit on the floor."],
+               order = 17.2,
+               set = function(_, value)
+                  mod.db.profile.opaqueIcons = value
+                  ns.ui:RefreshNow("map")
+               end,
+            },
             cameraAngle = {
                type = "range",
                name = L["Camera angle"],

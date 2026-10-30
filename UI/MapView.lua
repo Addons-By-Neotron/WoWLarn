@@ -202,6 +202,7 @@ local function DrawTile(cell, x, y, ground)
    local icon = object ~= 0 and not ns.mod.db.profile.ascii and V.ObjectIcon(object)
    if icon then
       cell.icon:SetTexture(icon)
+      cell.icon:SetBlendMode(ns.mod.db.profile.opaqueIcons and "BLEND" or "ADD")  -- (add: the black of the icon is left out)
       cell.icon:Show()
       cell.glyph:Hide()
    elseif object ~= 0 then

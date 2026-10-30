@@ -132,6 +132,7 @@ local function Icon(layer, texture, x, y, width, height)
       layer.icons[layer.usedIcons] = icon
    end
    icon:SetTexture(texture)
+   icon:SetBlendMode(ns.mod.db.profile.opaqueIcons and "BLEND" or "ADD")  -- (add: the black of the icon is left out)
    icon:ClearAllPoints()
    icon:SetPoint("BOTTOM", layer, "TOPLEFT", x, -y)
    icon:SetSize(width, height)
