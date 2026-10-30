@@ -593,8 +593,8 @@ CAST[K.SP_FIREBALL] = function(clev)
 end
 
 CAST[K.SP_COLD] = function(clev)
-   -- (weaker than a missile: it hits everything in its reach)
-   ConeDirect(K.SP_COLD, rnd(15) + 10 + idiv(clev, 2), L["The cone of cold strikes the %s."], 25, "O")
+   -- (a little weaker than the old missile: it hits everything in its reach)
+   ConeDirect(K.SP_COLD, rnd(15) + 20 + clev, L["The cone of cold strikes the %s."], 25, "O")
 end
 
 CAST[K.SP_POLYMORPH] = function()
