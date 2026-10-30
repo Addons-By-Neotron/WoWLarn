@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Constants.lua and Data/*.lua from the Ularn C sources.
+"""Generate Core/Constants.lua and Data/*.lua from the Ularn C sources.
 
 Usage: tools/convert-data.py [path-to-ularn]   (default /opt/workspace/ularn)
 
@@ -119,7 +119,7 @@ def constants():
     for index, name in enumerate(names):
         lines.append(f"   SP_{re.sub('[^A-Z]+', '_', name.upper())} = {index + 1},")
     lines.append("}\n")
-    (OUT / "Constants.lua").write_text("\n".join(lines))
+    (OUT / "Core" / "Constants.lua").write_text("\n".join(lines))
 
 
 def tables():
@@ -300,7 +300,7 @@ def lua_list(body, ids):
 def item_tables():
     data = (ULARN / "data.c").read_text()
     monster = (ULARN / "monster.c").read_text()
-    constants = (OUT / "Constants.lua").read_text()
+    constants = (OUT / "Core" / "Constants.lua").read_text()
     ids = set(re.findall(r"^\s+(\w+) = ", constants, re.M))
     out = [HEADER, "local _, ns = ...\n", "local K = ns.K\n", "local I = {}", "ns.ItemTables = I\n",
            "-- Probability tables of data.c. Scroll and potion ids are the shifted (+1) ones;",

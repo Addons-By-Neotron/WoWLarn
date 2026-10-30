@@ -48,7 +48,7 @@ block = visuals[visuals.index("V.DISPLAY = {"):visuals.index("V.MONSTER_SOUND = 
 block = block[:block.rindex("\n}")]  # (the table ends at its closing brace)
 for k, plus, v in re.findall(r"^   \[K\.([A-Z0-9]+)(?: \+ (\d+))?\] = ([^\n]+?),?(?:\s*--[^\n]*)?\n", block, re.M):
     looks[k + ("+" + plus if plus else "")] = v.strip().rstrip(",")  # (the demon lords: DEMONLORD+1, ...)
-consts = (ROOT / "Constants.lua").read_text()
+consts = (ROOT / "Core" / "Constants.lua").read_text()
 const_name = {}
 for k, v in re.findall(r"\n   ([A-Z0-9]+) = (\d+),", consts):
     const_name.setdefault(int(v), []).append(k)

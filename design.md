@@ -54,30 +54,30 @@ Game-logic modules mirror the C files so each one can be ported and checked agai
 
 | C file | Purpose | Lua module |
 |---|---|---|
-| `header.h`, `player.h`, `itm.h`, `monst.h` | constants, `c[]` indices, object/monster ids | `Constants.lua` |
+| `header.h`, `player.h`, `itm.h`, `monst.h` | constants, `c[]` indices, object/monster ids | `Core/Constants.lua` |
 | `data.c` | monster table, names, spells, probabilities, titles | `Data/Monsters.lua`, `Data/Objects.lua`, `Data/Spells.lua`, `Data/Tables.lua` |
 | `data/Umaps` | canned levels | `Data/Maps.lua` (generated) |
 | `data/Uhelp`, `data/Ufortune` | help text, fortunes | `Data/Help.lua`, `Data/Fortunes.lua` (generated) |
 | (new) | glyph/monster/item → texture, icon, displayID | `Data/Visuals.lua` |
-| `create.c` | player creation, level gen, object placement | `Create.lua` |
-| `main.c` (`parse`, loop) | turn loop, command dispatch | `Game.lua` |
-| `action.c` | wield/wear/drop/read/quaff/eat/run | `Action.lua` |
-| `player.c` | stats, exp, hp, inventory, `recalc` | `Player.lua` |
-| `monster.c` | combat, spells, monster creation, drops | `Monster.lua`, `Spells.lua` |
-| `movem.c` | monster movement AI | `MoveMonst.lua` |
-| `object.c`, `moreobj.c` | tile interactions, potions, scrolls, features | `Object.lua` |
-| `store.c`, `bill.c` | town building logic, tax letters | `Town.lua` (logic) + `UI/Store.lua` (window) |
-| `sphere.c` | spheres of annihilation | `Sphere.lua` |
-| `regen.c` | per-turn timers | `Regen.lua` |
-| `display.c` | map/status drawing | `UI/MapView.lua`, `UI/SidePanel.lua` (drawing); `Display.lua` (`showcell` visibility, `moveplayer`) |
-| `data.c` globals (`c[]`, `item[][]`, `know[][]`, `iven[]`, `level`, `playerx`, ...) | game state | `State.lua` (`ns.G`) |
-| `header.h` macros (`rnd`, `rund`) | random numbers, C integer math | `Util.lua` |
+| `create.c` | player creation, level gen, object placement | `Rules/Create.lua` |
+| `main.c` (`parse`, loop) | turn loop, command dispatch | `Core/Game.lua` |
+| `action.c` | wield/wear/drop/read/quaff/eat/run | `Rules/Action.lua` |
+| `player.c` | stats, exp, hp, inventory, `recalc` | `Rules/Player.lua` |
+| `monster.c` | combat, spells, monster creation, drops | `Rules/Monster.lua`, `Rules/Spells.lua` |
+| `movem.c` | monster movement AI | `Rules/MoveMonst.lua` |
+| `object.c`, `moreobj.c` | tile interactions, potions, scrolls, features | `Rules/Object.lua` |
+| `store.c`, `bill.c` | town building logic, tax letters | `Rules/Town.lua` (logic) + `UI/Store.lua` (window) |
+| `sphere.c` | spheres of annihilation | `Rules/Sphere.lua` |
+| `regen.c` | per-turn timers | `Rules/Regen.lua` |
+| `display.c` | map/status drawing | `UI/MapView.lua`, `UI/SidePanel.lua` (drawing); `Rules/Display.lua` (`showcell` visibility, `moveplayer`) |
+| `data.c` globals (`c[]`, `item[][]`, `know[][]`, `iven[]`, `level`, `playerx`, ...) | game state | `Core/State.lua` (`ns.G`) |
+| `header.h` macros (`rnd`, `rund`) | random numbers, C integer math | `Core/Util.lua` |
 | `store.c:pick_char` | class definitions | `Data/Classes.lua` (+ `Create.makePlayer`, `UI/ClassPicker.lua`) |
 | `show.c` | inventory and discovery lists | `UI/Inventory.lua`, `UI/Discoveries.lua` |
 | `io.c` (`lprintf` etc.) | message output, prompts | `UI/MessageLog.lua`, `UI/Prompt.lua` |
-| `tok.c` | keyboard tokens, options, difficulty | `UI/Input.lua`, `sethard` in `Create.lua` |
-| `savelev.c` | level/game save | `Save.lua` |
-| `scores.c` | scoreboard, death | `Scores.lua` + `UI/Scoreboard.lua` |
+| `tok.c` | keyboard tokens, options, difficulty | `UI/Input.lua`, `sethard` in `Rules/Create.lua` |
+| `savelev.c` | level/game save | `Core/Save.lua` |
+| `scores.c` | scoreboard, death | `Core/Scores.lua` + `UI/Scoreboard.lua` |
 | `help.c`, `fortune.c` | help pages, cookies | `UI/Help.lua` |
 | `tty.c`, `signal.c`, `nap.c`, `diag.c` | Unix terminal plumbing | **not ported** (`nap` → coroutine sleep; `diag` maybe debug-only) |
 
@@ -90,7 +90,7 @@ Game-logic modules mirror the C files so each one can be ported and checked agai
 WoW addons cannot read files at runtime, so all data files become Lua tables.
 
 - `tools/convert-data.py` (not shipped) reads the Ularn sources and writes the generated files, which are committed:
-  - done: `Constants.lua` (`ns.K`, from the three headers, with the index shifts applied), `Data/Tables.lua` (experience table, level titles, level names, glyph strings, object names), `Data/Monsters.lua` (the 65 monsters), `Data/Help.lua` (story and help pages), `Data/Maps.lua` (the 21 canned levels; the C only picks the first 20), `Data/Items.lua` (`scprob`, `potprob`, `nlpts`, `nch`, `nplt`, `ndgg`, `nsw`, `nobjtab`)
+  - done: `Core/Constants.lua` (`ns.K`, from the three headers, with the index shifts applied), `Data/Tables.lua` (experience table, level titles, level names, glyph strings, object names), `Data/Monsters.lua` (the 65 monsters), `Data/Help.lua` (story and help pages), `Data/Maps.lua` (the 21 canned levels; the C only picks the first 20), `Data/Items.lua` (`scprob`, `potprob`, `nlpts`, `nch`, `nplt`, `ndgg`, `nsw`, `nobjtab`)
   - to come: `Data/Fortunes.lua`, and the spell and scroll description tables with their milestones (5 and 6)
   - Modules import the constants they use as locals (`local HP, AC = K.HP, K.AC`), because a file may only have 200 locals.
   - Run `tools/convert-data.py` after changing it; never edit the generated files.
@@ -154,7 +154,7 @@ These are where most porting bugs will come from. Follow them everywhere.
 2. **Integer division:** C `a / b` on ints → `math.floor(a / b)` for non-negative values. For possibly negative operands, C truncates toward zero, so use a `idiv(a, b)` helper that truncates.
 3. **Modulo:** C `%` truncates; Lua `%` floors. `rand() % x` is safe (non-negative). Audit any other `%` with possibly negative operands and use a `cmod` helper.
 4. **Bit ops:** `&`, `|`, `<<`, `>>` → `bit.band`, `bit.bor`, `bit.lshift`, `bit.rshift` (WoW's `bit` library). Add `bit` to `.luacheckrc`. Example: `(c[HASTESELF]&1)==0`.
-5. **Game state:** the C globals live in one table, `ns.G` (`State.lua`). Its arrays are allocated once and reset in place, so modules may cache `G.c`, `G.item` and so on. The 2D grids are `[x][y]`. `mitem[x][y].mon` becomes `G.mon[x][y]` (a monster id); the stolen-item list of `mitem` will be a sparse table when theft arrives with the monsters. A saved level is a snapshot copied in and out (`G.SaveLevel`/`G.GetLevel`).
+5. **Game state:** the C globals live in one table, `ns.G` (`Core/State.lua`). Its arrays are allocated once and reset in place, so modules may cache `G.c`, `G.item` and so on. The 2D grids are `[x][y]`. `mitem[x][y].mon` becomes `G.mon[x][y]` (a monster id); the stolen-item list of `mitem` will be a sparse table when theft arrives with the monsters. A saved level is a snapshot copied in and out (`G.SaveLevel`/`G.GetLevel`).
 6. **Named constants:** every `#define` becomes a local or `ns` constant with the same name (`HP`, `OWALL`, `DEMONLORD`, ...), so `c[HP]` reads the same as in the C.
 7. **Integer widths:** C `char`/`short` fields clamp or overflow. Port explicit clamps (like those in `sethard`) exactly. Where C silently relied on `char` overflow, note it with a `-- C: char overflow` comment and clamp.
 8. **RNG:** keep `rnd(x) = random(1..x)`, `rund(x) = random(0..x-1)`. Use WoW's `math.random` / `fastrandom`. Replayable games aren't a goal.
@@ -371,14 +371,14 @@ Each milestone is playable or testable in game.
    - movement and run, minimap, stats panel, player model
    - still to do from this list: icon names in `Data/Visuals.lua` are placeholders to check in game; tile hover tooltips and click-to-move; the spell, scroll and potion tables (milestones 5 and 6); standing on a building does nothing yet (milestone 8)
 3. **Dungeon** (done):
-   - `Create.lua`: `makeMaze` (recursive-backtracker `Eat`, open rooms, corridor), `CannedLevel`, `TreasureRoom`/`TRoom`, `makeObject` with all object rules; `Item.lua`: `cgood`, `createItem`, `dropGold`, `something`, `newObject`; `Player.packWeight`, `Player.losehp`, `Player.died` (sets `G.dead`; the game loop ends when it is set, so code after `losehp` must check `G.dead`)
-   - `Object.lua`: dungeon entrance, stairs up and down, volcano shafts; `newCaveLevel` keeps visited levels; `ui:Choose` is the "(g) go inside, or (i) ignore it?" prompt
+   - `Rules/Create.lua`: `makeMaze` (recursive-backtracker `Eat`, open rooms, corridor), `CannedLevel`, `TreasureRoom`/`TRoom`, `makeObject` with all object rules; `Rules/Item.lua`: `cgood`, `createItem`, `dropGold`, `something`, `newObject`; `Player.packWeight`, `Player.losehp`, `Player.died` (sets `G.dead`; the game loop ends when it is set, so code after `losehp` must check `G.dead`)
+   - `Rules/Object.lua`: dungeon entrance, stairs up and down, volcano shafts; `newCaveLevel` keeps visited levels; `ui:Choose` is the "(g) go inside, or (i) ignore it?" prompt
    - depth-themed ground colours in `Visuals.Ground`
    - the monster hooks `Monster.makeMonst` and `Monster.createMonster` are stubs until milestone 4, so levels have no monsters yet; Dealer McDope's pad (`OPAD`) is the goblin alchemist's
    - deviations from the C, all deliberate: `scprob` and `potprob` are rolled one past their end in the C (it reads the next array); the C most likely reads a 0 from the array that follows, so the first entry is used instead. A door in a treasure room may sit in a corner, so tests treat diagonal steps as connected. Canned maps have no level-1 exit; entering the dungeon opens it, as in the C. The `rnd(n)` loop limits in `makeObject` are re-rolled on every pass, as in the C.
    - still to do from this list: pits, trapdoors, elevators and the rest of the features (milestone 7)
 4. **Monsters + combat** (done, flat tile renderer):
-   - `Monster.lua`: `makeMonst`, `createMonster`, `fillMonst`, `hitmonster`, `hitm`, `hitplayer`, all 16 `spattack` attacks, `dropsomething`; `MoveMonst.lua`: `movemonst`, `movemt` (smart and dumb movement), `mmove`, `teleportMonst`; `Create.setHP` fills a level (demon lords on 11 to 15, demon princes in the volcano); `Player`: experience and level changes, max HP/spell helpers, `stealSomething`, `adjustCValues`, `emptyHanded`; `Item.createGem`
+   - `Rules/Monster.lua`: `makeMonst`, `createMonster`, `fillMonst`, `hitmonster`, `hitm`, `hitplayer`, all 16 `spattack` attacks, `dropsomething`; `Rules/MoveMonst.lua`: `movemonst`, `movemt` (smart and dumb movement), `mmove`, `teleportMonst`; `Create.setHP` fills a level (demon lords on 11 to 15, demon princes in the volcano); `Player`: experience and level changes, max HP/spell helpers, `stealSomething`, `adjustCValues`, `emptyHanded`; `Item.createGem`
    - `G.monster` is a per-game copy of `ns.MonsterData` (`Monster.init`, called from `makePlayer`), because genocide changes the flags; `G.loot[x * 100 + y]` holds what a monster carries (C: `mitem[][].it`) and is saved with the level
    - monsters are drawn as their ASCII letter in red (tiles and minimap); invisible stalkers, demons without the eye of Larn and the mimic follow `Display.visibleMonster`
    - deliberate carry-overs from the C: a fire-breathing monster still hurts a fire-resistant player (the C `else` only guards the message); the scared-monster branch of `movemt` reads the `tmpitem` left over from an earlier move, as the C does
@@ -386,25 +386,25 @@ Each milestone is playable or testable in game.
    - the spheres of annihilation (`movsphere`, `rmsphere`, the `OANNIHILATION` branch of `mmove`) came with the spells in milestone 6
    - still to do from this list: monster icons or portraits on the tiles and the target model with animations (they need the models of milestone 10; the glyphs are the fallback), the death screen and scoreboard (milestone 9)
 5. **Items** (done):
-   - `Object.lua` `lookForObject`: gold, potions, scrolls, books, cookies, gems, orbs and wands (via `FindItem`), pits, stairs, elevators, chests, teleporter, door, arrow, dart and trapdoor traps, shafts, mushrooms and drugs, the annihilation sphere
-   - `Player`: `itemName`, `take`, `dropObject`, enchant helpers; `Magic.lua`: `quaffPotion`, `readScroll`, `readBook`, `teleport`, `removeCurse`, `adjustTime`; `Action.lua`: wield, wear, take off, drop (items and gold), read, quaff, eat, fortune, close door, find traps
+   - `Rules/Object.lua` `lookForObject`: gold, potions, scrolls, books, cookies, gems, orbs and wands (via `FindItem`), pits, stairs, elevators, chests, teleporter, door, arrow, dart and trapdoor traps, shafts, mushrooms and drugs, the annihilation sphere
+   - `Player`: `itemName`, `take`, `dropObject`, enchant helpers; `Rules/Magic.lua`: `quaffPotion`, `readScroll`, `readBook`, `teleport`, `removeCurse`, `adjustTime`; `Rules/Action.lua`: wield, wear, take off, drop (items and gold), read, quaff, eat, fortune, close door, find traps
    - `UI/Inventory.lua`: the 26-slot window; `ui:PickItem`, `ui:ShowInventory`, `ui:Choose`; clicking a slot injects its letter
    - effects row: `V.EFFECTS` lists the timers, `side:UpdateEffects` shows an icon with a tooltip (name and turns left) for each running one; the item icons in `V.object` are placeholders to curate
    - left to milestones 7 and 8: altars, thrones, fountains, statues, mirrors, the brass lamp (milestone 7); the school, banks, DND store, trading post, home, pad and LRS (milestone 8); they print "(Not implemented yet.)"
 6. **Spells** (done):
-   - `Spells.lua`: `cast`, `speldamage` with all 39 spells, `direct`, `godirect` (rays that break walls, doors, statues and thrones, bounce off mirrors and return from demons), `omnidirect`, `tdirect`, `makewall`, `dirpoly`, `genmonst`, `nospell`; spell numbers are 1..39 here, so the numbers in the C switch are shifted by one (`direct(x - 1, ...)` of the demon spell keeps the C quirk of using the genocide slot)
-   - `Sphere.lua`: `newsphere`, `rmsphere`, `sphboom`, `movsphere`; the spheres of every level are in `G.spheres` (newest first) with `c[SPHCAST]` as their count; the C quirks stay (a cancelled sphere still appears, the talisman check inside the blast loop)
+   - `Rules/Spells.lua`: `cast`, `speldamage` with all 39 spells, `direct`, `godirect` (rays that break walls, doors, statues and thrones, bounce off mirrors and return from demons), `omnidirect`, `tdirect`, `makewall`, `dirpoly`, `genmonst`, `nospell`; spell numbers are 1..39 here, so the numbers in the C switch are shifted by one (`direct(x - 1, ...)` of the demon spell keeps the C quirk of using the genocide slot)
+   - `Rules/Sphere.lua`: `newsphere`, `rmsphere`, `sphboom`, `movsphere`; the spheres of every level are in `G.spheres` (newest first) with `c[SPHCAST]` as their count; the C quirks stay (a cancelled sphere still appears, the talisman check inside the blast loop)
    - `Data/Tables.lua` gets `T.spelweird[monster][spell]` and `T.spelmes[reaction]`
    - UI: `UI/Spellbook.lua` lists the known spells while casting (type the three letters or click one; hover for the description) and the discoveries list (`D`); `ui:PickSpell`, `ui:Missile` (a glyph travels along the ray, drawn by `map:SetOverlay`), `ui:ShowDiscoveries`
    - changed from the C: Esc cancels the direction question (the C cannot be cancelled), the spell point stays spent; the scroll of pulverization now fires its ray
    - the spell animations with models wait for milestone 10; the glyph on the tile is the fallback
 7. **Features + artifacts** (done):
-   - `Features.lua`: `altar` (pray, give money, desecrate, ignore), `throne` and `deadThrone`, `fountain` with `fntchange`, `lamp` (the genie; `ui:PickSpell(message, true)` lists all 39 spells); `lookForObject` also handles the statue, mirror and dead fountain, which do nothing in the C
+   - `Rules/Features.lua`: `altar` (pray, give money, desecrate, ignore), `throne` and `deadThrone`, `fountain` with `fntchange`, `lamp` (the genie; `ui:PickSpell(message, true)` lists all 39 spells); `lookForObject` also handles the statue, mirror and dead fountain, which do nothing in the C
    - the unique artifacts were already finished by the earlier milestones (`Player.take`/`adjustCValues` for the stat changes, `Regen`, `hitm`, `movemonst`, `spattack` and `Magic` for the rest); an audit of every `O*` object used by the C against the Lua found no gap
    - changed from the C: Esc at the "give money or just pray" question goes back to the first altar question (the C ignores Esc there)
    - left to milestone 8: the town buildings (school, banks, DND store, trading post, home, pad and LRS), which print "(Not implemented yet.)" until then
-8. **Town buildings (done, not yet checked in the client):** `Town.lua` and `UI/Store.lua`; item tooltips and `[Item]` links (`ItemInfo.lua`); store windows for DND store, school, bank and 5th branch, trading post, LRS taxes, home, and the goblin alchemist.
-9. **Endgame + persistence (mostly done):** `Scores.lua` + `UI/Scoreboard.lua` (winners and dead lists in `WoWLarn.global`, life protection in `Player.died`, taxes per character, LRS pays them), `Save.lua` (the game goes to `WoWLarn.char.game` at logout and when the window hides; resumed when a new session starts; death, a win or quitting clears it). The tax letters (`bill.c`) are logged when you win (`Scores.letters`), and `/larn scores` shows the boards. Still to do: the equipped-slot idea of open decision 6.
+8. **Town buildings (done, not yet checked in the client):** `Rules/Town.lua` and `UI/Store.lua`; item tooltips and `[Item]` links (`Info/ItemInfo.lua`); store windows for DND store, school, bank and 5th branch, trading post, LRS taxes, home, and the goblin alchemist.
+9. **Endgame + persistence (mostly done):** `Core/Scores.lua` + `UI/Scoreboard.lua` (winners and dead lists in `WoWLarn.global`, life protection in `Player.died`, taxes per character, LRS pays them), `Core/Save.lua` (the game goes to `WoWLarn.char.game` at logout and when the window hides; resumed when a new session starts; death, a win or quitting clears it). The tax letters (`bill.c`) are logged when you win (`Scores.letters`), and `/larn scores` shows the boards. Still to do: the equipped-slot idea of open decision 6.
 10. **2.5D view (first slice done, untested in the client):** `UI/MapView3D.lua` draws the floor and walls as perspective quads (`/larn view` or the Map view option switches it); items, monsters and the player are still icons and glyphs standing on the floor.
    Done since: walk tween and attack/wound/death animations, monsters glide between tiles, blob shadows, thinner walls, mouseover tooltips, sound effects (`ui:Sound`, `/larn sounds`).
    Still to do:
@@ -412,7 +412,7 @@ Each milestone is playable or testable in game.
     - pooled `PlayerModel` actors with display lookup, per-monster tune, the depth fix (`Seat` technique) and animations
     - move tweens, spell effects, lighting/fog for remembered cells
     - debug model viewer for curating `Data/Visuals.lua`
-11. **Options + polish (races done):** the Races option adds small stat bonuses for the race of the WoW character at the start of a new game (`Create.lua`, no extra pick). Left: more monster renames, colour options, ASCII mode for the 2.5D view.
+11. **Options + polish (races done):** the Races option adds small stat bonuses for the race of the WoW character at the start of a new game (`Rules/Create.lua`, no extra pick). Left: more monster renames, colour options, ASCII mode for the 2.5D view.
    Original list: difficulty, monster renames, fast mode (no naps), tile size, ASCII fallback renderer, colors, LDB/minimap launcher, races (§9).
 
 ---
@@ -450,14 +450,14 @@ Each milestone is playable or testable in game.
      - `#` max experience; `_` debug kit (stats 70, Lance of Death, all spells, potions and scrolls known, map revealed)
      - `@` create item; `Z` teleport to any level 0–20; `A` dump state to the chat/log
      - the side effects: levels revealed, enchantments shown, some penalties skipped, genocided monsters still creatable
-   - **Packaging:** all of it sits inside `--@debug@` … `--@end-debug@` blocks, or in a `Debug.lua` that is only listed in the `.toc` between `#@debug@` / `#@end-debug@`. The packager strips it from releases, so wizard mode exists only in the dev checkout.
+   - **Packaging:** all of it sits inside `--@debug@` … `--@end-debug@` blocks, or in a `Core/Debug.lua` that is only listed in the `.toc` between `#@debug@` / `#@end-debug@`. The packager strips it from releases, so wizard mode exists only in the dev checkout.
    - Wizard games never record scores, as in C.
    - Debug-only extras go in the same place: the model viewer (§7.1) and `/larn` debug subcommands (e.g. `/larn level 15`, `/larn spawn <monster>`).
 4. ~~Map renderer default~~ **Decided:**
    - The 2.5D model view (§6.1) is the goal, with a **fixed north-up tilted camera**. A rotating camera would make the 8 movement directions confusing.
    - Build the **flat tile renderer first** (milestones 2–5), then add 2.5D as milestone 10. Both sit behind the `MapView` interface.
 5. ~~Tile art source~~ **Decided:** use **WoW textures/fileIDs** first, with the flat-color fallback. Revisit a bundled texture set later if WoW art doesn't work well or isn't available on all clients.
-6. **Equippable items (idea, not decided; stacking kept for now):** limiting rings would make the game harder than the original, so the original rules stay. `Equipment.lua` instead shows what is in effect: the inventory rows carry a tag (+N armor class, regeneration, ...), tooltips explain each item, and the footer sums armor class, weapon class, regeneration, energy, stat bonuses and artifacts. make accessories work more like WoW instead of "carry it and it works".
+6. **Equippable items (idea, not decided; stacking kept for now):** limiting rings would make the game harder than the original, so the original rules stay. `Rules/Equipment.lua` instead shows what is in effect: the inventory rows carry a tag (+N armor class, regeneration, ...), tooltips explain each item, and the footer sums armor class, weapon class, regeneration, energy, stat bonuses and artifacts. make accessories work more like WoW instead of "carry it and it works".
    - **The original:**
      - Rings, belts, the amulet and the artifacts take effect just by being in the pack; there is no equip step.
      - There is **no limit on the number of rings**. The pack is the only limit, so ten rings of protection all stack (`Player.recalc` adds `ivenarg + 1` for every `OPROTRING`, `ODAMRING`, `OREGENRING`, `OENERGYRING` and `OBELT` it finds). The stat rings (`ODEXRING`, `OSTRRING`, `OCLEVERRING`) apply once when they are picked up (`take`) and are undone when they are dropped (`dropobj`).
