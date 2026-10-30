@@ -104,7 +104,7 @@ end
 
 -- C: wield().
 function Action.wield()
-   local slot = ns.ui:PickItem(L["wield"], Has(WIELD), { none = true })
+   local slot = ns.ui:PickItem(L["wield"], Has(WIELD), { none = true, only = true, empty = L["You have nothing to wield."] })
    if not slot then return end
    if slot == "none" then
       c[K.WIELD] = 0
@@ -129,7 +129,7 @@ end
 
 -- C: wear().
 function Action.wear()
-   local slot = ns.ui:PickItem(L["wear"], Has(WEAR))
+   local slot = ns.ui:PickItem(L["wear"], Has(WEAR), { only = true, empty = L["You have nothing to wear."] })
    if not slot then return end
    local id = iven[slot]
    if id == 0 then
@@ -295,7 +295,7 @@ end
 
 -- C: eatcookie().
 function Action.eat()
-   local slot = ns.ui:PickItem(L["eat"], Is(K.OCOOKIE))
+   local slot = ns.ui:PickItem(L["eat"], Is(K.OCOOKIE), { only = true, empty = L["You have no cookies to eat."] })
    if not slot then return end
    local id = iven[slot]
    if id == K.OCOOKIE then

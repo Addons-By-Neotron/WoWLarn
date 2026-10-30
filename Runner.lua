@@ -427,7 +427,7 @@ function ui:PickItem(verb, filter, opts)
       for slot = 1, ns.K.IVENSIZE do
          if ns.G.iven[slot] ~= 0 and filter(ns.G.iven[slot]) then fits = true break end
       end
-      if not fits then
+      if not fits and not (opts.none and ns.G.c[ns.K.WIELD] ~= 0) then  -- (a wielded weapon can still be put away)
          self:Message(opts.empty or L["You have nothing to %s."], verb)
          return nil
       end

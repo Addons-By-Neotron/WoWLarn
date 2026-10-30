@@ -1072,3 +1072,6 @@ L["When it wears off you crash, and come out a little worse than you went in."] 
 L["You have found out what comes after %s!"] = true
 L["The fel tonic wears off, and you crash hard!"] = true
 L["Your hands are so clumsy from the brew that the weapon slips away!"] = true
+L["You have nothing to wield."] = true
+L["You have nothing to wear."] = true
+L["You have no cookies to eat."] = true
