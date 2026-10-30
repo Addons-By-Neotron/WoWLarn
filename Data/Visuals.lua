@@ -142,6 +142,15 @@ V.POTION_ICON = {
    [K.PCUREDIANTH] = "INV_Potion_33",  -- Dragonfire Potion: the cure for the daughter
 }
 
+-- The 3D model of an object, a model file data id (nothing yet: chosen in the object viewer).
+-- What is set in the object viewer wins until the next reload.
+V.OBJECT_MODELS = {
+}
+function V.ObjectModel(id)
+   local own = ns.mod.db.global.objectModels
+   return (own and own[id]) or V.OBJECT_MODELS[id]
+end
+
 function V.ObjectIcon(id, arg)
    if id == K.OPOTION and arg and V.POTION_ICON[arg] then
       return ICONS .. V.POTION_ICON[arg]

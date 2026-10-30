@@ -70,4 +70,5 @@ Data\ModelList.lua
 Core\Debug.lua
 UI\DebugPanel.lua
 UI\TextureBrowser.lua
+UI\ObjectViewer.lua
 #@end-debug@
