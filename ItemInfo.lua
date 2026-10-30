@@ -214,7 +214,7 @@ function ItemInfo.lines(id, arg)
    lines[#lines + 1] = format("|cff%s%s|r", quality.color, quality.name)
    local armor, weapon = ns.Player.ARMOR_AC[id], ns.Player.WEAPON_WC[id]
    if armor then lines[#lines + 1] = format(L["Armor class %d"], armor + arg) end
-   if weapon then lines[#lines + 1] = format(L["Weapon class %d"], weapon + arg) end
+   if weapon and ns.Action.isWeapon(id) then lines[#lines + 1] = format(L["Weapon class %d"], weapon + arg) end  -- (the staff, belt and shield have one in the table, but are not weapons)
    if id == K.OPOTION or id == K.OSCROLL then
       local known = id == K.OPOTION and G.potionknown[arg] or G.scrollknown[arg]
       if known ~= 0 then
