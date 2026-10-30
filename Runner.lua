@@ -492,11 +492,22 @@ function ui:PickSpell(message, all)
 end
 
 -- C: the missile of godirect(): shows glyph on a tile for delay milliseconds.
-function ui:Missile(x, y, glyph, delay)
-   ns.map:SetOverlay(x, y, glyph)
+function ui:Missile(x, y, glyph, delay, color)
+   ns.map:SetOverlay(x, y, glyph, color)
    self:Refresh("map")
    self:Nap(delay)
    ns.map:SetOverlay()
+   self:Refresh("map")
+end
+
+-- The effect of an area spell: the glyph on all the tiles (a list of { x, y }) at once.
+function ui:Burst(tiles, glyph, delay, color)
+   local list = {}
+   for _, tile in ipairs(tiles) do list[#list + 1] = { x = tile[1], y = tile[2], glyph = glyph, color = color } end
+   ns.map:SetOverlays(list)
+   self:Refresh("map")
+   self:Nap(delay)
+   ns.map:SetOverlays()
    self:Refresh("map")
 end
 

@@ -270,8 +270,16 @@ local function ConeDirect(spell, dam, str, delay, cshow)
    if not tx then return end
    local tiles = Spells.coneTiles(tx - G.playerx, ty - G.playery, CONE_LENGTH)
    local fade = 3 + idiv(c[K.HARDGAME], 2)
-   if c[K.BLINDCOUNT] == 0 then
-      for _, tile in ipairs(tiles) do ui:Missile(tile[1], tile[2], cshow, delay) end
+   if c[K.BLINDCOUNT] == 0 then  -- (a ring of the cone at a time)
+      local ring, distance = {}, 1
+      for _, tile in ipairs(tiles) do
+         if tile[3] ~= distance then
+            ui:Burst(ring, cshow, delay, { 0.6, 0.9, 1 })
+            ring, distance = {}, tile[3]
+         end
+         ring[#ring + 1] = tile
+      end
+      if #ring > 0 then ui:Burst(ring, cshow, delay, { 0.6, 0.9, 1 }) end
    end
    for _, tile in ipairs(tiles) do
       local x, y, distance = tile[1], tile[2], tile[3]
@@ -295,8 +303,19 @@ local function ConeDirect(spell, dam, str, delay, cshow)
 end
 
 -- C: omnidirect(). Hits every monster next to the player.
-local function OmniDirect(spell, dam, str)
+local function OmniDirect(spell, dam, str, glyph, color)
    if spell < 1 or spell > SPNUM then return end
+   if glyph and c[K.BLINDCOUNT] == 0 then  -- (what it looks like: the tiles around the player)
+      local tiles = {}
+      for x = G.playerx - 1, G.playerx + 1 do
+         for y = G.playery - 1, G.playery + 1 do
+            if (x ~= G.playerx or y ~= G.playery) and x >= 1 and x <= MAXX and y >= 1 and y <= MAXY and item[x][y] ~= K.OWALL then
+               tiles[#tiles + 1] = { x, y }
+            end
+         end
+      end
+      ns.ui:Burst(tiles, glyph, 350, color)
+   end
    for x = G.playerx - 1, G.playerx + 1 do
       for y = G.playery - 1, G.playery + 1 do
          if x >= 1 and x <= MAXX and y >= 1 and y <= MAXY then
@@ -594,7 +613,7 @@ end
 
 CAST[K.SP_COLD] = function(clev)
    -- (a little weaker than the old missile: it hits everything in its reach)
-   ConeDirect(K.SP_COLD, rnd(15) + 20 + clev, L["The cone of cold strikes the %s."], 25, "O")
+   ConeDirect(K.SP_COLD, rnd(15) + 20 + clev, L["The cone of cold strikes the %s."], 70, "O")
 end
 
 CAST[K.SP_POLYMORPH] = function()
@@ -610,7 +629,7 @@ CAST[K.SP_HASTE_SELF] = function(clev)
 end
 
 CAST[K.SP_CLOUD_KILL] = function()
-   OmniDirect(K.SP_CLOUD_KILL, 30 + rnd(10), L["The %s gasps for air!"])
+   OmniDirect(K.SP_CLOUD_KILL, 30 + rnd(10), L["The %s gasps for air!"], "%", { 0.5, 0.9, 0.4 })
 end
 
 CAST[K.SP_VAPORIZE_ROCK] = Vaporize
@@ -636,7 +655,7 @@ CAST[K.SP_INVULNERABILITY] = function()
 end
 
 CAST[K.SP_FLOOD] = function(clev)
-   OmniDirect(K.SP_FLOOD, 32 + clev, L["The %s struggles for air in your flood!"])
+   OmniDirect(K.SP_FLOOD, 32 + clev, L["The %s struggles for air in your flood!"], "~", { 0.4, 0.6, 1 })
 end
 
 CAST[K.SP_FINGER_OF_DEATH] = function()
@@ -677,7 +696,7 @@ CAST[K.SP_TELEPORT_AWAY] = function()
 end
 
 CAST[K.SP_MAGIC_FIRE] = function(clev)
-   OmniDirect(K.SP_MAGIC_FIRE, 35 + rnd(10) + clev, L["The %s cringes from the flame."])
+   OmniDirect(K.SP_MAGIC_FIRE, 35 + rnd(10) + clev, L["The %s cringes from the flame."], "^", { 1, 0.5, 0.2 })
 end
 
 CAST[K.SP_MAKE_A_WALL] = function()

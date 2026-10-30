@@ -216,8 +216,14 @@ local function DrawTile(cell, x, y, ground)
 end
 
 -- C: the missile shown by godirect(). Call without arguments to remove it.
-function map:SetOverlay(x, y, glyph)
-   self.overlay = x and { x = x, y = y, glyph = glyph } or nil
+function map:SetOverlay(x, y, glyph, color)
+   self.overlays = x and { { x = x, y = y, glyph = glyph, color = color } } or nil
+end
+
+-- Several at once: a list of { x, y, glyph, color } (the area spells).  Call without arguments to
+-- remove them.
+function map:SetOverlays(list)
+   self.overlays = list
 end
 
 --@debug@
@@ -323,17 +329,16 @@ function map:Draw()
          end
       end
    end
-   -- The missile of a spell on its way.
-   local overlay = self.overlay
-   if overlay then
-      local cell = self.cells[overlay.y - camY + 1] and self.cells[overlay.y - camY + 1][overlay.x - camX + 1]
-      if cell then
-         cell.icon:Hide()
-         cell.glyph:SetText(overlay.glyph)
-         cell.glyph:SetTextColor(unpack(V.MISSILE_COLOR))
-         cell.glyph:Show()
+   -- What spells do on the way, above the models (the effects of the 2.5D view).
+   ns.map3d:BeginEffects(self.modelLayer:GetFrameLevel() + 30)
+   for _, effect in ipairs(self.overlays or {}) do
+      local col, row = effect.x - camX + 1, effect.y - camY + 1
+      if self.cells[row] and self.cells[row][col] then
+         ns.map3d:Effect(self.offsetX + (col - 0.5) * TILE, self.offsetY + (row - 0.5) * TILE, TILE * 0.9,
+            effect.glyph, effect.color or V.MISSILE_COLOR)
       end
    end
+   ns.map3d:EndEffects()
    -- The player.
    local col, row = G.playerx - camX + 1, G.playery - camY + 1
    local cell = self.cells[row] and self.cells[row][col]

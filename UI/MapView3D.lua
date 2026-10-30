@@ -337,6 +337,9 @@ function map3d:Create(view)
       end
    end)
    self.layers = {}
+   -- the effects of spells go above everything, models too (a model is a frame of its own, and
+   -- what is drawn in a layer is under it)
+   self.effects = NewLayer(view, view:GetFrameLevel() + 1000)
    self:Hide()
 end
 
@@ -361,10 +364,32 @@ function map3d:SetReach(zoom)
    self:EnsureLayers(ROWS)
 end
 
+-- Effects: BeginEffects(level), Effect() for each, EndEffects().  (sx, sy) is the middle of the
+-- tile in the view, size how many pixels wide.
+function map3d:BeginEffects(level)
+   local layer = self.effects
+   layer:SetFrameLevel(level)
+   layer:Show()
+   Begin(layer)
+end
+
+function map3d:Effect(sx, sy, size, glyph, color)
+   local layer = self.effects
+   local half = size * 0.65
+   Quad(layer, { color[1], color[2], color[3], 0.5 }, sx - half, sy - half, sx + half, sy - half, sx + half, sy + half, sx - half, sy + half,
+      "Interface\\AddOns\\WoWLarn\\Media\\Shadow")
+   Glyph(layer, glyph, color, sx, sy + size * 0.4, size)
+end
+
+function map3d:EndEffects()
+   Finish(self.effects)
+end
+
 function map3d:Hide()
    for _, layers in ipairs(self.layers or {}) do
       for _, layer in pairs(layers) do layer:Hide() end
    end
+   if self.effects then self.effects:Hide() end
    self.shown = false
 end
 
@@ -683,27 +708,15 @@ function map3d:Draw()
          end
       end
    end
-   -- the missile of a spell on its way: a glow on the floor and the glyph above it
-   local overlay = ns.map.overlay
-   if overlay then
-      local row = overlay.y - (roundY - FAR_ROWS) + 1
-      local layer = self.layers[row] and self.layers[row][ACTOR]
-      if layer and overlay.x >= 1 and overlay.x <= MAXX and overlay.y >= 1 and overlay.y <= MAXY then
-         local wx, wy = (overlay.x - 0.5) * TILE, (overlay.y - 0.5) * TILE
-         local mx, my, scale = Project(wx, wy, TILE * 0.35)
-         if mx then
-            local ax, ay = Project(wx - TILE * 0.6, wy - TILE * 0.6, 0)
-            local bx, by = Project(wx + TILE * 0.6, wy - TILE * 0.6, 0)
-            local cx, cy = Project(wx + TILE * 0.6, wy + TILE * 0.6, 0)
-            local dx, dy = Project(wx - TILE * 0.6, wy + TILE * 0.6, 0)
-            if ax and bx and cx and dx then
-               local color = V.MISSILE_COLOR
-               Quad(layer, { color[1], color[2], color[3], 0.9 }, ax, ay, bx, by, cx, cy, dx, dy, SHADOW)
-            end
-            Glyph(layer, overlay.glyph, V.MISSILE_COLOR, mx, my, TILE * 1.1 * scale)
-         end
+   -- what spells do on the way: a glow and a glyph, above the models
+   self:BeginEffects(view:GetFrameLevel() + 1 + (ROWS + 1) * 3 + 3)
+   for _, effect in ipairs(ns.map.overlays or {}) do
+      local mx, my, scale = Project((effect.x - 0.5) * TILE, (effect.y - 0.5) * TILE, TILE * 0.35)
+      if mx and effect.x >= 1 and effect.x <= MAXX and effect.y >= 1 and effect.y <= MAXY then
+         self:Effect(mx, my, TILE * 1.1 * scale, effect.glyph, effect.color or V.MISSILE_COLOR)
       end
    end
+   self:EndEffects()
    -- the player, in the row of the nearest tile
    do
       local layer = self.layers[FAR_ROWS + 1][ACTOR]
