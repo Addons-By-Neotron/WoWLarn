@@ -54,6 +54,11 @@ local SPECIAL = {
    [16] = L["Steals your gear"],
 }
 
+-- The monster as it is in this game (the difficulty changes it), or as it is by default.
+local function Stats(id)
+   return (G.monster and G.monster[id]) or ns.MonsterData[id]
+end
+
 -- A game that has had cheats on does not add to it.
 local function Counts()
    return not (G.wizard or G.cheated)
@@ -143,11 +148,6 @@ end
 
 function Bestiary.count()
    return #Bestiary.list()
-end
-
--- The monster as it is in this game (the difficulty changes it), or as it is by default.
-local function Stats(id)
-   return (G.monster and G.monster[id]) or ns.MonsterData[id]
 end
 
 -- A range around a value, not exact: the more of its kind have been killed, the closer it
