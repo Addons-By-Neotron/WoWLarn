@@ -162,6 +162,12 @@ V.SPELL_ICON = {
    cbl = "Spell_Holy_RemoveCurse", enl = "Spell_Holy_MindVision", stp = "Spell_Frost_Stun", sca = "Spell_Shadow_PsychicScream",
    lor = "INV_Misc_Book_09",
 }
+-- The spells that put an effect on you have the icon of that effect.
+for spell, counter in pairs({ pro = K.PROTECTIONTIME, dex = K.DEXCOUNT, str = K.STRCOUNT }) do
+   for _, effect in ipairs(V.EFFECTS) do
+      if effect[1] == counter then V.SPELL_ICON[spell] = effect[3] end
+   end
+end
 
 function V.ObjectIcon(id, arg)
    if id == K.OPOTION and arg and V.POTION_ICON[arg] then
