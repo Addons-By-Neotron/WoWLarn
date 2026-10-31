@@ -188,8 +188,6 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
       frame.model:SetAllPoints()
       frame.model:SetScript("OnModelLoaded", function(self)
          self:SetFacing(frame.facing or FACING)
-         self:SetPitch(frame.pitch or 0)
-         self:SetRoll(frame.roll or 0)
          if frame.anim and self.SetAnimation then self:SetAnimation(frame.anim) end  -- (loading resets it)
          if MODEL_ROOM ~= 1 and self.SetModelScale then self:SetModelScale(1 / MODEL_ROOM) end  -- (and this)
          CameraScale(self, frame.scale or 1)  -- (and this)
@@ -220,7 +218,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
       else
          frame.model:SetDisplayInfo(look)
       end
-      frame.facing, frame.anim, frame.pitch, frame.roll = nil, nil, nil, nil
+      frame.facing, frame.anim = nil, nil
       frame.model.settleUntil = GetTime() + SETTLE
    end
    anim = anim or ANIM.stand
@@ -232,14 +230,6 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    if frame.facing ~= facing then
       frame.facing = facing
       frame.model:SetFacing(facing)
-   end
-   if type(look) == "number" and look < 0 then  -- (a model file: tipped as chosen in the viewer)
-      local pitch, roll = V.Tilt(look)
-      if frame.pitch ~= pitch or frame.roll ~= roll then
-         frame.pitch, frame.roll = pitch, roll
-         frame.model:SetPitch(pitch)
-         frame.model:SetRoll(roll)
-      end
    end
    -- a model is clipped to its frame and a dying one lies down wider than it stands, so
    -- every model gets a frame MODEL_ROOM times larger around the same centre, and is scaled
@@ -562,10 +552,7 @@ local function DrawTile(layers, x, y, ground)
    elseif object ~= 0 then
       local icon = not ns.mod.db.profile.ascii and V.ObjectIcon(object)
       local size = TILE * 0.6 * scale
-      local file = models and V.ObjectModel(object)
-      if file then
-         Model(layers[ACTOR], -file, mx, my + TILE * 0.05 * scale, TILE * 0.8 * scale, V.Turn(-file))
-      elseif icon then
+      if icon then
          Icon(layers[ACTOR], icon, mx, my + size * 0.1, size, size)
       else
          Glyph(layers[ACTOR], V.ObjectGlyph(object), V.GLYPH_COLOR, mx, my + size * 0.1, size)
