@@ -419,6 +419,7 @@ end
 -- stands from the model, 1 is the usual; above 1 shrinks the model.  What is set in the model
 -- viewer (global.scales) wins.
 V.SCALE = {
+   [-189141] = 2.2,  -- the altar (an object model: negative, the model file)
    [146] = 0.68,
    [391] = 1.33,
    [486] = 1.33,

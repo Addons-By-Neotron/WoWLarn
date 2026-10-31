@@ -216,6 +216,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
       if look == "player" then
          frame.model:SetUnit("player")
       elseif look < 0 then  -- (a model file data id, negated)
+         if frame.model.ClearModel then frame.model:ClearModel() end  -- (not the creature that had the frame before, while it loads)
          frame.model:SetModel(-look)
       else
          frame.model:SetDisplayInfo(look)
