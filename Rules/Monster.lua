@@ -473,6 +473,7 @@ function Monster.spattack(x, xx, yy)
          elseif m == K.OSSPLATE then
             message = L["The %s hit you -- you are fortunate to have stainless steel armor!"]
          elseif m == K.OELVENCHAIN then
+            ns.ItemInfo.discover(K.OELVENCHAIN, G.lastmonst)
             message = L["The %s hit you -- you are very lucky to have such strong elven chain!"]
          end
       else

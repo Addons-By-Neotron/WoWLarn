@@ -141,11 +141,12 @@ local POWER = {
    [K.ONOTHEFT] = L["Thieves can't steal from you."],
    [K.OSPHTALISMAN] = L["Spheres of annihilation can't harm you."],
    [K.OORBOFDRAGON] = L["Your blows hurt dragons much more."],
-   [K.OSPIRITSCARAB] = L["Ghostly monsters hurt you less."],
-   [K.OPSTAFF] = L["It turns aside the special attacks of the mightiest monsters."],
-   [K.OCUBEofUNDEAD] = L["The undead hurt you less, and some will not attack at all."],
+   [K.OSPIRITSCARAB] = L["Spirit nagas and poltergeists hurt you half as much."],
+   [K.OPSTAFF] = L["+10 wisdom.  Three times in four it cancels the special attack of a demon lord, demon prince, wraith or vampire (never Lucifer's)."],
+   [K.OCUBEofUNDEAD] = L["Zombies hurt you half as much, and wraiths and vampires can't hurt you or drain your levels."],
    [K.OAMULET] = L["Your invisibility lasts longer."],
    [K.OLARNEYE] = L["Demon lords can't hide from you."],
+   [K.OELVENCHAIN] = L["Strong and light, and the rust monster can't weaken it."],
    [K.OWWAND] = L["You float over pits and trap doors."],
    -- the elixirs of the goblin alchemist: found out by drinking one
    [K.OSPEED] = L["You move much faster and take half the damage for a long while, but it saps your attributes for good."],
@@ -189,6 +190,7 @@ local SEEN = {
    [K.OCUBEofUNDEAD] = L["Your Cube of Undead Control keeps the %s at bay!"],
    [K.OAMULET] = L["Your Amulet of Invisibility makes the spell last much longer!"],
    [K.OLARNEYE] = L["The Eye of Larn lets you see the %s through the dark!"],
+   [K.OELVENCHAIN] = L["Your Elven Chain shrugs off the %s's rust!"],
    [K.OWWAND] = L["Your Wand of Wonder lifts you clear of the danger!"],
 }
 
