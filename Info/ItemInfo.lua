@@ -142,7 +142,7 @@ local POWER = {
    [K.OSPHTALISMAN] = L["Spheres of annihilation can't harm you."],
    [K.OORBOFDRAGON] = L["Your blows hurt dragons much more."],
    [K.OSPIRITSCARAB] = L["Spirit nagas and poltergeists hurt you half as much."],
-   [K.OPSTAFF] = L["+10 wisdom.  Three times in four it cancels the special attack of a demon lord, demon prince, wraith or vampire (never Lucifer's)."],
+   [K.OPSTAFF] = L["+10 wisdom.  It can cancel the special attack of a demon lord, demon prince, wraith or vampire, but never Lucifer's."],
    [K.OCUBEofUNDEAD] = L["Zombies hurt you half as much, and wraiths and vampires can't hurt you or drain your levels."],
    [K.OAMULET] = L["Your invisibility lasts longer."],
    [K.OLARNEYE] = L["Demon lords can't hide from you."],
@@ -200,6 +200,12 @@ function ItemInfo.discover(id, name)
    Discoveries()[id] = true
    if SEEN[id] then ns.ui:Message(SEEN[id], name or "") end
    ns.ui:Message(L["You have found out what %s can do!"], ns.StripArticle(ns.Tables.objectname[id]))
+end
+
+-- Called each time an item turns an attack aside: said every time, and found out the first.
+function ItemInfo.notice(id, name)
+   if not Discoveries()[id] and POWER[id] then return ItemInfo.discover(id, name) end
+   if SEEN[id] then ns.ui:Message(SEEN[id], name or "") end
 end
 
 -- The second tier: what an elixir leaves behind, when it shows.

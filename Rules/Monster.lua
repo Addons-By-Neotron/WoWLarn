@@ -422,7 +422,7 @@ function Monster.spattack(x, xx, yy)
       if monst >= DEMONLORD or monst == K.WRAITH or monst == K.VAMPIRE then
          for i = 1, K.IVENSIZE do
             if iven[i] == K.OPSTAFF and rnd(100) < 75 then
-               ns.ItemInfo.discover(K.OPSTAFF, G.lastmonst)
+               ns.ItemInfo.notice(K.OPSTAFF, G.lastmonst)
                return false
             end
          end
@@ -431,7 +431,7 @@ function Monster.spattack(x, xx, yy)
    -- with the cube of undead control, wraiths and vampires do nothing
    if monst == K.WRAITH or monst == K.VAMPIRE then
       if c[K.CUBEofUNDEAD] ~= 0 or c[K.UNDEADPRO] ~= 0 then
-         if c[K.CUBEofUNDEAD] ~= 0 then ns.ItemInfo.discover(K.OCUBEofUNDEAD, G.lastmonst) end
+         if c[K.CUBEofUNDEAD] ~= 0 then ns.ItemInfo.notice(K.OCUBEofUNDEAD, G.lastmonst) end
          return false
       end
    end
@@ -682,7 +682,7 @@ function Monster.hitplayer(x, y)
    if c[K.CUBEofUNDEAD] ~= 0 or c[K.UNDEADPRO] ~= 0 then
       if mster == K.VAMPIRE or mster == K.WRAITH or mster == K.ZOMBIE then
          dam = Trunc(dam / 2)
-         if c[K.CUBEofUNDEAD] ~= 0 then ns.ItemInfo.discover(K.OCUBEofUNDEAD, G.lastmonst) end
+         if c[K.CUBEofUNDEAD] ~= 0 then ns.ItemInfo.notice(K.OCUBEofUNDEAD, G.lastmonst) end
       end
    end
 
