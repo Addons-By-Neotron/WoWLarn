@@ -245,6 +245,14 @@ function bar:Create(parent)
       local back = button:CreateTexture(nil, "BACKGROUND")
       back:SetAllPoints()
       back:SetColorTexture(0, 0, 0, 0.55)
+      for _, edge in ipairs({ { "TOPLEFT", "TOPRIGHT", true }, { "BOTTOMLEFT", "BOTTOMRIGHT", true },
+         { "TOPLEFT", "BOTTOMLEFT" }, { "TOPRIGHT", "BOTTOMRIGHT" } }) do
+         local line = button:CreateTexture(nil, "BORDER")
+         line:SetColorTexture(0.45, 0.45, 0.5, 1)
+         line:SetPoint(edge[1])
+         line:SetPoint(edge[2])
+         if edge[3] then line:SetHeight(1) else line:SetWidth(1) end
+      end
       button.icon = button:CreateTexture(nil, "ARTWORK")
       button.icon:SetPoint("TOPLEFT", 1, -1)
       button.icon:SetPoint("BOTTOMRIGHT", -1, 1)

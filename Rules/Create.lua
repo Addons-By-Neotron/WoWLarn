@@ -84,6 +84,12 @@ function Create.makePlayer(class)
    for slot, entry in ipairs(class.kit) do
       iven[slot] = entry[1]
       ivenarg[slot] = entry[2] == "random" and rnd(6) or entry[2]
+      -- FIX: not in the C. The potions and scrolls of the kit are known to their owner.
+      if entry[1] == K.OPOTION then
+         G.potionknown[ivenarg[slot]] = 1
+      elseif entry[1] == K.OSCROLL then
+         G.scrollknown[ivenarg[slot]] = 1
+      end
    end
    c[K.WEAR] = class.wear or 0
    c[K.WIELD] = class.wield or 0
