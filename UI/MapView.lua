@@ -210,7 +210,15 @@ local function DrawTile(cell, x, y, ground)
    end
    local monster = ns.Display.visibleMonster(x, y)
    if monster ~= 0 then
-      cell.icon:Hide()
+      -- (what lies under the monster stays, as a picture)
+      local under = object ~= 0 and not ns.mod.db.profile.ascii and V.ObjectIcon(object)
+      if under then
+         cell.icon:SetTexture(under)
+         cell.icon:SetBlendMode(ns.mod.db.profile.opaqueIcons and "BLEND" or "ADD")
+         cell.icon:Show()
+      else
+         cell.icon:Hide()
+      end
       if ns.map3d.MonsterModel(x, y) then  -- (drawn as a model, see map:Draw)
          cell.glyph:Hide()
          return

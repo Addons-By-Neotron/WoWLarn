@@ -542,6 +542,13 @@ local function DrawTile(layers, x, y, ground)
                if sx then mx, my, scale = sx, sy, sscale end
             end
          end
+         if object ~= 0 then  -- (what lies under the monster stays, a little smaller)
+            local under = not ns.mod.db.profile.ascii and V.ObjectIcon(object)
+            if under then
+               local size = TILE * 0.5 * scale
+               Icon(layers[ACTOR], under, mx, my + size * 0.1, size, size)
+            end
+         end
          Shadow(layers[ACTOR], wx, wy, TILE * 0.42)
          Model(layers[ACTOR], display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, Facing(toward), anim)
       else
