@@ -145,6 +145,12 @@ V.POTION_ICON = {
 -- The 3D model of an object, a model file data id (nothing yet: chosen in the object viewer).
 -- What is set in the object viewer wins until the next reload.
 V.OBJECT_MODELS = {
+   [1] = 189141,  -- a Holy Altar
+   [26] = 244250,  -- a Sword of Slashing
+   [28] = 200234,  -- a Sunsword
+   [29] = 244250,  -- a Two-handed Sword
+   [30] = 200220,  -- a Spear
+   [58] = 244250,  -- a Longsword
 }
 function V.ObjectModel(id)
    local own = ns.mod.db.global.objectModels
