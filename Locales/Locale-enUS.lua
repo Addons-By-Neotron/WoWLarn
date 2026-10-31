@@ -1171,3 +1171,5 @@ L["Strong and light.  Dulling can take away its enchantment, but never leave it 
 L["Your Sword of Slashing is no duller for the %s's touch!"] = true
 L["Leave"] = true
 L["Page %d / %d"] = true
+L["Potion of %s"] = true
+L["Scroll of %s"] = true

@@ -89,9 +89,9 @@ end
 local function StockName(entry)
    local T = ns.Tables
    if entry[3] == K.OPOTION then
-      return format(L["potion of %s"], T.potionname[entry[4]])
+      return format(L["Potion of %s"], T.potionname[entry[4]])
    elseif entry[3] == K.OSCROLL then
-      return format(L["scroll of %s"], T.scrollname[entry[4]])
+      return format(L["Scroll of %s"], T.scrollname[entry[4]])
    end
    return ns.StripArticle(T.objectname[entry[3]])
 end
