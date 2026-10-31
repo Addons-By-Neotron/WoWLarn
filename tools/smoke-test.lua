@@ -322,6 +322,7 @@ Fresh(3); G.c[K.GOLD] = 1000; Put(K.LEPRECHAUN, 31, 8)
 check(ns.Monster.spattack(8, 31, 8) == true and G.mon[31][8] == 0 and G.c[K.GOLD] < 1000, "gold stolen")
 -- the nymph steals an item, keeps it through a save, and drops it when she dies
 Fresh(3)
+check(G.potionknown[K.PINSTHEAL] == 1 and G.potionknown[K.PCUREDIANTH] == 0 and G.potionknown[G.ivenarg[2]] == 1, "initial potion knowledge")
 for i = 1, K.IVENSIZE do G.iven[i], G.ivenarg[i] = 0, 0 end
 G.c[K.WIELD], G.c[K.WEAR], G.c[K.SHIELD] = 0, 0, 0
 G.iven[5], G.ivenarg[5] = K.OPOTION, 2; Put(K.NYMPH, 31, 8)
@@ -380,7 +381,7 @@ Fresh(3)
 for i = 1, K.IVENSIZE do G.iven[i], G.ivenarg[i] = 0, 0 end
 G.c[K.WIELD], G.c[K.WEAR], G.c[K.SHIELD] = 0, 0, 0
 G.c[K.LEVEL] = 1
-check(G.potionknown[K.PINSTHEAL] == 1 and G.potionknown[K.PHEALING] == 0, "initial potion knowledge")
+
 -- the pack holds 15 + level/2 things
 local taken = 0
 for _ = 1, 30 do if ns.Player.take(K.OPOTION, K.PHEALING) then taken = taken + 1 end end

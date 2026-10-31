@@ -1166,3 +1166,6 @@ L["+10 wisdom.  Three times in four it cancels the special attack of a demon lor
 L["Zombies hurt you half as much, and wraiths and vampires can't hurt you or drain your levels."] = true
 L["Strong and light, and the rust monster can't weaken it."] = true
 L["Your Elven Chain shrugs off the %s's rust!"] = true
+L["+10 wisdom.  It can turn aside the special attacks of the mightiest monsters.  Carrying it is enough."] = true
+L["Strong and light.  Dulling can take away its enchantment, but never leave it worse than +0."] = true
+L["Your Sword of Slashing is no duller for the %s's touch!"] = true
