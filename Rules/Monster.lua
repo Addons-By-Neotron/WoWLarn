@@ -356,6 +356,8 @@ function Monster.hitmonster(x, y)
          ns.Bestiary.special(monst, ns.Bestiary.DULLS)
          ivenarg[wield] = ivenarg[wield] - 1
          ns.Player.recalc()
+      elseif ivenarg[wield] > -10 then  -- (already at +0, and not a weapon that dulls any further)
+         if iven[wield] == K.OSWORDofSLASHING then ns.ItemInfo.notice(K.OSWORDofSLASHING, G.lastmonst) end
       elseif ivenarg[wield] <= -10 then
          Msg(L["Your weapon disintegrates!"])
          ns.Bestiary.special(monst, ns.Bestiary.DULLS)

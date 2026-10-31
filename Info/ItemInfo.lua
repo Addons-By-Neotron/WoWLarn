@@ -147,6 +147,7 @@ local POWER = {
    [K.OAMULET] = L["Your invisibility lasts longer."],
    [K.OLARNEYE] = L["Demon lords can't hide from you."],
    [K.OELVENCHAIN] = L["Strong and light, and the rust monster can't weaken it."],
+   [K.OSWORDofSLASHING] = L["Strong and light.  Dulling can take away its enchantment, but never leave it worse than +0."],
    [K.OWWAND] = L["You float over pits and trap doors."],
    -- the elixirs of the goblin alchemist: found out by drinking one
    [K.OSPEED] = L["You move much faster and take half the damage for a long while, but it saps your attributes for good."],
@@ -191,6 +192,7 @@ local SEEN = {
    [K.OAMULET] = L["Your Amulet of Invisibility makes the spell last much longer!"],
    [K.OLARNEYE] = L["The Eye of Larn lets you see the %s through the dark!"],
    [K.OELVENCHAIN] = L["Your Elven Chain shrugs off the %s's rust!"],
+   [K.OSWORDofSLASHING] = L["Your Sword of Slashing is no duller for the %s's touch!"],
    [K.OWWAND] = L["Your Wand of Wonder lifts you clear of the danger!"],
 }
 
@@ -233,7 +235,7 @@ function ItemInfo.lines(id, arg)
          lines[#lines + 1] = L["You don't know what it does yet."]
       end
    end
-   local effect = not POWER[id] and ns.Equipment.effect(id, arg)
+   local effect = (not POWER[id] or id == K.OSWORDofSLASHING) and ns.Equipment.effect(id, arg)  -- (the sword keeps its +5 dexterity line)
    if effect then
       lines[#lines + 1] = effect
       lines[#lines + 1] = L["Works as long as you carry it."]
