@@ -583,6 +583,16 @@ function V.Turn(display)
    return (own and own[display]) or V.TURN[display] or 0
 end
 
+-- How far a model is tipped forward (pitch) and sideways (roll), in radians.
+V.TILT = {}
+
+function V.Tilt(display)
+   local own = Own("tilts")
+   local tilt = (own and own[display]) or V.TILT[display]
+   if tilt then return tilt[1] or 0, tilt[2] or 0 end
+   return 0, 0
+end
+
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
 -- id and the rules stay those of the original monster.
 V.MONSTER_NAME = {

@@ -27,7 +27,7 @@ local K = ns.K
 local viewer = {}
 ns.objectViewer = viewer
 
-local ROWS, ROW_H, OBJECT_W, MODEL_W, FILE_W, HEIGHT = 22, 16, 190, 320, 620, 460
+local ROWS, ROW_H, OBJECT_W, MODEL_W, FILE_W, HEIGHT = 22, 16, 190, 320, 620, 490
 local KINDS = { "all", "chest", "door", "rock", "lava", "crystal", "weapon", "loot", "decor" }
 
 -- A list with a filter box and a scroll bar: rows (a pool of buttons), shown (the entries) and
@@ -119,6 +119,7 @@ function viewer:ShowFile(file, path)
    self.scale = ns.Visuals.Scale(display)
    self.model:SetModel(file)
    self.model:SetFacing(ns.Visuals.Turn(display))
+   self:ApplyTilt()
    ns.map3d.CameraScale(self.model, self.scale)
    self.title:SetText(format("%d  %s", file, path or ""))
 end
@@ -153,8 +154,15 @@ function viewer:Print()
    local ids = {}
    for id in pairs(ns.mod.db.global.objectModels) do ids[#ids + 1] = id end
    table.sort(ids)
+   local V = ns.Visuals
    for _, id in ipairs(ids) do
-      ns.mod:Print(format("   [%d] = %d,  -- %s", id, ns.mod.db.global.objectModels[id], ns.Tables.objectname[id] or "?"))
+      local file = ns.mod.db.global.objectModels[id]
+      ns.mod:Print(format("   [%d] = %d,  -- %s", id, file, ns.Tables.objectname[id] or "?"))
+      local pitch, roll = V.Tilt(-file)
+      local turn = V.Turn(-file)
+      if turn ~= 0 or pitch ~= 0 or roll ~= 0 then
+         ns.mod:Print(format("      turn %.2f  pitch %.2f  roll %.2f  scale %.2f  (display %d)", turn, pitch, roll, V.Scale(-file), -file))
+      end
    end
 end
 
@@ -173,6 +181,22 @@ function viewer:Turn(by)
    local turn = ns.Visuals.Turn(-self.file) + by
    ns.mod.db.global.turns[-self.file] = turn
    self.model:SetFacing(turn)
+end
+
+-- Pitch and roll, kept for the display -file next to the turn.
+function viewer:ApplyTilt()
+   local pitch, roll = ns.Visuals.Tilt(-self.file)
+   self.model:SetPitch(pitch)
+   self.model:SetRoll(roll)
+end
+
+function viewer:Tilt(slot, by)
+   if not self.file then return end
+   local pitch, roll = ns.Visuals.Tilt(-self.file)
+   local tilt = { pitch, roll }
+   tilt[slot] = tilt[slot] + by
+   ns.mod.db.global.tilts[-self.file] = tilt
+   self:ApplyTilt()
 end
 
 function viewer:Create()
@@ -200,8 +224,11 @@ function viewer:Create()
    x = x + OBJECT_W + 8
    self.model = CreateFrame("PlayerModel", nil, frame)
    self.model:SetPoint("TOPLEFT", x, -32)
-   self.model:SetSize(MODEL_W - 8, 300)
-   self.model:SetScript("OnModelLoaded", function(model) model:SetFacing(ns.Visuals.Turn(-(self.file or 0))) end)
+   self.model:SetSize(MODEL_W - 8, 280)
+   self.model:SetScript("OnModelLoaded", function(model)
+      model:SetFacing(ns.Visuals.Turn(-(self.file or 0)))
+      if self.file then self:ApplyTilt() end
+   end)
    self.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
    self.title:SetPoint("TOPLEFT", self.model, "BOTTOMLEFT", 0, -6)
    self.title:SetWidth(MODEL_W - 8)
@@ -221,6 +248,10 @@ function viewer:Create()
    Button("Bigger", 70, x + 74, 70, function() self:Resize(1 / 1.1) end)
    Button("< Turn", 70, x + 148, 70, function() self:Turn(-math.pi / 12) end)
    Button("Turn >", 70, x + 222, 70, function() self:Turn(math.pi / 12) end)
+   Button("< Pitch", 70, x, 100, function() self:Tilt(1, -math.pi / 12) end)
+   Button("Pitch >", 70, x + 74, 100, function() self:Tilt(1, math.pi / 12) end)
+   Button("< Roll", 70, x + 148, 100, function() self:Tilt(2, -math.pi / 12) end)
+   Button("Roll >", 70, x + 222, 100, function() self:Tilt(2, math.pi / 12) end)
    Button("Use for the object", 150, x, 40, function() self:Use() end)
    Button("Clear", 70, x + 154, 40, function() self:Clear() end)
    Button("Print the choices", 150, x, 10, function() self:Print() end)

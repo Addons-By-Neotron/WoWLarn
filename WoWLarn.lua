@@ -52,6 +52,7 @@ mod.defaults = {
       lowers = {},  -- [display id] = how far the model is moved down, set in the model viewer (Visuals.Lower)
       objectModels = {},  -- [object id] = the model file data id chosen in the object viewer (debug builds)
       textures = {},  -- [level .. slot] = file data id: set with the texture browser (debug builds), until the next reload
+      tilts = {},  -- [display id] = { pitch, roll } (radians) set in the object viewer (Visuals.Tilt)
       turns = {},  -- [display id] = the turn (radians) set in the model viewer (Visuals.Turn)
    },
 }
@@ -68,7 +69,7 @@ function mod:OnInitialize()
 
    -- What the model viewer set lasts until the next reload: the game starts from the tables in
    -- Data/Visuals.lua (see Visuals Own).
-   for _, key in ipairs({ "displays", "scales", "rooms", "lowers", "turns", "textures", "objectModels" }) do
+   for _, key in ipairs({ "displays", "scales", "rooms", "lowers", "turns", "textures", "objectModels", "tilts" }) do
       wipe(self.db.global[key])
    end
 
