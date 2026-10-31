@@ -323,6 +323,19 @@ check(ns.Monster.spattack(8, 31, 8) == true and G.mon[31][8] == 0 and G.c[K.GOLD
 -- the nymph steals an item, keeps it through a save, and drops it when she dies
 Fresh(3)
 check(G.potionknown[K.PINSTHEAL] == 1 and G.potionknown[K.PCUREDIANTH] == 0 and G.potionknown[G.ivenarg[2]] == 1, "initial potion knowledge")
+do  -- a drop never ends up on the other side of a wall
+   for x = 6, 14 do for y = 5, 11 do G.item[x][y], G.mon[x][y] = 0, 0 end end
+   for x = 9, 11 do for y = 7, 9 do G.item[x][y] = K.OWALL end end
+   G.item[10][8] = 0  -- a cell closed in by walls, floor on the far side
+   for _ = 1, 30 do ns.Item.createItem(10, 8, K.OGOLDPILE, 5); ns.Item.createItem(10, 8, K.OPOTION, 1) end
+   local strays = 0
+   for x = 6, 14 do for y = 5, 11 do if G.item[x][y] ~= 0 and G.item[x][y] ~= K.OWALL then strays = strays + 1 end end end
+   check(strays == 0, "nothing dropped out of a closed cell, got " .. strays)
+   G.item[11][8] = 0  -- a gap: the drops stay on the way out
+   for _ = 1, 10 do ns.Item.createItem(10, 8, K.OPOTION, 1) end
+   check(G.item[11][8] == K.OPOTION, "a drop goes through the gap")
+   for x = 6, 14 do for y = 5, 11 do G.item[x][y] = 0 end end
+end
 for i = 1, K.IVENSIZE do G.iven[i], G.ivenarg[i] = 0, 0 end
 G.c[K.WIELD], G.c[K.WEAR], G.c[K.SHIELD] = 0, 0, 0
 G.iven[5], G.ivenarg[5] = K.OPOTION, 2; Put(K.NYMPH, 31, 8)
@@ -893,7 +906,11 @@ do
       { "p", "m", "ESC", "i" }, { "p", "m", "9", "9", "9", "9", "ENTER", "i" }, { "d" }, { "i" } }
    for i = 1, 160 do Visit(K.OALTAR, 0, altar[i % #altar + 1]) end
    local thrones = { { "p" }, { "s" }, { "i" } }
+   -- (a teleport may leave you stuck in a rock, 2 times in 151: that is the game, but ends this test)
+   local died = ns.Player.died
+   ns.Player.died = function(cause, ...) if cause ~= 264 then return died(cause, ...) end end
    for i = 1, 90 do Visit(i % 2 == 0 and K.OTHRONE or K.OTHRONE2, 0, thrones[i % 3 + 1]) end
+   ns.Player.died = died
    for i = 1, 30 do Visit(K.ODEADTHRONE, 0, i % 2 == 0 and { "s" } or { "i" }) end
    local fountain = { { "d" }, { "w" }, { "i" } }
    for i = 1, 60 do Visit(K.OFOUNTAIN, 0, fountain[i % 3 + 1]) end

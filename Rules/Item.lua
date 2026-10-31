@@ -73,16 +73,54 @@ end
 
 local cgood = Item.cgood
 
--- C: createitem(). Places an item on a free tile next to (x, y); gold is added to a pile.
-function Item.createItem(x, y, it, arg)
-   if it >= K.MAXOBJ then return end  -- no such object
+-- The tiles to try for something that drops at (x0, y0): the eight around it, starting at a
+-- random one, then those further away that can be walked to from it.
+-- FIX: not in the C, which steps on from each tile it tried and so could end up behind a wall.
+local SPOT_REACH = 6
 
+local function Spots(x0, y0)
+   local spots, seen = {}, { [x0 * 100 + y0] = 0 }
    local k = rnd(8)
    for _ = 1, 8 do
       if k > 8 then k = 1 end  -- wraparound the diroff arrays
-      x = x + DIROFFX[k]
-      y = y + DIROFFY[k]
+      local x, y = x0 + DIROFFX[k], y0 + DIROFFY[k]
       k = k + 1
+      if x >= 1 and x <= MAXX and y >= 1 and y <= MAXY then
+         seen[x * 100 + y] = 1
+         spots[#spots + 1] = { x, y }
+      end
+   end
+   -- (walls and shut doors stop the search; the eight around may be walls themselves)
+   local queue, head = {}, 1
+   for _, spot in ipairs(spots) do
+      if item[spot[1]][spot[2]] ~= K.OWALL and item[spot[1]][spot[2]] ~= K.OCLOSEDDOOR then queue[#queue + 1] = spot end
+   end
+   while queue[head] do
+      local x, y = queue[head][1], queue[head][2]
+      head = head + 1
+      local depth = seen[x * 100 + y]
+      if depth < SPOT_REACH then
+         for dir = 1, 8 do
+            local nx, ny = x + DIROFFX[dir], y + DIROFFY[dir]
+            if nx >= 1 and nx <= MAXX and ny >= 1 and ny <= MAXY and not seen[nx * 100 + ny]
+               and item[nx][ny] ~= K.OWALL and item[nx][ny] ~= K.OCLOSEDDOOR then
+               seen[nx * 100 + ny] = depth + 1
+               local spot = { nx, ny }
+               spots[#spots + 1] = spot
+               queue[#queue + 1] = spot
+            end
+         end
+      end
+   end
+   return spots
+end
+
+-- C: createitem(). Places an item on a free tile next to (x, y); gold is added to a pile.
+function Item.createItem(x0, y0, it, arg)
+   if it >= K.MAXOBJ then return end  -- no such object
+
+   for _, spot in ipairs(Spots(x0, y0)) do
+      local x, y = spot[1], spot[2]
       if it ~= K.OMAXGOLD and it ~= K.OGOLDPILE then
          if cgood(x, y, true, false) then
             item[x][y] = it
