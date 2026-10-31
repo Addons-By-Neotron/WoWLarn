@@ -145,16 +145,20 @@ function Town.dndStore()
    local store, ui = ns.store, ns.ui
    store:Open(title, L["Welcome to the Ularn Thrift Shoppe.  We stock many items explorers find useful in their adventures.  Feel free to browse to your heart's content.  Also be advised that if you break 'em, you pay for 'em."], 2)
    local page = 0
+   local pages = math.ceil(K.DNDSIZE / K.IVENSIZE)
    while true do
       store:SetRows(StockRows(page))
+      store:SetPages(page + 1, pages)
       ShowGold()
       ns.prompt:Set(L["Enter your transaction [space for more, escape to leave]"])
       local key = ui:GetKey()
       if key == ESC then
          break
-      elseif key == " " then
-         page = page + 1
-         if page * K.IVENSIZE >= K.DNDSIZE then page = 0 end
+      elseif key == " " or key == ">" then
+         page = (page + 1) % pages
+         store:SetNote("")
+      elseif key == "<" then
+         page = (page - 1) % pages
          store:SetNote("")
       elseif #key == 1 and key >= "a" and key <= "z" then
          Buy(page * K.IVENSIZE + key:byte() - 96)

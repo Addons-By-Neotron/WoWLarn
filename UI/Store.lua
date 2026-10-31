@@ -52,6 +52,35 @@ function store:Create(parent)
    self.intro:SetJustifyH("LEFT")
    self.intro:SetJustifyV("TOP")
 
+   -- leave the building (the same as Esc) and page through a long list ("<" and ">" are the
+   -- keys the game code listens for)
+   local function Key(key)
+      ns.main:SetFocus(true)
+      ns.ui:InjectKey(key)
+   end
+   local leave = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+   leave:SetSize(70, 20)
+   leave:SetPoint("TOPRIGHT", -6, -4)
+   leave:SetText(L["Leave"])
+   leave:SetScript("OnClick", function() Key(ns.ESC) end)
+   self.pager = CreateFrame("Frame", nil, frame)
+   self.pager:SetSize(120, 20)
+   self.pager:SetPoint("RIGHT", leave, "LEFT", -8, 0)
+   self.pager:Hide()
+   local previous = CreateFrame("Button", nil, self.pager, "UIPanelButtonTemplate")
+   previous:SetSize(24, 20)
+   previous:SetPoint("LEFT")
+   previous:SetText("<")
+   previous:SetScript("OnClick", function() Key("<") end)
+   local following = CreateFrame("Button", nil, self.pager, "UIPanelButtonTemplate")
+   following:SetSize(24, 20)
+   following:SetPoint("RIGHT")
+   following:SetText(">")
+   following:SetScript("OnClick", function() Key(">") end)
+   self.pageText = self.pager:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+   self.pageText:SetPoint("LEFT", previous, "RIGHT")
+   self.pageText:SetPoint("RIGHT", following, "LEFT")
+
    self.status = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
    self.status:SetPoint("BOTTOMLEFT", 8, 26)
    self.status:SetPoint("BOTTOMRIGHT", -8, 26)
@@ -117,8 +146,16 @@ function store:Open(title, intro, columns)
    self.intro:SetText(intro or "")
    self.status:SetText("")
    self.note:SetText("")
+   self:SetPages()
    self:SetRows({})
    self.frame:Show()
+end
+
+-- Shows the page buttons ("Page 2 / 3"), or hides them when there is only one page.
+function store:SetPages(page, pages)
+   if not self.frame then return end
+   self.pager:SetShown(pages ~= nil and pages > 1)
+   if pages then self.pageText:SetText(format(L["Page %d / %d"], page, pages)) end
 end
 
 -- rows: { key = "a", text = "...", price = "...", icon = object id, arg = its argument (the
