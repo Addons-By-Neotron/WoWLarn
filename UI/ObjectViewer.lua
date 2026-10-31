@@ -27,7 +27,7 @@ local K = ns.K
 local viewer = {}
 ns.objectViewer = viewer
 
-local ROWS, ROW_H, OBJECT_W, MODEL_W, FILE_W, HEIGHT = 22, 16, 190, 320, 300, 460
+local ROWS, ROW_H, OBJECT_W, MODEL_W, FILE_W, HEIGHT = 22, 16, 190, 320, 620, 460
 local KINDS = { "all", "chest", "door", "rock", "lava", "crystal", "weapon", "loot", "decor" }
 
 -- A list with a filter box and a scroll bar: rows (a pool of buttons), shown (the entries) and
@@ -56,6 +56,7 @@ local function List(frame, name, x, width, filter, onClick, text)
       button.text:SetPoint("LEFT", 2, 0)
       button.text:SetJustifyH("LEFT")
       button.text:SetWidth(width - 26)
+      button.text:SetWordWrap(false)
       button:SetScript("OnClick", function(b) if b.entry then onClick(b.entry) end end)
       list.rows[row] = button
    end
