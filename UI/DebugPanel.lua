@@ -61,7 +61,7 @@ local function Entries()
                if kind and kind ~= "" then entries[#entries + 1] = { id = id, arg = arg, text = name .. " of " .. kind } end
             end
          else
-            entries[#entries + 1] = { id = id, text = name }
+            entries[#entries + 1] = { id = id, text = ns.Debug.objectLabel(id, name) }
          end
       end
    end

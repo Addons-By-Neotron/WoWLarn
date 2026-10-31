@@ -93,6 +93,15 @@ function Debug.createItem()
 end
 
 -- Puts an object next to the player.
+-- The four gold ids are one pile at different scales (the argument is multiplied).
+local GOLD_SCALE = { [K.OGOLDPILE] = 1, [K.ODGOLD] = 10, [K.OMAXGOLD] = 100, [K.OKGOLD] = 1000 }
+
+function Debug.objectLabel(id, name)
+   local scale = GOLD_SCALE[id]
+   if scale then return ("%s (x%d)"):format(name, scale) end
+   return name
+end
+
 function Debug.makeItem(id, arg)
    ns.Item.createItem(G.playerx, G.playery, id, arg)
    Log("created %s (%d, %d)", ns.Tables.objectname[id] or "?", id, arg)

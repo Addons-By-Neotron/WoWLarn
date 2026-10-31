@@ -82,7 +82,7 @@ function viewer:Objects()
    local objects = {}
    for id = 1, K.MAXOBJ - 1 do
       local name = T.objectname[id]
-      if name and name ~= "" then objects[#objects + 1] = { id = id, text = name } end
+      if name and name ~= "" then objects[#objects + 1] = { id = id, text = ns.Debug.objectLabel(id, name) } end
    end
    return objects
 end
