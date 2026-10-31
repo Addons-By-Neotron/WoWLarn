@@ -82,7 +82,19 @@ function ui:IsReady()
    return self.wait == "key" and self.atCommand == true
 end
 
+-- How long movement keys are ignored after a monster you can't see has hit you, so a held key
+-- (or its repeat) doesn't carry you on while you still don't know what hit you.
+local UNSEEN_PAUSE = 0.5
+
+function ui:Unseen()
+   self.unseenUntil = GetTime() + UNSEEN_PAUSE
+end
+
 function ui:InjectKey(key)
+   if self.atCommand and self.unseenUntil and GetTime() < self.unseenUntil
+      and (DIRECTION[key] or DIRECTION[key:lower()]) then
+      return
+   end
    if self.wait == "key" then
       self:Resume(key)
    elseif not self.co then

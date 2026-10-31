@@ -57,7 +57,7 @@ local function strip(s) return (s:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
 local function lines() local out = {} for i, l in ipairs(LOG) do out[i] = strip(l) end return out end
 local function last() local l = lines() return l[#l] end
 local function check(cond, msg) if not cond then print("FAIL: " .. msg); os.exit(1) end end
-local function keys(s) for ch in s:gmatch(".") do ui:InjectKey(ch) end end
+local function keys(s) ui.unseenUntil = nil; for ch in s:gmatch(".") do ui:InjectKey(ch) end end  -- (the clock stands still here)
 
 ---------------------------------------------------------------- data
 check(#ns.MonsterData == 65, "65 monsters, got " .. #ns.MonsterData)
@@ -508,6 +508,9 @@ for x = 1, K.MAXX do for y = 1, K.MAXY do G.item[x][y] = 0 end end  -- clear the
 G.playerx, G.playery = 10, 8
 local t0 = G.gtime
 ns.mod.db.profile.actionBar = false  -- (the digits are the repeat count then)
+ui:Unseen()  -- (an unseen monster hit: movement keys are ignored for a moment)
+ui:InjectKey("l"); check(G.playerx == 10, "no step right after an unseen hit")
+ui.unseenUntil = nil
 keys("3l"); check(G.playerx == 13 and G.playery == 8, "repeat count: x=" .. G.playerx)
 check(G.gtime == t0 + 3, "three turns passed, got " .. (G.gtime - t0))
 ns.mod.db.profile.actionBar = nil

@@ -644,6 +644,11 @@ function Monster.hitplayer(x, y)
    local bias = c[K.HARDGAME] + 1
    G.hitflag, G.hit2flag, G.hit3flag = true, true, true
    ns.ui.repcount = 0
+   -- (what Display.visibleMonster hides)
+   if (mster == K.INVISIBLESTALKER and c[K.SEEINVISIBLE] == 0)
+      or (mster >= K.DEMONLORD and mster <= K.LUCIFER and c[K.EYEOFLARN] == 0) then
+      ns.ui:Unseen()
+   end
    IfBlind(x, y)
    local name = G.lastmonst
 
