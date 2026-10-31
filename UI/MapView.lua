@@ -201,8 +201,8 @@ local function DrawTile(cell, x, y, ground)
       HideCell(cell)
       return
    end
-   local id, uv = V.Texture(G.level, "floor", x, y)
-   FillTexture(cell.bg, id, uv, V.Tint(G.level), ground)
+   -- (a plain floor in the flat view: the texture hides the lines between the tiles and what lies on them)
+   FillTexture(cell.bg, nil, nil, V.Tint(G.level), ground)
    cell.actor:Hide()
    if G.know[x][y] == 0 and not (x == G.playerx and y == G.playery) then  -- (not in sight)
       HideCell(cell)
