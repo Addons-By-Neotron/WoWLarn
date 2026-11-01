@@ -89,15 +89,36 @@ local function NewLayer(view, level)
    return frame
 end
 
+-- The models are pooled too, but a creature gets the frame that already shows its look when
+-- there is one, wherever it is in the pool: a model that is given another look is loaded again
+-- (it blinks), and one that is hidden and shown again starts over.  A frame that is not taken in
+-- a pass (pool.pass is the number of the pass) is hidden at its end.
+-- The layers of the rows of the view share one pool (layer.shared): the creatures change rows as
+-- the player moves, and a frame that keeps its parent, with only its level changed, keeps its
+-- model.
+local function BeginModels(layer)
+   local pool = layer.models
+   pool.pass = (type(pool.pass) == "number" and pool.pass or 0) + 1
+end
+
+local function EndModels(layer)
+   local pool = layer.models
+   for _, frame in ipairs(pool) do
+      if frame.modelDraw ~= pool.pass then frame:Hide() end
+   end
+end
+map3d.BeginModels, map3d.EndModels = BeginModels, EndModels
+
 local function Begin(layer)
    layer.usedQuads, layer.usedIcons, layer.usedGlyphs, layer.usedModels = 0, 0, 0, 0
+   if not layer.shared then BeginModels(layer) end
 end
 
 local function Finish(layer)
    for index = layer.usedQuads + 1, #layer.quads do layer.quads[index]:Hide() end
    for index = layer.usedIcons + 1, #layer.icons do layer.icons[index]:Hide() end
    for index = layer.usedGlyphs + 1, #layer.glyphs do layer.glyphs[index]:Hide() end
-   for index = layer.usedModels + 1, #layer.models do layer.models[index]:Hide() end
+   if not layer.shared then EndModels(layer) end
 end
 
 -- A four-cornered piece of the view, corners in order around it (top left, top right, bottom
@@ -182,15 +203,20 @@ end
 -- frames never sets another look on it, which would restart its animation.
 local function Model(layer, look, x, y, width, facing, anim, owner)
    local frame = owner and owner.frame
-   if not frame then
-      if not owner then
-         layer.usedModels = layer.usedModels + 1
-         frame = layer.models[layer.usedModels]
+   if not frame and not owner then
+      local spare
+      local pool = layer.models
+      for _, candidate in ipairs(pool) do
+         if candidate.modelDraw ~= pool.pass then
+            if candidate.look == look then frame = candidate break end
+            spare = spare or candidate
+         end
       end
+      frame = frame or spare
    end
    if not frame then
       -- (an owned frame hangs on the view: changing its parent, or hiding it, restarts it)
-      frame = CreateFrame("Frame", nil, owner and layer:GetParent() or layer)
+      frame = CreateFrame("Frame", nil, (owner or layer.shared) and layer:GetParent() or layer)
       frame.model = CreateFrame("PlayerModel", nil, frame)
       frame.model:SetAllPoints()
       frame.model:SetScript("OnModelLoaded", function(self)
@@ -206,7 +232,15 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
       if owner then
          owner.frame = frame
       else
-         layer.models[layer.usedModels] = frame
+         layer.models[#layer.models + 1] = frame
+      end
+   end
+   if not owner then frame.modelDraw = layer.models.pass end
+   if layer.shared and not owner then  -- (above the row it stands in)
+      local level = layer:GetFrameLevel() + 1
+      if frame.level ~= level then
+         frame.level = level
+         frame:SetFrameLevel(level)
       end
    end
    if owner then  -- (follows its tile from row to row)
@@ -380,6 +414,7 @@ function map3d:Create(view)
       end
    end)
    self.layers = {}
+   self.sharedLayer = { models = {} }  -- (the pool of the models of all the rows)
    -- the effects of spells go above everything, models too (a model is a frame of its own, and
    -- what is drawn in a layer is under it)
    self.effects = NewLayer(view, view:GetFrameLevel() + 1000)
@@ -396,6 +431,8 @@ function map3d:EnsureLayers(rows)
          [WALL] = NewLayer(view, base + (row - 1) * 3 + WALL),
          [ACTOR] = NewLayer(view, base + (row - 1) * 3 + ACTOR),
       }
+      local actor = self.layers[row][ACTOR]
+      actor.models, actor.shared = self.sharedLayer.models, true
    end
 end
 
@@ -790,6 +827,7 @@ function map3d:Draw()
    self:SetReach(ns.mod.db.profile.zoom3d or 1)
    self:StackRows(roundY)
 
+   BeginModels(self.sharedLayer)
    for row = 1, #self.layers do
       for _, layer in pairs(self.layers[row]) do
          layer:SetShown(row <= ROWS)
@@ -859,4 +897,5 @@ function map3d:Draw()
    for row = 1, ROWS do
       for _, layer in pairs(self.layers[row]) do Finish(layer) end
    end
+   EndModels(self.sharedLayer)
 end

@@ -347,7 +347,7 @@ function map:Draw()
    end
    local frame = self.modelLayer
    frame:Show()
-   frame.usedModels = 0
+   ns.map3d.BeginModels(frame)
    for row = 1, rows do
       for col = 1, cols do
          local x, y = camX + col - 1, camY + row - 1
@@ -394,5 +394,5 @@ function map:Draw()
          cell.glyph:Hide()
       end
    end
-   for index = frame.usedModels + 1, #frame.models do frame.models[index]:Hide() end
+   ns.map3d.EndModels(frame)
 end
