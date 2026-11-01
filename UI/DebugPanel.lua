@@ -184,7 +184,6 @@ function panel:Create()
    Button("Dump the state", ns.Debug.dump)
    Button("New game (gives this one up)", ns.Debug.newGame)
    Button("Texture browser", function() ns.textureBrowser:Toggle() end)
-   Button("Place the player model", function() ns.formTuner:Toggle() end)
    Button("Flat / 2.5D view", function() ns.mod:ToggleView() end)
    frame:SetSize(WIDTH, 34 + #buttons * (BUTTON_H + GAP))
 end

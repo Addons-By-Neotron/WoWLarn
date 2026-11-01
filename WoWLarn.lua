@@ -51,7 +51,6 @@ mod.defaults = {
       rooms = {},  -- [display id] = the room set in the model viewer (Visuals.Room)
       lowers = {},  -- [display id] = how far the model is moved down, set in the model viewer (Visuals.Lower)
       textures = {},  -- [level .. slot] = file data id: set with the texture browser (debug builds), until the next reload
-      forms = {},  -- [model file id] = { scale, shift, lower, room } of the player model, set with /larn form (Visuals.Form)
       turns = {},  -- [display id] = the turn (radians) set in the model viewer (Visuals.Turn)
    },
 }
@@ -68,7 +67,7 @@ function mod:OnInitialize()
 
    -- What the model viewer set lasts until the next reload: the game starts from the tables in
    -- Data/Visuals.lua (see Visuals Own).
-   for _, key in ipairs({ "displays", "scales", "rooms", "lowers", "turns", "textures", "forms" }) do
+   for _, key in ipairs({ "displays", "scales", "rooms", "lowers", "turns", "textures" }) do
       wipe(self.db.global[key])
    end
 
@@ -166,7 +165,6 @@ function mod:PrintHelp()
    self:info("/larn new  - give this game up and start another")
    self:info("/larn models  - the model viewer (choose the look of the monsters)")
    self:info("/larn zoo  - all the monsters in one place")
-   self:info("/larn form  - place the model of the player (size and place of a form)")
    self:info("/larn mapdebug  - what the map is drawing")
    self:info("/larn tex floor|wall|lava <id|+|->  - try textures for this level")
 --@end-debug@
@@ -196,10 +194,6 @@ function mod:ChatCommand(input)
       ns.modelViewer:Toggle()
    elseif cmd == "zoo" then
       ns.zoo:Toggle()
---@debug@
-   elseif cmd == "form" then
-      ns.formTuner:Toggle()
---@end-debug@
    elseif cmd == "reset" then
       ns.main:ResetPosition()
    elseif cmd == "help" then

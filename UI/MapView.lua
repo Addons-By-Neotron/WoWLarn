@@ -380,6 +380,10 @@ function map:Draw()
          cell.glyph:SetTextColor(unpack(V.PLAYER_COLOR))
          cell.glyph:Show()
          cell.icon:Hide()
+      elseif V.FormIcon() then  -- shapeshifted: the icon of the form
+         cell.actor:SetTexture(V.FormIcon())
+         cell.actor:Show()
+         cell.glyph:Hide()
       elseif ns.mod.db.profile.models ~= false then  -- the model of the player
          local facing, anim = ns.map3d.PlayerModel()
          cell.actor:Hide()

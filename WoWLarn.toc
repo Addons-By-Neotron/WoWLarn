@@ -70,5 +70,4 @@ Data\TextureList.lua
 Core\Debug.lua
 UI\DebugPanel.lua
 UI\TextureBrowser.lua
-UI\FormTuner.lua
 #@end-debug@
