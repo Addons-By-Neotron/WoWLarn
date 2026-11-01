@@ -37,7 +37,7 @@ e  eat a cookie        w  wield a weapon       W  wear armor
 T  take off armor      d  drop an item         i  look in your pack
 D  discoveries         ^  find traps           C  close a door
 Z  teleport            g  your pack weight     P  your tax status
-t  go to a place you found
+t  go to a place you found     B  the bestiary (button)
 v  version             S  save and close       Q  quit the game
 ?  this help
 
@@ -53,7 +53,9 @@ When dropping gold, if you type '*' as the amount, all your gold gets dropped.
 In general, typing '*' means all of what you are interested in.  This is true
 when visiting the bank, or when contributing at altars.
 
-In the stores, the trading post, the school and the home, Esc gets you out.
+In the stores, the trading post, the school and the home, Esc gets you out, or
+click Leave.  The Thrift Shoppe has several pages: space or > turns to the next,
+< to the previous.
 
 When casting a spell, type 'D' as the first letter to see the spells you know,
 then type the three letter code of the spell, or click the spell.  Typing 'D'
@@ -61,7 +63,30 @@ at any other time shows all the spells you know, and the potions and scrolls
 you have identified so far.
 
 What is on a tile (stairs, altars, doors, items) comes up when you step on it.
-Press ',' to bring it up again.]=],
+Press ',' to bring it up again.
+
+Going to a place: t lists the stairs, elevators, shops, altars, fountains and so
+on that you have found, by name, with the steps to each.  The walk goes round
+walls, traps and objects, through doors (you get the usual question), and stops
+when a monster is near, when you are hit, or when you step on an object.  It
+always says why it stopped.
+
+The action bar at the bottom of the map holds ten slots for spells, potions
+and scrolls, on the keys 1 to 0.  Right-click a slot to choose what it holds,
+click it (or press its key) to use it.
+
+The bestiary (the B button) lists the monsters you have met, and what you have
+seen them do.  Items show what you have learned about them when you hover over
+them; a power is only described once you have seen it work.
+
+The classes are the Ularn ones, with WoW names.  The Glass Cannon starts with
+1 hit point and the Lance of Death: it kills almost anything, until something
+touches it.
+
+A monster that is hit by an unseen attacker (an invisible stalker, a demon
+lord without the Eye of Larn) stops your running for a moment.  Settings has
+an optional elevator limit, to keep an express elevator from taking you many
+levels at once.]=],
    H.."The high scores"..R..[=[
 
 There are two lists, one for winners and one for characters that died, shared
