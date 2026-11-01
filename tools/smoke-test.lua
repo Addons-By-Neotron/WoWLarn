@@ -1650,6 +1650,18 @@ G.god, G.wizard = true, true
 ns.Debug.newGame()
 ui:InjectKey("ENTER")  -- (the settings)
 check(ui.wait == "key" and ns.picker.frame.shown and not G.god and not G.wizard, "a new game starts from the class picker, without god mode")
+-- leaving the 2.5D view (the town is flat) hides its models too
+do
+   local hidden = 0
+   local pool = ns.map3d.sharedLayer and ns.map3d.sharedLayer.models
+   if pool then
+      pool[#pool + 1] = { Hide = function() hidden = hidden + 1 end }
+      ns.map3d:Reset()
+      check(hidden >= 1, "the models of the 2.5D view are hidden when it is left")
+      pool[#pool] = nil
+   end
+end
+
 -- a key pressed as the game ends does not start the next one
 do
    local oldCo, oldWait = ui.co, ui.wait

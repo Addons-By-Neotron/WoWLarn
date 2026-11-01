@@ -475,7 +475,20 @@ function map3d:Hide()
       for _, layer in pairs(layers) do layer:Hide() end
    end
    if self.effects then self.effects:Hide() end
+   -- (the models hang on the view, not on the layers: the town is drawn flat, with its own models)
+   if self.sharedLayer then
+      for _, frame in ipairs(self.sharedLayer.models) do frame:Hide() end
+   end
+   for _, ghost in pairs(self.ghosts) do
+      if ghost.frame then ghost.frame:Hide() end
+   end
    self.shown = false
+end
+
+-- Forgets what the models were doing, for a new game.
+function map3d:Reset()
+   self.anims, self.ghosts, self.moves, self.playerAnim = {}, {}, {}, nil
+   self:Hide()
 end
 
 local function IsWall(x, y)

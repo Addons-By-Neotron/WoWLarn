@@ -60,6 +60,7 @@ end
 function ui:NewGame(startKey)
    self.startKey, self.startTime = startKey, GetTime()
    ns.scoreboard:Hide()
+   ns.map3d:Reset()
    self.co = coroutine.create(ns.Game.Run)
    self.wait = nil
    ns.prompt:Clear()
