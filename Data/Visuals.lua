@@ -407,6 +407,16 @@ local function Own(name)
    return ns.mod.db.global[name]
 end
 
+-- How the models of the player in a form (a druid's, a mount) are placed, by model file id: scale
+-- (above 1: smaller), shift (sideways, in tile widths), lower and room.  Found with /larn form (debug).
+V.FORM = {
+}
+
+function V.Form(file)
+   local own = Own("forms")
+   return (own and own[file]) or V.FORM[file]
+end
+
 V.LOWER = {
    [1206] = 0.12,  -- snake
 }

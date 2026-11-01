@@ -194,6 +194,13 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
          if MODEL_ROOM ~= 1 and self.SetModelScale then self:SetModelScale(1 / MODEL_ROOM) end  -- (and this)
          CameraScale(self, frame.scale or 1)  -- (and this)
          self.settleUntil = GetTime() + SETTLE  -- (the client sets up the camera of a model after it has loaded)
+         -- which model the player is now (a form of a druid, a mount): it may need its own place
+         local file = frame.look == "player" and self.GetModelFileID and self:GetModelFileID()
+         if file and file ~= frame.fileID then
+            frame.fileID = file
+            map3d.playerFile = file
+            C_Timer.After(0, function() if map3d.shown then ns.map:Draw() end end)
+         end
       end)
       frame.model:SetScript("OnUpdate", function(self)
          if self.settleUntil and self.settleUntil > GetTime() then CameraScale(self, frame.scale or 1) end
@@ -239,14 +246,20 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    local k = MODEL_ROOM
    local room = look ~= "player" and V.Room(look) or PLAYER_ROOM
    local own = look == "player" and V.PlayerScale() or 1  -- (a short race: the model is smaller, so the feet are brought down again)
-   y = y + (look ~= "player" and V.Lower(look) or (1 - 1 / own) / 2 * MODEL_ASPECT * 0.9) * width
+   local form = look == "player" and frame.fileID and V.Form(frame.fileID)  -- (a form that needs its own size and place)
+   if form then
+      room = form.room or room
+      own = own * (form.scale or 1)
+      x = x + (form.shift or 0) * width
+   end
+   y = y + (look ~= "player" and V.Lower(look) or (1 - 1 / own) / 2 * MODEL_ASPECT * 0.9 + (form and form.lower or 0)) * width
    frame:ClearAllPoints()
    frame:SetPoint("CENTER", layer, "TOPLEFT", x, -(y - width * MODEL_ASPECT / 2))
    frame:SetSize(width * k * room, width * k * room * MODEL_ASPECT)
    -- (every time: the client resets the scale when it reloads or restarts the model)
    if k ~= 1 and frame.model.SetModelScale then frame.model:SetModelScale(1 / k) end
    -- (after the size: the client sets up the camera again when a frame is resized)
-   local scale = look ~= "player" and V.Scale(look) * V.Room(look) or own * PLAYER_ROOM  -- (a larger frame, the camera further back)
+   local scale = look ~= "player" and V.Scale(look) * V.Room(look) or own * room  -- (a larger frame, the camera further back)
    if frame.scale ~= scale then
       frame.scale = scale
       CameraScale(frame.model, scale)
