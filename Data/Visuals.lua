@@ -175,7 +175,7 @@ end
 -- it has its own transparency, and is not cut at the edges like an icon), else its icon.
 function V.ObjectPicture(id, arg)
    local visual = V.object[id]
-   if visual and visual.image then return IMAGES .. visual.image, true end
+   if visual and visual.image then return IMAGES .. visual.image .. ".png", true end
    return V.ObjectIcon(id, arg), false
 end
 

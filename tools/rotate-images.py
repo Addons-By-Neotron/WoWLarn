@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Rotates the weapon pictures (webp with transparency) 45 degrees clockwise and saves them as
-transparent 256x256 PNG and TGA files in Media/Weapons.  Usage: rotate-images.py <folder> [angle]"""
+transparent 256x256 PNG files in Media/Weapons.  Usage: rotate-images.py <folder> [angle]"""
 import sys
 from pathlib import Path
 from PIL import Image
@@ -20,7 +20,6 @@ def convert(source, target, angle):
     canvas.paste(image, ((side - image.width) // 2, (side - image.height) // 2))
     canvas = canvas.resize((SIZE, SIZE), Image.LANCZOS)
     canvas.save(target.with_suffix(".png"))
-    canvas.save(target.with_suffix(".tga"))
 
 if __name__ == "__main__":
     folder = Path(sys.argv[1]).expanduser()
