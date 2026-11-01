@@ -29,7 +29,8 @@ local _, ns = ...
 local options = {}
 ns.gameOptions = options
 
-local WIDTH, ROW_H = 520, 62
+local WIDTH, ROW_H = 560, 76
+local CONTROL_W = 190  -- (what is kept free at the right for the slider or the check box)
 
 -- The settings: key in the profile, what it is, how the value reads.
 local SETTINGS = {
@@ -70,14 +71,18 @@ function options:Create(parent)
       label:SetPoint("TOPLEFT", 16, y)
       local desc = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
       desc:SetPoint("TOPLEFT", label, "BOTTOMLEFT", 0, -3)
-      desc:SetWidth(WIDTH - 32)
+      desc:SetWidth(WIDTH - 32 - CONTROL_W)
       desc:SetJustifyH("LEFT")
       desc:SetText(setting.desc)
       local widget = { setting = setting, label = label }
       if setting.slider then
          local slider = CreateFrame("Slider", nil, frame, "OptionsSliderTemplate")
-         slider:SetSize(160, 16)
-         slider:SetPoint("TOPRIGHT", -16, y - 2)
+         slider:SetSize(CONTROL_W - 30, 16)
+         slider:SetPoint("TOPRIGHT", -26, y - 6)
+         for _, name in ipairs({ "Low", "High", "Text" }) do  -- (the template's own labels)
+            local label = slider[name]
+            if type(label) == "table" then label:Hide() end
+         end
          slider:SetMinMaxValues(setting.min, setting.max)
          slider:SetObeyStepOnDrag(true)
          slider:SetValueStep(1)
@@ -90,7 +95,7 @@ function options:Create(parent)
       else
          local check = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
          check:SetSize(24, 24)
-         check:SetPoint("TOPRIGHT", -16, y + 4)
+         check:SetPoint("TOPRIGHT", -26 - (CONTROL_W - 54) / 2, y - 2)
          check:SetScript("OnClick", function(button)
             Profile()[setting.key] = button:GetChecked() and true or false
             self:Update()
