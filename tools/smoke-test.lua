@@ -28,6 +28,7 @@ UIParent = newframe("ui")
 UISpecialFrames = {}
 BackdropTemplateMixin = true
 tinsert = table.insert
+wipe = function(t) for k in pairs(t) do t[k] = nil end return t end
 format = string.format
 unpack = unpack or table.unpack
 GameTooltip, GameTooltip_Hide, ChatFontNormal = proxy, function() end, {}
@@ -1262,6 +1263,11 @@ local blocked = ns.Spells.coneTiles(1, 0, 5)
 check(not Has(blocked, 32, 8) and not Has(blocked, 34, 8), "a wall stops the cone behind it")
 local diagonal = ns.Spells.coneTiles(1, 1, 5)
 check(Has(diagonal, 33, 11) and Has(diagonal, 34, 10) and not Has(diagonal, 28, 8), "a cone can go diagonally")
+
+-- a new game starts with an empty action bar
+ns.mod.db.char.actionbar = { [3] = { spell = "bal" } }
+Fresh(3)
+check(next(ns.mod.db.char.actionbar) == nil, "the action bar is empty in a new game")
 
 -- a mimic is drawn as another monster, and as the oozeling only when it dies
 Fresh(3)

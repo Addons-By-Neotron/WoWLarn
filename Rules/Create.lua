@@ -66,6 +66,8 @@ local function ApplyRace()
 end
 
 function Create.makePlayer(class)
+   local bar = ns.mod.db.char.actionbar  -- (the slots of an earlier game, wizard tests too, are not for this one)
+   if bar then wipe(bar) end
    c[K.HARDGAME] = ns.mod.db.profile.difficulty or 0  -- (the setting at the start of the game)
    c[K.LEVEL] = 1
    c[K.REGENCOUNTER] = 16
