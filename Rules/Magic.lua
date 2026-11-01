@@ -189,7 +189,7 @@ function Magic.quaffPotion(pot)
       c[K.CHARISMA] = c[K.CHARISMA] + 1
 
    elseif pot == K.PDIZZINESS then
-      Msg(L["You become dizzy!"])
+      Msg(L["You feel weaker!"])
       c[K.STRENGTH] = c[K.STRENGTH] - 1
       if c[K.STRENGTH] < 3 then c[K.STRENGTH] = 3 end
 

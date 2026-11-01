@@ -98,7 +98,7 @@ local POTION = {
    L["Puts you to sleep for a while."], L["Heals a few hit points and cures blindness."],
    L["Raises your level by one."], L["Raises all of your attributes."],
    L["Raises your wisdom."], L["Raises your strength."], L["Raises your charisma."],
-   L["Makes you dizzy and unsteady."], L["Raises your intelligence."],
+   L["Lowers your strength by 1."], L["Raises your intelligence."],
    L["Shows the gold on this level."], L["Shows the monsters on this level."],
    L["Makes you forget some of the map."], L["Tastes like water."],
    L["Blinds you for a while."], L["Confuses you for a while."], L["Makes you a hero for a while."],

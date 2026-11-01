@@ -131,7 +131,7 @@ T.monstlevel = {5, 11, 17, 22, 27, 33, 39, 42, 46, 50, 53, 56}
 T.scrollname = {"Enchant Armor", "Enchant Weapon", "Enlightenment", "Blank Paper", "Create Monster", "Create Artifact", "Aggravate Monsters", "Time Warp", "Teleportation", "Expanded Awareness", "Haste Monsters", "Monster Healing", "Spirit Protection", "Undead Protection", "Stealth", "Magic Mapping", "Hold Monsters", "Gem Perfection", "Spell Extension", "Identify", "Remove Curse", "Annihilation", "Pulverization", "Life Protection", "", "", "", ""}
 
 -- T.potionname[id]: empty for the unused ids.
-T.potionname = {"Sleep", "Healing", "Raise Level", "Increase Ability", "Wisdom", "Strength", "Raise Charisma", "Dizziness", "Learning", "Gold Detection", "Monster Detection", "Forgetfulness", "Water", "Blindness", "Confusion", "Heroism", "Sturdiness", "Giant Strength", "Fire Resistance", "Treasure Finding", "Instant Healing", "Cure Dianthroritis", "Poison", "See Invisible", "", "", "", "", "", "", "", "", "", "", ""}
+T.potionname = {"Sleep", "Healing", "Raise Level", "Increase Ability", "Wisdom", "Strength", "Raise Charisma", "Weakness", "Learning", "Gold Detection", "Monster Detection", "Forgetfulness", "Water", "Blindness", "Confusion", "Heroism", "Sturdiness", "Giant Strength", "Fire Resistance", "Treasure Finding", "Instant Healing", "Cure Dianthroritis", "Poison", "See Invisible", "", "", "", "", "", "", "", "", "", "", ""}
 
 -- Spells 1..39 (C: 0..38): three letter code, name and description.
 T.spelcode = {"pro", "mle", "dex", "sle", "chm", "ssp", "web", "str", "enl", "hel", "cbl", "cre", "pha", "inv", "bal", "cld", "ply", "can", "has", "ckl", "vpr", "dry", "lit", "drl", "glo", "flo", "fgr", "sca", "hld", "stp", "tel", "mfi", "mkw", "sph", "gen", "sum", "wtw", "alt", "per", "lor"}
