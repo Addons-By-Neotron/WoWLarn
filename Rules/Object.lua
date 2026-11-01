@@ -517,6 +517,9 @@ function Object.lookForObject()
             G.lastnum = 274
             ns.Player.losehp(ns.rnd(20))
             if G.dead then return end
+            if ns.mod.db.profile.warnings ~= false then
+               ui:Alert(format(L["The door shocked you!  You have %d of %d hit points left."], c[K.HP], c[K.HPMAX]))
+            end
          elseif trap == 9 then
             Msg(L["You suddenly feel weaker!"])
             if c[K.STRENGTH] > 3 then c[K.STRENGTH] = c[K.STRENGTH] - 1 end

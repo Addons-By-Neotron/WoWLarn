@@ -37,6 +37,9 @@ Works on Retail and Classic.
   WoW writes saved variables when you log out or `/reload`, so a crash loses what happened since.
 - One life: dying ends the game and enters your score. The high scores are shared by all your
   characters (`/larn scores`).
+  A window warns you when a door shocks you and when your hit points fall to a quarter or less; it
+  has to be answered (Enter, Space, Esc or OK), so a held key cannot carry on through it
+  ("Warnings" in the addon options).
   The score is gold plus the bank balance; the option "Score counts what you carry" (in the
   addon options, for every game) adds what the bank and the trading post would pay for your pack.
 

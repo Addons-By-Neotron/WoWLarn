@@ -1298,3 +1298,8 @@ L["The Slayer is meant to halve what demons do to you.  The original source has 
 L["Score counts what you carry"] = true
 L["The score is your gold and bank balance, as in the original.  On, what the bank and the trading post would pay for the items in your pack counts too.  It applies to every game from now on."] = true
 L["(a dead end)"] = true
+L["Warnings"] = true
+L["Show a window when a door shocks you, and when your hit points fall to a quarter or less.  It has to be answered, so a key held down does not carry on through it."] = true
+L["The door shocked you!  You have %d of %d hit points left."] = true
+L["You are nearly dead!  You have %d of %d hit points left."] = true
+L["Warning"] = true

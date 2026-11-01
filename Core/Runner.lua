@@ -427,6 +427,19 @@ end
 -- C: pick_char(). Returns the chosen entry of classes (keyed by its letter, or Enter for
 -- the highlighted one; the arrow keys move the highlight).
 -- The settings of a new game (UI/GameOptions.lua): waits for Start, which is Enter.
+-- A warning in a window: only Enter, Space, Esc or a click on OK answer it, so a key that is
+-- held down (a run, a door tried again and again) cannot go on through it.
+function ui:Alert(text)
+   self.repcount, self.keys = 0, nil
+   ns.main:SetFocus(true)
+   ns.alert:Show(text)
+   local key
+   repeat
+      key = self:GetKey()
+   until key == "ENTER" or key == " " or key == ESC
+   ns.alert:Hide()
+end
+
 function ui:PickSettings()
    ns.gameOptions:Show()
    local key

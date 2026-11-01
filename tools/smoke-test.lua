@@ -525,6 +525,7 @@ check(ns.Player.packWeight() == w0 + 35, "plate weighs 35")
 ns.inventory:Open("test", function(id) return id == K.OPLATE end); ns.inventory:Update(); ns.inventory:Close()
 
 ---------------------------------------------------------------- the game
+ns.mod.db.profile.warnings = false  -- (the windows that wait for an answer; tested at the end)
 ui.co = nil
 ui:NewGame()
 check(ui.wait == "key" and ns.gameOptions.frame.shown, "the settings of a new game come first")
@@ -1642,4 +1643,33 @@ G.god, G.wizard = true, true
 ns.Debug.newGame()
 ui:InjectKey("ENTER")  -- (the settings)
 check(ui.wait == "key" and ns.picker.frame.shown and not G.god and not G.wizard, "a new game starts from the class picker, without god mode")
+-- warnings that have to be answered
+do
+   local oldCo, oldWait = ui.co, ui.wait
+   ns.mod.db.profile.warnings = nil
+   local function Run(fn)
+      local done = false
+      ui.co = coroutine.create(function() fn(); done = true end)
+      ui:Resume()
+      return function() return done end
+   end
+   G.dead = false; G.c[K.HP], G.c[K.HPMAX] = 40, 100
+   local done = Run(function() ns.Player.losehp(20) end)
+   check(ns.alert.frame.shown and ui.wait == "key" and not done(), "falling to a quarter of the hit points asks to be answered")
+   ui:InjectKey("h"); ui:InjectKey("l")
+   check(ns.alert.frame.shown and not done(), "a movement key does not answer it")
+   ui:InjectKey("ENTER")
+   check(not ns.alert.frame.shown and done() and G.c[K.HP] == 20, "Enter answers it")
+   G.c[K.HP] = 15
+   done = Run(function() ns.Player.losehp(5) end)
+   check(not ns.alert.frame.shown and done(), "already low: no second warning")
+   G.c[K.HP] = 90
+   done = Run(function() ns.Player.losehp(5) end)
+   check(not ns.alert.frame.shown and done(), "a small hit: no warning")
+   G.c[K.HP] = 40; ns.mod.db.profile.warnings = false
+   done = Run(function() ns.Player.losehp(20) end)
+   check(not ns.alert.frame.shown and done(), "warnings can be switched off")
+   ns.mod.db.profile.warnings = false
+   ui.co, ui.wait = oldCo, oldWait
+end
 print("ALL OK")

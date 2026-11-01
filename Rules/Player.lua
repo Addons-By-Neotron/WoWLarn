@@ -144,6 +144,7 @@ function Player.losehp(x, quiet)
    if G.god then return end
 --@end-debug@
    if not quiet and x > 0 then ns.ui:Message(L["You lose %d hit points."], x) end
+   local before = c[K.HP]
    c[K.HP] = c[K.HP] - x
    if x > 0 then ns.ui:Animate("hurt") end
    if c[K.HP] <= 0 then
@@ -152,6 +153,11 @@ function Player.losehp(x, quiet)
       Player.died(G.lastnum)
    end
    ns.ui:Refresh("stats")
+   -- FIX: not in the C. A warning when the hit points fall to a quarter or less, so it is not missed
+   if not G.dead and c[K.HP] > 0 and before * 4 >= c[K.HPMAX] and c[K.HP] * 4 < c[K.HPMAX]
+      and ns.mod.db.profile.warnings ~= false then
+      ns.ui:Alert(format(L["You are nearly dead!  You have %d of %d hit points left."], c[K.HP], c[K.HPMAX]))
+   end
 end
 
 -- C: raisehp(), raisemhp(), losemhp(), raisespells(), raisemspells(), losemspells().

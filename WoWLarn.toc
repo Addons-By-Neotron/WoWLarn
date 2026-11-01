@@ -65,6 +65,7 @@ UI\Scoreboard.lua
 UI\ModelViewer.lua
 UI\Zoo.lua
 UI\ClassPicker.lua
+UI\Alert.lua
 UI\GameOptions.lua
 UI\HelpWindow.lua
 UI\MainFrame.lua

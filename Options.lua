@@ -131,6 +131,13 @@ local function BuildOptions()
                   ns.ui:RefreshNow("map")
                end,
             },
+            warnings = {
+               type = "toggle",
+               name = L["Warnings"],
+               desc = L["Show a window when a door shocks you, and when your hit points fall to a quarter or less.  It has to be answered, so a key held down does not carry on through it."],
+               order = 17.6,
+               get = function() return mod.db.profile.warnings ~= false end,
+            },
             scoreItems = {
                type = "toggle",
                name = L["Score counts what you carry"],
