@@ -344,7 +344,7 @@ local BUILDING = {
    [K.OSCHOOL] = { found = L["You have found the College of Ularn."], key = "g", enter = function() ns.Town.school() end },
    [K.OBANK] = { found = L["You have found the bank of Ularn."], key = "g", enter = function() ns.Town.bank(false) end },
    [K.OBANK2] = { found = L["You have found a branch office of the bank of Ularn."], key = "g", enter = function() ns.Town.bank(true) end },
-   [K.ODNDSTORE] = { found = L["There is a DND store here."], key = "g", enter = function() ns.Town.dndStore() end },
+   [K.ODNDSTORE] = { found = L["There is a Thrift Shoppe here."], key = "g", enter = function() ns.Town.dndStore() end },
    [K.OTRADEPOST] = { found = L["You have found the Ularn trading Post."], key = "g", enter = function() ns.Town.tradingPost() end },
    [K.OHOME] = { found = L["You have found your way home."], key = "g", enter = function() ns.Town.home() end },
    [K.OPAD] = { found = L["You have found Grizzik's Questionable Elixirs!"], key = "c", enter = function() ns.Town.pad() end },

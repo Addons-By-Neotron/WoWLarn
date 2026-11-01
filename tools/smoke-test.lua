@@ -64,7 +64,7 @@ local function keys(s) ui.unseenUntil = nil; for ch in s:gmatch(".") do ui:Injec
 ---------------------------------------------------------------- data
 check(#ns.MonsterData == 65, "65 monsters, got " .. #ns.MonsterData)
 check(K.PTREASURE == 20 and K.STRENGTH == 1 and K.OENTRANCE == 54, "shifted constants")
-check(ns.Tables.objectname[K.ODNDSTORE] == "the DND Store", "object names")
+check(ns.Tables.objectname[K.ODNDSTORE] == "the Thrift Shoppe", "object names")
 check(ns.Tables.class[1] == "novice explorer", "class titles")
 check(#ns.HelpPages == 1 and #ns.HelpSections > 3, "help texts")
 -- Lua 5.1 (unlike LuaJIT and 5.4) rejects a nested opening bracket inside a long string.
