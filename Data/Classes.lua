@@ -20,6 +20,7 @@ along with WoWLarn.  If not, see <https://www.gnu.org/licenses/old-licenses/gpl-
 
 **********************************************************************
 ]]
+local L = LibStub("AceLocale-3.0"):GetLocale("WoWLarn")
 local _, ns = ...
 local K = ns.K
 
@@ -52,7 +53,12 @@ ns.Classes = {
    { letter = "g", token = "PALADIN", icon = "ClassIcon_Paladin",
      hp = 12, stats = { 16, 6, 8, 16, 4, 4 }, spells = { 1 }, spellmax = 1, spellcount = 1,
      kit = { { K.OSPEAR, 0 } }, wield = 1 },
-   { letter = "h", token = "WARLOCK", icon = "ClassIcon_Warlock",
+   { letter = "h", token = "WARLOCK", icon = "ClassIcon_Warlock", name = L["Glass Cannon"],
      hp = 1, stats = { 3, 3, 3, 3, 3, 3 }, spells = {}, spellmax = 0, spellcount = 0,
      kit = { { K.OLANCE, 0 } }, wield = 1, lanceofdeath = true },
 }
+
+-- What the class is called: its own name, or the WoW class it stands for.
+function ns.ClassName(class)
+   return class.name or (LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[class.token]) or class.token
+end

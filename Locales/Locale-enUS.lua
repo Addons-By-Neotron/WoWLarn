@@ -1217,3 +1217,4 @@ L["The %s changes into a %s!"] = true
 L["Optional changes to the game"] = true
 L["Elevator limit"] = true
 L["The most levels an express elevator can take you, up or down.  Off (0) leaves it to chance, as in the original: a ride from level 3 can end on level 15.  Applies to the next ride."] = true
+L["Glass Cannon"] = true

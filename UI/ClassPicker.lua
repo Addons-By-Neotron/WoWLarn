@@ -30,11 +30,6 @@ ns.picker = picker
 
 local ROW_H, WIDTH = 40, 520
 
-local function ClassName(token)
-   local names = LOCALIZED_CLASS_NAMES_MALE
-   return names and names[token] or token
-end
-
 local function Summary(class)
    local s = class.stats
    return format("%s %d  %s %d  %s %d  %s %d  %s %d  %s %d  %s %d", L["HP"], class.hp,
@@ -44,7 +39,7 @@ end
 local function ShowTooltip(row)
    local class = row.class
    GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
-   GameTooltip:SetText(ClassName(class.token))
+   GameTooltip:SetText(ns.ClassName(class))
    for _, entry in ipairs(class.kit) do
       GameTooltip:AddLine(ns.Tables.objectname[entry[1]] or "?", 1, 1, 1)
    end
@@ -85,7 +80,7 @@ function picker:Create(parent)
       letter:SetText(class.letter .. ")")
       local name = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
       name:SetPoint("LEFT", letter, "RIGHT", 6, 6)
-      name:SetText(ClassName(class.token))
+      name:SetText(ns.ClassName(class))
       local detail = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
       detail:SetPoint("TOPLEFT", name, "BOTTOMLEFT", 0, -2)
       detail:SetText(Summary(class))

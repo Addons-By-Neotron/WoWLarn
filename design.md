@@ -331,7 +331,7 @@ The 8 Ularn classes are re-themed as WoW classes. **Mechanics are unchanged:** s
 | Rogue | **Rogue** | DEX 14, stealth | 12 HP, `mle`, leather + dagger, stealth scroll |
 | Geek | **Hunter** | all 12, jack of all trades | 10 HP, `pro`+`mle`, leather + dagger |
 | Dwarf | **Paladin** | STR/CON 16, spear | 12 HP, `pro`, spear |
-| Rambo | **Warlock** ("forbidden pact") | all stats 3, 1 HP, starts with the Lance of Death | 1 HP, Lance of Death |
+| Rambo | **Glass Cannon** (token WARLOCK; a WoW warlock gets it by default) | all stats 3, 1 HP, starts with the Lance of Death | 1 HP, Lance of Death |
 
 - Druid (and Death Knight etc. on Retail) are unused for now. They are possible later as new classes with their own stat lines.
 - The class picker pre-selects the player's own WoW class (`UnitClass("player")`) when it maps to one.

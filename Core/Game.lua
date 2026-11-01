@@ -247,7 +247,7 @@ function Game.Run()
       ns.Create.newCaveLevel(0)
       ui:Refresh("all")
       Welcome()
-      ui:Log("system", L["You set out as %s."], LOCALIZED_CLASS_NAMES_MALE[class.token] or class.token)
+      ui:Log("system", L["You set out as %s."], ns.ClassName(class))
       if G.race then ui:Log("system", L["Your %s blood adds to your abilities."], G.race) end
    end
 
