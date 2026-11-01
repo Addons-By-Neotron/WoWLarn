@@ -264,7 +264,14 @@ function Monster.hitm(x, y, amt, hitmsg)
    end
 
    if monst >= DEMONLORD then
-      if c[K.LANCEDEATH] ~= 0 then amt = 300 end
+      if c[K.LANCEDEATH] ~= 0 then
+         -- FIX: not in the C. It says so: the lance turns every blow, spells too, into 300.
+         if amt ~= 300 then
+            Msg(L["Your lance of death turns the blow into 300 damage."])
+            ns.ItemInfo.discover(K.OLANCE)
+         end
+         amt = 300
+      end
       if wielded == K.OSLAYER then
          amt = 10000
          ns.ItemInfo.discover(K.OSLAYER, G.lastmonst)

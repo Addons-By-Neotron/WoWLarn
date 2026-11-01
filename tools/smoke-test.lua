@@ -1527,6 +1527,17 @@ do
    G.rules.toughWeapons = false
 end
 
+-- the lance of death says what it does to demons
+do
+   Fresh(3)
+   G.c[K.LANCEDEATH] = 1
+   G.mon[31][8], G.hitp[31][8] = K.DEMONLORD, 150
+   LOG = {}
+   ns.Monster.hitm(31, 8, 60)
+   check(table.concat(lines(), "|"):find("lance of death turns the blow into 300"), "the lance says it turns the blow into 300")
+   G.c[K.LANCEDEATH] = 0
+end
+
 -- starting over from a god mode game
 G.god, G.wizard = true, true
 ns.Debug.newGame()

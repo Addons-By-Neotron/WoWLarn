@@ -135,7 +135,7 @@ local MISC = {
 -- games (the discoveries are kept with the account).  Until then the tooltip only hints at them.
 local POWER = {
    [K.OVORPAL] = L["It can behead the monsters that have a head."],
-   [K.OLANCE] = L["It slays what it hits, but is less effective against demons."],
+   [K.OLANCE] = L["It slays what it hits.  Against demon lords and princes every blow you strike, spells too, does exactly 300."],
    [K.OSLAYER] = L["It slays demon lords and princes, and they hurt you less."],
    [K.OHANDofFEAR] = L["Monsters sometimes run in fear.  The scare monster spell needs it."],
    [K.ONOTHEFT] = L["Thieves can't steal from you."],
