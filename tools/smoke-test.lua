@@ -66,6 +66,7 @@ check(#ns.MonsterData == 65, "65 monsters, got " .. #ns.MonsterData)
 check(K.PTREASURE == 20 and K.STRENGTH == 1 and K.OENTRANCE == 54, "shifted constants")
 check(ns.Tables.objectname[K.ODNDSTORE] == "the Thrift Shoppe", "object names")
 check(ns.Tables.class[1] == "novice explorer", "class titles")
+check(ns.Equipment.effect(K.OAMULET, 5) == "Invisibility lasts 768 turns longer", "the amulet says how much longer invisibility lasts")
 check(#ns.HelpPages == 1 and #ns.HelpSections > 3, "help texts")
 -- Lua 5.1 (unlike LuaJIT and 5.4) rejects a nested opening bracket inside a long string.
 do
