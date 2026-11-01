@@ -314,6 +314,22 @@ local function Shadow(layer, wx, wy, radius)
    end
 end
 
+-- A picture standing upright in the middle of a tile, a little above the floor, like a
+-- wall texture (it is foreshortened as the camera looks down on it), with a shadow below.
+local PICTURE_LIFT = 0.1  -- of a tile, how far above the floor it floats
+local function PictureQuad(layer, texture, tileX, tileY, size, ahead)
+   local wx, wy = (tileX - 0.5) * TILE, (tileY - 0.5) * TILE
+   local half, z0 = size * TILE / 2, PICTURE_LIFT * TILE
+   local z1 = z0 + size * TILE
+   local ax, ay = Project(wx - half, wy, z1)
+   local bx, by = Project(wx + half, wy, z1)
+   local cx, cy = Project(wx + half, wy, z0)
+   local dx, dy = Project(wx - half, wy, z0)
+   if not (ax and bx and cx and dx) then return end
+   Shadow(layer, wx, wy, half * 0.8)
+   Quad(layer, Shade({ 1, 1, 1 }, ahead, 1), ax, ay, bx, by, cx, cy, dx, dy, texture)
+end
+
 -- A tile with a creature (a display, or "player") on it, as the map draws them, for the
 -- monster zoo: the centre of the tile is at (sx, sy) in the view of layer, zoom times larger.
 function map3d.DrawTile(layer, look, sx, sy, zoom, floorColor, facing)
@@ -547,8 +563,12 @@ local function DrawTile(layers, x, y, ground)
             local under, picture
             if not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object) end
             if under then
-               local size = TILE * 0.5 * scale
-               Icon(layers[ACTOR], under, mx, my + size * 0.1, size, size, picture)
+               if picture then
+                  PictureQuad(layers[ACTOR], under, x, y, 0.5, ahead)
+               else
+                  local size = TILE * 0.5 * scale
+                  Icon(layers[ACTOR], under, mx, my + size * 0.1, size, size)
+               end
             end
          end
          Shadow(layers[ACTOR], wx, wy, TILE * 0.42)
@@ -562,8 +582,10 @@ local function DrawTile(layers, x, y, ground)
       local icon, picture
       if not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object) end
       local size = TILE * 0.6 * scale
-      if icon then
-         Icon(layers[ACTOR], icon, mx, my + size * 0.1, size, size, picture)
+      if icon and picture then
+         PictureQuad(layers[ACTOR], icon, x, y, 0.75, ahead)
+      elseif icon then
+         Icon(layers[ACTOR], icon, mx, my + size * 0.1, size, size)
       else
          Glyph(layers[ACTOR], V.ObjectGlyph(object), V.GLYPH_COLOR, mx, my + size * 0.1, size)
       end
