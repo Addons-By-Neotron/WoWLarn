@@ -820,7 +820,9 @@ function Spells.cast()
          if T.spelcode[i] == code and G.spelknow[i] ~= 0 then
             Msg(L["Casting %s (%s)."], code, T.spelname[i])
             ui:Sound("cast")
+            G.castName = T.spelname[i]  -- (the lance of death says which spell it amplifies)
             Spells.speldamage(i)
+            G.castName = nil
             found = true
             break
          end

@@ -1535,6 +1535,13 @@ do
    LOG = {}
    ns.Monster.hitm(31, 8, 60)
    check(table.concat(lines(), "|"):find("lance of death turns the blow into 300"), "the lance says it turns the blow into 300")
+   G.castName = "Fireball"; G.mon[31][8], G.hitp[31][8] = K.DEMONLORD, 150; LOG = {}
+   ns.Monster.hitm(31, 8, 60)
+   check(table.concat(lines(), "|"):find("The lance amplifies the fireball damage to 300"), "the lance says which spell it amplifies")
+   G.mon[31][8], G.hitp[31][8] = K.DEMONLORD, 150; LOG = {}
+   ns.Monster.hitm(31, 8, 2000)
+   check(table.concat(lines(), "|"):find("The lance holds the fireball damage to 300"), "the lance says when it holds a spell down")
+   G.castName = nil
    G.c[K.LANCEDEATH] = 0
 end
 

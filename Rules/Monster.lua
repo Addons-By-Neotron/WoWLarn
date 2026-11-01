@@ -267,7 +267,11 @@ function Monster.hitm(x, y, amt, hitmsg)
       if c[K.LANCEDEATH] ~= 0 then
          -- FIX: not in the C. It says so: the lance turns every blow, spells too, into 300.
          if amt ~= 300 then
-            Msg(L["Your lance of death turns the blow into 300 damage."])
+            if G.castName then
+               Msg(amt < 300 and L["The lance amplifies the %s damage to 300."] or L["The lance holds the %s damage to 300."], G.castName:lower())
+            else
+               Msg(L["Your lance of death turns the blow into 300 damage."])
+            end
             ns.ItemInfo.discover(K.OLANCE)
          end
          amt = 300

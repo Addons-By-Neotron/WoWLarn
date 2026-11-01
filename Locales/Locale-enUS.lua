@@ -1245,3 +1245,5 @@ L["Invisibility lasts %d turns longer"] = true
 L["While you carry one, you keep seeing invisible monsters."] = true
 L["Your lance of death turns the blow into 300 damage."] = true
 L["It slays what it hits.  Against demon lords and princes every blow you strike, spells too, does exactly 300."] = true
+L["The lance amplifies the %s damage to 300."] = true
+L["The lance holds the %s damage to 300."] = true
