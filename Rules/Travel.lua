@@ -161,7 +161,12 @@ function Travel.list()
          local id = Seen(x, y)
          if id == 0 and G.level == 1 and x == 34 and y == MAXY then id = EXIT end  -- (the way out has no object)
          if names[id] and (x ~= G.playerx or y ~= G.playery) and Remembered(x, y) and cost[x][y] then
-            list[#list + 1] = { x = x, y = y, id = id, name = names[id], steps = steps[x][y] }
+            local label = names[id]
+            local ride = G.elevators[G.level * 10000 + x * 100 + y]  -- (where it took you last time)
+            if ride and (id == K.OELEVATORUP or id == K.OELEVATORDOWN) then
+               label = label .. " " .. string.format(L["to floor %s"], ns.Tables.levelname[ride + 1])
+            end
+            list[#list + 1] = { x = x, y = y, id = id, name = names[id], label = label, steps = steps[x][y] }
          end
       end
    end
@@ -287,7 +292,7 @@ function Travel.command()
    local rows = {}
    for index, spot in ipairs(list) do
       rows[index] = {
-         key = string.char(96 + index), text = spot.name, icon = spot.id,
+         key = string.char(96 + index), text = spot.label, icon = spot.id,
          price = string.format(L["%d steps"], spot.steps),
       }
    end

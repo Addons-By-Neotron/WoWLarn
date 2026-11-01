@@ -1480,6 +1480,7 @@ do
       Ready()
       ns.Create.newCaveLevel(10); Clear(); G.lookedHere = nil; G.item[31][8] = K.OELEVATORUP; keys("l")
       check(G.level >= 8 and G.level <= 9, "elevator up stays within the limit: " .. G.level)
+      check(G.elevators[10 * 10000 + 31 * 100 + 8] == G.level, "the elevator remembers where it went")
    end
    G.rules.elevatorLimit = 0
    -- the bank: sell one stone, sell all, deposit with the slider window

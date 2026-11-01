@@ -1291,3 +1291,5 @@ L["Healing and cures"] = true
 L["Utility"] = true
 L["Pick a race"] = true
 L["Green and red are what it adds to your stats when the Races setting is on."] = true
+L["to floor %s"] = true
+L["The elevator took you to floor %s."] = true

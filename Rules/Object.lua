@@ -261,6 +261,7 @@ end
 -- C: oelevator(). dir 1 goes up, -1 goes down.
 local function Elevator(dir)
    local ui = ns.ui
+   local from = G.level * 10000 + G.playerx * 100 + G.playery  -- (the elevator, to remember where it went)
    if dir == 1 then
       if G.level == 0 then
          Msg(L["Unfortunately, it is out of order."])
@@ -288,7 +289,9 @@ local function Elevator(dir)
       Create.newCaveLevel(G.level + ride)
    end
    ns.Player.positionPlayer()
+   G.elevators[from] = G.level
    ui:Refresh("all")
+   Msg(L["The elevator took you to floor %s."], ns.Tables.levelname[G.level + 1])
 end
 
 -- C: ochest().
