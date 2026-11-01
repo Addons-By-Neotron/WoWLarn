@@ -72,6 +72,22 @@ local function LogPage(page)
    end
 end
 
+-- Shows a text in the window over the map until the player closes it.
+local function TextWindow(title, text)
+   if not ns.store.frame then  -- (no window: the message log)
+      LogPage(text)
+      ui:More()
+      return
+   end
+   ns.store:Open(title, text, 0)
+   ns.prompt:Set(L["Press space, enter or escape to close the window"])
+   local key
+   repeat key = ui:GetKey() until key == ns.ESC or key == " " or key == "ENTER"
+   ns.prompt:Clear()
+   ns.store:Close()
+   ui:Refresh("all")
+end
+
 -- C: parse(). Gets and executes one command. Returns true if the game is over.
 local function Parse()
    ns.Player.normalize()  -- (drains and the like may have left a stat low)
@@ -175,7 +191,7 @@ local function Parse()
    elseif key == "?" then
       ui.repcount = 0
       G.nomove = true
-      LogPage(ns.HelpPages[2])
+      TextWindow(L["Help"], ns.HelpPages[2])
    else
       ui.repcount = 0
       G.nomove = true
@@ -186,8 +202,7 @@ end
 
 -- C: welcome().
 local function Welcome()
-   LogPage(ns.HelpPages[1])
-   ui:More()
+   TextWindow(L["Welcome to Ularn"], ns.HelpPages[1])
 end
 
 local function DefaultClass()

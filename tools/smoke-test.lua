@@ -18,6 +18,7 @@ local function newframe(kind)
          if k == "GetFrameLevel" then return function() return 1 end end
          if k == "GetWidth" then return function() return 704 end end
          if k == "GetHeight" then return function() return 448 end end
+         if k == "GetStringHeight" then return function() return 300 end end
          if k == "CreateFontString" or k == "CreateTexture" then return function() return newframe("child") end end
          return function() return proxy end
       end,
@@ -511,10 +512,9 @@ check(ui.wait == "key" and ns.picker.frame.shown, "class picker waits")
 ui:InjectKey("UP"); ui:InjectKey("ENTER")  -- Mage is the default (index 2); Up goes to 1
 check(G.class and G.class.token == "WARRIOR", "picked via arrows and enter")
 check(ui.wait == "key", "welcome asks for more")
-local story = false
-for _, l in ipairs(lines()) do if l:find("Welcome to the game of Ularn") then story = true end end
-check(story, "story shown")
+check(ns.store.frame.shown, "story shown in the window")
 keys(" ")
+check(not ns.store.frame.shown, "the window closes")
 check(last():find("You set out as Warrior"), "set out message, got " .. tostring(last()))
 
 ns.mod.db.profile.fast = true
@@ -541,7 +541,7 @@ keys("L"); check(G.playerx == 5, "run stops on an object, x=" .. G.playerx)
 check(last():find("the bank of Ularn"), "object message, got " .. tostring(last()))
 keys("i"); G.item[5][7] = 0  -- stay outside
 keys("S"); check(not ns.main.frame.shown, "S closes the window")
-ns.main:Show(); keys("."); keys("?"); check(last():find("help") or #LOG > 20, "help logged")
+ns.main:Show(); keys("."); keys("?"); check(ns.store.frame.shown, "help shown in the window"); keys(" "); check(not ns.store.frame.shown, "help window closes")
 keys("x"); check(last():find("not implemented"), "unknown command")
 ui:InjectKey("ESC"); check(not ns.main.focused, "Esc releases the keyboard")
 keys("Q"); keys("n"); check(ui:IsActive(), "quit declined")

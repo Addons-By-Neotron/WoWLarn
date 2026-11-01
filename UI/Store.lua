@@ -63,6 +63,7 @@ function store:Create(parent)
    leave:SetPoint("TOPRIGHT", -6, -4)
    leave:SetText(L["Leave"])
    leave:SetScript("OnClick", function() Key(ns.ESC) end)
+   self.leave = leave
    self.pager = CreateFrame("Frame", nil, frame)
    self.pager:SetSize(120, 20)
    self.pager:SetPoint("RIGHT", leave, "LEFT", -8, 0)
@@ -143,6 +144,7 @@ function store:Open(title, intro, columns)
    self.introHeight = self.columns == 0 and TEXT_H or INTRO_H
    self.intro:SetFontObject(self.columns == 0 and "GameFontHighlight" or "GameFontHighlightSmall")
    self.title:SetText(title)
+   self.leave:SetText(self.columns == 0 and L["OK"] or L["Leave"])
    self.intro:SetText(intro or "")
    self.status:SetText("")
    self.note:SetText("")
@@ -191,7 +193,7 @@ function store:SetRows(rows)
    local count = math.min(#rows, ROWS * COLUMNS)
    local lines = self.columns == 1 and count or math.min(perColumn, ROWS)
    if self.columns == 0 then
-      self.frame:SetHeight(HEADER_H + TEXT_H + FOOTER_H + 8)
+      self.frame:SetHeight(HEADER_H + math.max(TEXT_H, self.intro:GetStringHeight() + 8) + FOOTER_H + 8)
    else
       self.frame:SetHeight(HEADER_H + INTRO_H + math.max(lines, 1) * ROW_H + FOOTER_H + 8)
    end
