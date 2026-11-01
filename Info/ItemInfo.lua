@@ -142,7 +142,7 @@ local POWER = {
    [K.OSPHTALISMAN] = L["Spheres of annihilation can't harm you."],
    [K.OORBOFDRAGON] = L["Your blows hurt dragons much more."],
    [K.OSPIRITSCARAB] = L["Spirit nagas and poltergeists hurt you half as much."],
-   [K.OPSTAFF] = L["+10 wisdom.  It can turn aside the special attacks of the mightiest monsters.  Carrying it is enough."],
+   [K.OPSTAFF] = L["It can turn aside the special attacks of the mightiest monsters."],
    [K.OCUBEofUNDEAD] = L["Zombies hurt you half as much, and wraiths and vampires can't hurt you or drain your levels."],
    [K.OAMULET] = L["Your invisibility lasts longer."],
    [K.OLARNEYE] = L["Demon lords can't hide from you."],
@@ -235,7 +235,7 @@ function ItemInfo.lines(id, arg)
          lines[#lines + 1] = L["You don't know what it does yet."]
       end
    end
-   local effect = (not POWER[id] or id == K.OSWORDofSLASHING) and ns.Equipment.effect(id, arg)  -- (the sword keeps its +5 dexterity line)
+   local effect = (not POWER[id] or id == K.OSWORDofSLASHING or id == K.OPSTAFF) and ns.Equipment.effect(id, arg)  -- (the sword and the staff keep their stat line: it shows when you pick them up)
    if effect then
       lines[#lines + 1] = effect
       lines[#lines + 1] = L["Works as long as you carry it."]

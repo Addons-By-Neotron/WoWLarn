@@ -1174,3 +1174,4 @@ L["Page %d / %d"] = true
 L["Potion of %s"] = true
 L["Scroll of %s"] = true
 L["Only a positive display can be tried."] = true
+L["It can turn aside the special attacks of the mightiest monsters."] = true

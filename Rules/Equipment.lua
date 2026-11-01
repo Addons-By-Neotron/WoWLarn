@@ -61,7 +61,7 @@ local EFFECTS = {
 local SHORT = {
    [K.OPROTRING] = true, [K.ODAMRING] = true, [K.OBELT] = true, [K.OREGENRING] = true,
    [K.ORINGOFEXTRA] = true, [K.OENERGYRING] = true, [K.ODEXRING] = true, [K.OSTRRING] = true,
-   [K.OCLEVERRING] = true, [K.OSWORDofSLASHING] = true,
+   [K.OCLEVERRING] = true, [K.OSWORDofSLASHING] = true, [K.OPSTAFF] = true,
 }
 
 -- The effect text of a passive item, or nil.
