@@ -168,16 +168,15 @@ end
 
 -- Shows a display in the viewer.
 function viewer:Show(display)
-   if display < 0 and ns.ModelList then
-      local listed
-      for _, entry in ipairs(ns.ModelList) do
-         if entry[1] == -display then listed = entry[2] break end
+   if display < 0 then  -- (a model file, not a creature: only the ones the game uses, the others can crash the client)
+      local known
+      for _, id in ipairs(ns.Visuals.MIMIC_CHEST) do
+         if id == display then known = true end
       end
-      if not listed then
-         ns.mod:Print(format("%d is not one of the models in tools/model-candidates.txt (it could crash the game)", -display))
+      if not known then
+         ns.mod:Print(L["Only a positive display can be tried."])
          return
       end
-      ns.mod:Print(format("%d  %s", -display, listed))
    end
    self.display = display < 0 and display or math.max(1, display)
    self.scale = ns.Visuals.Scale(self.display)
@@ -265,25 +264,9 @@ function viewer:Sync()
    self:Refresh()
 end
 
--- (a model file, not a creature: the next or the previous one of ns.ModelList, because the ids
--- in between are mostly not models, and showing one of those can crash the game)
-local function NextFile(display, by)
-   local list = ns.ModelList
-   local at = 0
-   for index, entry in ipairs(list) do
-      if entry[1] <= -display then at = index end
-   end
-   local entry = list[math.min(#list, math.max(1, at + by))]
-   return -entry[1]
-end
-
 function viewer:Step(by)
-   if self.display < 0 then
-      if not ns.ModelList then return end
-      self:Show(NextFile(self.display, by > 0 and 1 or -1))
-   else
-      self:Show(self.display + by)
-   end
+   if self.display < 0 then return end
+   self:Show(self.display + by)
 end
 
 function viewer:Update()

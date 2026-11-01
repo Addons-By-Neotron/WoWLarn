@@ -1173,3 +1173,4 @@ L["Leave"] = true
 L["Page %d / %d"] = true
 L["Potion of %s"] = true
 L["Scroll of %s"] = true
+L["Only a positive display can be tried."] = true

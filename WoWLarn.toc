@@ -67,9 +67,7 @@ UI\MainFrame.lua
 Core\Game.lua
 #@debug@
 Data\TextureList.lua
-Data\ModelList.lua
 Core\Debug.lua
 UI\DebugPanel.lua
 UI\TextureBrowser.lua
-UI\ObjectViewer.lua
 #@end-debug@

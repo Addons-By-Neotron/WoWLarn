@@ -142,15 +142,6 @@ V.POTION_ICON = {
    [K.PCUREDIANTH] = "INV_Potion_33",  -- Dragonfire Potion: the cure for the daughter
 }
 
--- The 3D model of an object, a model file data id (nothing yet: chosen in the object viewer).
--- What is set in the object viewer wins until the next reload.
-V.OBJECT_MODELS = {
-}
-function V.ObjectModel(id)
-   local own = ns.mod.db.global.objectModels
-   return (own and own[id]) or V.OBJECT_MODELS[id]
-end
-
 -- The icon of a spell by its three letters (for the action bar); the others get a book.
 V.SPELL_ICON = {
    pro = "Spell_Holy_PowerWordShield", mle = "Spell_Nature_StarFall", sle = "Spell_Nature_Sleep",
@@ -587,16 +578,6 @@ V.TURN = {
 function V.Turn(display)
    local own = Own("turns")
    return (own and own[display]) or V.TURN[display] or 0
-end
-
--- How far a model is tipped forward (pitch) and sideways (roll), in radians.
-V.TILT = {}
-
-function V.Tilt(display)
-   local own = Own("tilts")
-   local tilt = (own and own[display]) or V.TILT[display]
-   if tilt then return tilt[1] or 0, tilt[2] or 0 end
-   return 0, 0
 end
 
 -- Monsters that go by another name than in the original (design.md, open decision 2).  The
