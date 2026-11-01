@@ -221,7 +221,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    if frame.look ~= look then  -- (setting the look again would restart it)
       frame.look = look
       if look == "player" then
-         frame.model:SetUnit("player")
+         frame.model:SetUnit("player", false, true)  -- (as you are, not in a form: a druid's bear or bird does not fit a tile)
       elseif look < 0 then  -- (a model file data id, negated)
          frame.model:SetModel(-look)
       else
