@@ -1213,3 +1213,4 @@ L["You stop: you were hit."] = true
 L["You stop: the door is shut."] = true
 L["You stop: there is something here."] = true
 L["You stop: you were moved."] = true
+L["The %s changes into a %s!"] = true

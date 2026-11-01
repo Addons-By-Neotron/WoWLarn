@@ -368,6 +368,8 @@ function Monster.hitmonster(x, y)
    end
    if monst == K.METAMORPH and hitp[x][y] < 25 and hitp[x][y] > 0 then
       mon[x][y] = K.BRONZEDRAGON + rund(9)
+      -- FIX: not in the C. Says so, or it looks like the monster was swapped for no reason.
+      if c[K.BLINDCOUNT] == 0 then Msg(L["The %s changes into a %s!"], G.lastmonst, G.monster[mon[x][y]].name) end
       ns.Bestiary.special(monst, ns.Bestiary.METAMORPHS)
    end
    if mon[x][y] == K.LEMMING and rnd(100) <= 40 and not Monster.lemmingsEnough() then
