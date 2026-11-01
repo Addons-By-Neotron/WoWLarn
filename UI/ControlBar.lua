@@ -41,6 +41,7 @@ local COMMANDS = {
    { key = "C", name = L["Close door"], icon = "INV_Misc_Key_03" },
    { key = "^", name = L["Find traps"], icon = "Ability_Rogue_FindWeakness" },
    { key = ".", name = L["Rest"], icon = "Spell_Nature_Sleep" },
+   { key = "t", name = L["Go to"], icon = "INV_Misc_Map_01" },
    { key = "Z", name = L["Teleport"], icon = "Spell_Arcane_Blink" },
    { key = "D", name = L["Discoveries"], icon = "INV_Misc_Book_08" },
    { key = "?", name = L["Help"], icon = "INV_Misc_QuestionMark" },

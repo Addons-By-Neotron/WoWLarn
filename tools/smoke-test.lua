@@ -1333,6 +1333,106 @@ Fresh(3)
 ns.Debug.toggleWizard(); ns.Debug.toggleWizard()
 check(not G.wizard and G.cheated and ns.Scores.record(ns.Scores.QUIT) == nil, "wizard mode switched off again still keeps the game off the scoreboard")
 
+-- go to a place that was found
+do
+   ns.mod.db.profile.fast = true  -- (no naps)
+   Fresh(3)
+   for y = 1, K.MAXY do if y ~= 2 then G.item[35][y] = K.OWALL end end  -- a wall with a gap
+   G.item[40][8] = K.OSTAIRSDOWN
+   G.item[33][8] = K.ODARTRAP
+   G.item[45][3] = K.OTHRONE
+   local list = ns.Travel.list()
+   check(#list == 2 and list[1].id == K.OSTAIRSDOWN and list[1].steps > 10 and list[2].id == K.OTHRONE, "the places found are listed, nearest first")
+   ns.Travel.go(40, 8)
+   check(G.playerx == 40 and G.playery == 8, "the walk reaches the stairs, round the wall and the trap, got " .. G.playerx .. "," .. G.playery)
+   -- magic mapping puts the places on the list
+   Fresh(3)
+   G.FillKnow(0)
+   G.item[40][8] = K.OSTAIRSDOWN
+   check(#ns.Travel.list() == 0, "nothing is known before the map")
+   G.FillKnow(1)
+   local mapped = ns.Travel.list()
+   check(#mapped == 1 and mapped[1].id == K.OSTAIRSDOWN, "magic mapping puts the stairs on the list, got " .. #mapped)
+   for y = 1, K.MAXY do G.mon[38][y], G.hitp[38][y] = K.ORC, 5 end  -- (a line of monsters, all on the map now)
+   check(#ns.Travel.list() == 1, "monsters on the map do not hide a place")
+   -- an object in view does not stop the walk, stepping on one does
+   Fresh(3)
+   G.item[40][8] = K.OSTAIRSDOWN
+   for x = 31, 35 do for y = 1, K.MAXY do if y ~= 8 then G.item[x][y] = K.OWALL end end end
+   G.item[33][8] = K.OPOTION
+   ns.Travel.go(40, 8)
+   check(G.playerx == 33 and G.playery == 8 and not G.nomove, "the walk stops on an object in the way, got " .. G.playerx .. "," .. G.playery)
+   Fresh(3)
+   G.item[40][8] = K.OSTAIRSDOWN
+   G.item[35][12] = K.OPOTION
+   ns.Travel.go(40, 8)
+   check(G.playerx == 40 and G.playery == 8, "an object beside the way does not stop the walk")
+   -- a diagonal gap between two walls is used when it is the shortest way
+   Fresh(3)
+   G.playerx, G.playery = 31, 8
+   G.item[32][8], G.item[31][9] = K.OWALL, K.OWALL
+   G.item[32][9] = K.OSTAIRSDOWN
+   local moves = 0
+   do
+      local orig = ns.Display.moveplayer
+      ns.Display.moveplayer = function(dir) moves = moves + 1; return orig(dir) end
+      ns.Travel.go(32, 9)
+      ns.Display.moveplayer = orig
+   end
+   check(G.playerx == 32 and G.playery == 9 and moves == 1, "the walk takes a diagonal gap when it is shorter, in " .. moves)
+   -- doors and known traps are avoided when there is a way round (a trap that can not be avoided stops the walk)
+   local function Visits(setup)
+      Fresh(3)
+      G.playerx, G.playery = 31, 8
+      for y = 1, K.MAXY do G.item[33][y] = K.OWALL end
+      G.item[33][4] = 0  -- the way round
+      G.item[35][8] = K.OSTAIRSDOWN
+      setup()
+      local visited, orig = {}, ns.Display.moveplayer
+      ns.Display.moveplayer = function(dir)
+         local r = orig(dir)
+         visited[G.playerx .. "," .. G.playery] = true
+         return r
+      end
+      LOG = {}
+      ns.Travel.go(35, 8)
+      ns.Display.moveplayer = orig
+      return visited
+   end
+   local v = Visits(function() G.item[33][8] = K.OCLOSEDDOOR; G.iarg[33][8] = 3 end)
+   check(G.playerx == 35 and not v["33,8"], "the walk goes round a closed door when it can")
+   v = Visits(function() G.item[33][8] = K.ODARTRAP end)
+   check(G.playerx == 35 and not v["33,8"], "the walk goes round a known trap when it can")
+   v = Visits(function() G.item[33][8] = K.ODARTRAP; G.item[33][4] = K.OWALL end)
+   check(G.playerx == 32 and not v["33,8"] and last():find("trap in the way"), "the walk stops in front of a trap that can not be avoided, got " .. G.playerx .. " " .. tostring(last()))
+   -- a monster behind a wall does not
+   Fresh(3)
+   G.item[40][8] = K.OSTAIRSDOWN
+   for y = 1, K.MAXY do G.item[32][y] = K.OWALL end
+   G.item[32][1] = 0  -- (a gap far away)
+   G.know[33][8] = 1; G.mon[33][8], G.hitp[33][8] = K.ANT, 5; LOG = {}
+   G.c[K.HOLDMONST] = 100  -- (it stays where it is)
+   ns.Travel.go(40, 8)
+   check(G.playerx == 40 and G.playery == 8, "a monster behind a wall does not stop the walk, got " .. G.playerx .. "," .. G.playery .. " " .. tostring(last()))
+   G.c[K.HOLDMONST] = 0
+   -- so does a monster
+   Fresh(3)
+   G.know[33][8] = 1
+   G.item[40][8] = K.OSTAIRSDOWN
+   G.mon[33][8], G.hitp[33][8] = K.ANT, 5
+   ns.Travel.go(40, 8)
+   check(G.playerx == 31 and last():find("monster is near"), "the walk stops two tiles from a monster, got " .. G.playerx)
+   -- the way out of the dungeon is on the list on level 1
+   Fresh(1)
+   G.item[34][K.MAXY] = 0
+   local out
+   for _, spot in ipairs(ns.Travel.list()) do if spot.y == K.MAXY and spot.x == 34 then out = spot end end
+   check(out and out.name == "Dungeon exit", "the dungeon exit is a place to go to")
+   ns.Travel.go(34, K.MAXY)
+   check(G.level == 0, "the walk leaves the dungeon")
+   ns.mod.db.profile.fast = false
+end
+
 -- starting over from a god mode game
 G.god, G.wizard = true, true
 ns.Debug.newGame()

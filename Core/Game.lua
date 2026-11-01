@@ -154,6 +154,10 @@ local function Parse()
    elseif key == "Z" then
       ui.repcount = 0
       ns.Action.teleport()
+   elseif key == "t" then  -- go to a place that was found
+      ui.repcount = 0
+      G.nomove = true
+      ns.Travel.command()
    elseif key == "v" then
       ui.repcount = 0
       G.nomove = true

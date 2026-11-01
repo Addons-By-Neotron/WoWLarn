@@ -37,12 +37,16 @@ e  eat a cookie        w  wield a weapon       W  wear armor
 T  take off armor      d  drop an item         i  look in your pack
 D  discoveries         ^  find traps           C  close a door
 Z  teleport            g  your pack weight     P  your tax status
+t  go to a place you found
 v  version             S  save and close       Q  quit the game
 ?  this help
 
 The buttons at the bottom of the window do the same with the mouse.
 Click the window to capture the keyboard, Esc releases it.  Hover over the
-map, your stats, your effects and your items for tooltips.]=],
+map, your stats, your effects and your items for tooltips.
+
+Press t (or the map button) to go to a stairway, shop, altar and so on that you
+have found.  You walk the shortest way, and stop at monsters, objects and traps.]=],
    H.."Special notes"..R..[=[
 
 When dropping gold, if you type '*' as the amount, all your gold gets dropped.
