@@ -122,6 +122,7 @@ L["can't createmonst(%d)"] = true
 L["monster"] = true
 L["The Vorpal Blade beheads the %s!"] = true
 L["The %s died!"] = true
+L["You gained %d exp."] = true
 L["You hit the %s."] = true
 L["You missed the %s."] = true
 L["Your weapon is dulled by the %s."] = true

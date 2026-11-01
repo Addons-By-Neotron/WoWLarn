@@ -276,6 +276,7 @@ function Monster.hitm(x, y, amt, hitmsg)
    if hpoints <= amt then
       ns.ui:Animate("die", x, y, monst)
       Msg(L["The %s died!"], G.lastmonst)
+      Msg(L["You gained %d exp."], monster[monst].experience)
       ns.Bestiary.kill(monst)
       ns.Player.raiseExperience(monster[monst].experience)
       mon[x][y], know[x][y] = 0, 0  -- C: disappear(x, y)
