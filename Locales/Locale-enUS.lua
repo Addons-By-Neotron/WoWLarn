@@ -1176,3 +1176,4 @@ L["Scroll of %s"] = true
 L["Only a positive display can be tried."] = true
 L["It can turn aside the special attacks of the mightiest monsters."] = true
 L["You are shapeshifted, so you are drawn as an icon."] = true
+L["leper gnome"] = true

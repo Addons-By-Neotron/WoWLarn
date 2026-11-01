@@ -595,6 +595,7 @@ end
 -- id and the rules stay those of the original monster.
 V.MONSTER_NAME = {
    [K.LEMMING] = L["rat"],
+   [K.GNOME] = L["leper gnome"],
    [K.YELLOWMOLD] = L["fungal spore"],
    [K.ZILLER] = L["zhevra"],
    [K.XVART] = L["bluegill warrior"],
