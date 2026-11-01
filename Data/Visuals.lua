@@ -685,7 +685,7 @@ function V.ClassIcon(class)
    return ICONS .. class.icon
 end
 
--- The icon of the form the player is in (a druid's bear, cat or bird), or nil if not shapeshifted.
+-- The icon to draw the player as while in a form (a druid's bear, cat or bird): the class icon, or nil if not shapeshifted.
 -- A form does not fit the model of a tile, which would need another turn for every facing, so
 -- the map draws the icon instead; the log says so once.
 local shifted = false
@@ -695,12 +695,11 @@ function V.FormIcon()
       shifted = false
       return nil
    end
-   local icon = GetShapeshiftFormInfo and GetShapeshiftFormInfo(form)
    if not shifted then
       shifted = true
       ns.ui:Log("system", L["You are shapeshifted, so you are drawn as an icon."])
    end
-   return icon or ICONS .. "INV_Misc_QuestionMark"
+   return V.ClassIcon(ns.G.class)  -- (until there are generic models by class)
 end
 
 -- Textures of the ground, walls and lava: file data ids, by region and slot.  A tile takes one of

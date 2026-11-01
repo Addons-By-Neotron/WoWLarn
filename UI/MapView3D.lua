@@ -528,7 +528,7 @@ local function DrawTile(layers, x, y, ground)
    local object = G.item[x][y]
    local models = ns.mod.db.profile.models ~= false and not ns.mod.db.profile.ascii
    local ghost = map3d.ghosts[x * 100 + y]
-   if ghost and monster == 0 and ghost.expires > GetTime() and models then  -- (the corpse stays under the player)
+   if ghost and monster == 0 and ghost.expires > GetTime() and ghost.level == G.level and models then  -- (the corpse stays under the player)
       Shadow(layers[ACTOR], (x - 0.5) * TILE, (y - 0.5) * TILE, TILE * 0.42)
       Model(layers[ACTOR], ghost.display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, ghost.facing, ANIM.death, ghost)
    else
@@ -656,7 +656,7 @@ function map3d:Animate(kind, x, y, monster, fromY)
       local look = G.look[x][y]
       local display = look ~= 0 and monster and V.MonsterDisplay(monster, look)
       if display then
-         self.ghosts[key] = { display = display, expires = now + duration,
+         self.ghosts[key] = { display = display, expires = now + duration, level = G.level,
             facing = Facing(DIRECTION[Sign(G.playerx - x)][Sign(G.playery - y)]) }
       end
    end
@@ -852,7 +852,7 @@ function map3d:Draw()
    for key, ghost in pairs(self.ghosts) do  -- (hiding a model restarts it: only those not drawn)
       if ghost.drawn ~= self.drawn then
          if ghost.frame then ghost.frame:Hide() end
-         if ghost.expires <= GetTime() then self.ghosts[key] = nil end
+         if ghost.expires <= GetTime() or ghost.level ~= G.level then self.ghosts[key] = nil end  -- (a corpse stays on its level)
       end
    end
    for row = 1, ROWS do
