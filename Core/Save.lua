@@ -38,7 +38,7 @@ local SCALARS = {
 -- The tables of G that are copied as they are.
 local TABLES = {
    "c", "cbak", "iven", "ivenarg", "spelknow", "scrollknown", "potionknown", "visited", "spheres",
-   "stock", "course", "drug", "monster", "gemsSold",
+   "stock", "course", "drug", "monster", "gemsSold", "rules",
 }
 
 local function Copy(value)
@@ -99,7 +99,7 @@ function Save.unpack(data)
    for _, name in ipairs({ "c", "cbak", "iven", "ivenarg", "spelknow", "scrollknown", "potionknown" }) do
       for index, value in pairs(data[name]) do G[name][index] = value end
    end
-   for _, name in ipairs({ "visited", "spheres", "stock", "course", "drug", "monster", "gemsSold" }) do
+   for _, name in ipairs({ "visited", "spheres", "stock", "course", "drug", "monster", "gemsSold", "rules" }) do
       G[name] = Copy(data[name])
    end
    for id, name in pairs(ns.Visuals.MONSTER_NAME) do  -- (renamed since the game was saved)
@@ -110,6 +110,7 @@ function Save.unpack(data)
       if G.monster[id] then G.monster[id].armorclass = ac end
    end
    G.gemsSold = G.gemsSold or {}  -- (saves from before this was kept)
+   G.rules = G.rules or {}  -- (so were the options of the game)
    G.levels = {}
    for index, packed in pairs(data.levels) do
       local level = { loot = Copy(packed.loot) }

@@ -68,13 +68,6 @@ local function BuildOptions()
                   ns.ui:RefreshNow("map")
                end,
             },
-            difficulty = {
-               type = "range",
-               name = L["Difficulty"],
-               desc = L["How hard the game is.  Monsters are tougher and the dungeon is meaner.  It applies to games you start from now on."],
-               order = 12,
-               min = 0, max = 6, step = 1,
-            },
             tileSize = {
                type = "range",
                name = L["Tile size"],
@@ -105,12 +98,6 @@ local function BuildOptions()
                   mod.db.profile.shadows = value
                   ns.ui:RefreshNow("map")
                end,
-            },
-            races = {
-               type = "toggle",
-               name = L["Races"],
-               desc = L["Your character's race adds a few points to the stats of a new game.  Not part of the original game."],
-               order = 17.5,
             },
             textures = {
                type = "toggle",
@@ -205,19 +192,6 @@ local function BuildOptions()
                name = L["Fast mode"],
                desc = L["Skip the short pauses between game steps, such as spell animations."],
                order = 20,
-               width = "full",
-            },
-            easy = {
-               type = "header",
-               name = L["Optional changes to the game"],
-               order = 40,
-            },
-            elevatorLimit = {
-               type = "range",
-               name = L["Elevator limit"],
-               desc = L["The most levels an express elevator can take you, up or down.  Off (0) leaves it to chance, as in the original: a ride from level 3 can end on level 15.  Applies to the next ride."],
-               order = 41,
-               min = 0, max = 14, step = 1,
                width = "full",
             },
          },

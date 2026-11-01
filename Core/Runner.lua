@@ -423,6 +423,14 @@ end
 
 -- C: pick_char(). Returns the chosen entry of classes (keyed by its letter, or Enter for
 -- the highlighted one; the arrow keys move the highlight).
+-- The settings of a new game (UI/GameOptions.lua): waits for Start, which is Enter.
+function ui:PickSettings()
+   ns.gameOptions:Show()
+   local key
+   repeat key = self:GetKey() until key == "ENTER" or key == ESC
+   ns.gameOptions:Hide()
+end
+
 function ui:PickClass(classes, selected)
    ns.picker:Show(classes, selected)
    local result

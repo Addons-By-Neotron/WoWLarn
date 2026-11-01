@@ -99,6 +99,7 @@ function main:Create()
    map:SetPoint("BOTTOMRIGHT", -(SIDE_W + 2 * PAD), BOTTOM_H + 2 * PAD)
 
    ns.picker:Create(map)
+   ns.gameOptions:Create(map)
    ns.actionBar:Create(map)
    ns.inventory:Create(map)
    ns.spellbook:Create(map)

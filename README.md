@@ -41,9 +41,11 @@ turn shadows, models and sounds off, or draw monsters as the original letters.
 Deliberate changes are marked `FIX:` in the code. The main ones: the lemming cap, what is on a
 tile only comes up when you step on it, every game gets its own place on the scoreboard, the log
 says how much experience a kill gave and when a metamorph changes shape, and a new character
-knows the potions and scrolls it starts with. Optional settings (all off by default): Races (a few
-stat points from your character's race) and an elevator limit (the most levels an express
-elevator can take you).
+knows the potions and scrolls it starts with. A new game starts with a settings window: the
+difficulty, and optional changes, all off by default: tough weapons (the better a weapon, and the
+more plus it has, the better it resists the rust monster and its kin; the Lance of Death never
+dulls), an elevator limit (the most levels an express elevator can take you), and Races (a few
+stat points from your character's race). A game keeps the settings it was started with.
 
 The eight classes keep the Ularn stats. Note they are not balanced: the Hunter is the best all
 rounder, and the Glass Cannon (the WoW warlock) starts with 1 hit point and the Lance of Death.

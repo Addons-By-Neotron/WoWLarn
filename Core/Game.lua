@@ -242,6 +242,7 @@ function Game.Run()
       ui:Refresh("all")
       ui:Log("system", L["Welcome back.  Your game goes on where you left it."])
    else
+      ui:PickSettings()
       local class = ui:PickClass(ns.Classes, DefaultClass())
       ns.Create.makePlayer(class)
       ns.Create.newCaveLevel(0)

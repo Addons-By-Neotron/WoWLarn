@@ -84,9 +84,13 @@ The classes are the Ularn ones, with WoW names.  The Glass Cannon starts with
 touches it.
 
 A monster that is hit by an unseen attacker (an invisible stalker, a demon
-lord without the Eye of Larn) stops your running for a moment.  Settings has
-an optional elevator limit, to keep an express elevator from taking you many
-levels at once.]=],
+lord without the Eye of Larn) stops your running for a moment.
+
+A new game starts with a settings window: the difficulty, and some optional
+changes (all off by default): tough weapons, which resist being dulled the
+better they are (the Lance of Death never dulls), a limit on how far an express
+elevator can take you, and a few stat points from your character's race.  A
+game keeps the settings it was started with.]=],
    H.."The high scores"..R..[=[
 
 There are two lists, one for winners and one for characters that died, shared

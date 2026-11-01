@@ -508,7 +508,9 @@ ns.inventory:Open("test", function(id) return id == K.OPLATE end); ns.inventory:
 ---------------------------------------------------------------- the game
 ui.co = nil
 ui:NewGame()
-check(ui.wait == "key" and ns.picker.frame.shown, "class picker waits")
+check(ui.wait == "key" and ns.gameOptions.frame.shown, "the settings of a new game come first")
+ui:InjectKey("ENTER")
+check(ui.wait == "key" and ns.picker.frame.shown and not ns.gameOptions.frame.shown, "class picker waits")
 ui:InjectKey("UP"); ui:InjectKey("ENTER")  -- Mage is the default (index 2); Up goes to 1
 check(G.class and G.class.token == "WARRIOR", "picked via arrows and enter")
 check(ui.wait == "key", "welcome asks for more")
@@ -546,7 +548,8 @@ keys("x"); check(last():find("not implemented"), "unknown command")
 ui:InjectKey("ESC"); check(not ns.main.focused, "Esc releases the keyboard")
 keys("Q"); keys("n"); check(ui:IsActive(), "quit declined")
 keys("Q"); keys("y"); check(not ui:IsActive(), "quit ends the game")
-keys("a"); check(ui:IsActive() and ns.picker.frame.shown, "any key starts a new game")
+keys("a"); check(ui:IsActive() and ns.gameOptions.frame.shown, "any key starts a new game")
+ui:InjectKey("ENTER"); check(ns.picker.frame.shown, "the class comes after the settings")
 
 -- stairs, entrance and shaft in a real game
 ns.picker.frame.shown = true
@@ -950,7 +953,7 @@ Clear(); G.c[K.HP] = 1; G.item[31][8] = K.OTRAPARROW; keys("l")
 check(not ui:IsActive() or G.dead, "an arrow ends the game at 1 hp ")
 keys("S"); ns.main:Show()
 -- a new game, and death by one's own fireball in the live thread
-keys("a"); keys(" "); check(ui:IsActive() and ui.wait == "key", "a new game starts")
+keys("a"); ui:InjectKey("ENTER"); keys("a"); keys(" "); check(ui:IsActive() and ui.wait == "key", "a new game starts")
 do
    local oldfast = ns.mod.db.profile.fast
    ns.mod.db.profile.fast = true
@@ -1436,11 +1439,11 @@ end
 
 -- the elevator limit option
 do
-   ui.co = nil; ui:NewGame(); ui:InjectKey("UP"); ui:InjectKey("ENTER"); keys(" ")
+   ui.co = nil; ui:NewGame(); ui:InjectKey("ENTER"); ui:InjectKey("UP"); ui:InjectKey("ENTER"); keys(" ")
    check(ui.atCommand, "a new game waits for a command")
    ns.mod.db.profile.fast = true  -- (no naps)
    G.god = true  -- (the rides land among monsters)
-   ns.mod.db.profile.elevatorLimit = 2
+   G.rules.elevatorLimit = 2
    local function Ready()  -- (where the ride ended may ask something)
       for _ = 1, 5 do if not ui.atCommand then keys("i") end end
       check(ui.atCommand, "back at the command prompt")
@@ -1454,7 +1457,7 @@ do
       ns.Create.newCaveLevel(10); Clear(); G.lookedHere = nil; G.item[31][8] = K.OELEVATORUP; keys("l")
       check(G.level >= 8 and G.level <= 9, "elevator up stays within the limit: " .. G.level)
    end
-   ns.mod.db.profile.elevatorLimit = nil
+   G.rules.elevatorLimit = 0
    -- the bank: sell one stone, sell all, deposit with the slider window
    Ready(); Clear(); G.lookedHere = nil; G.taxes = 0
    G.item[31][8] = K.OBANK
@@ -1497,8 +1500,29 @@ do
    G.god = false
 end
 
+-- tough weapons: the better the weapon, the less it is dulled
+do
+   local M = ns.Monster
+   check(M.resistChance(K.OLANCE, 0) == 100 and M.resistChance(K.ODAGGER, 0) == 0 and M.resistChance(K.ODAGGER, 4) == 20
+      and M.resistChance(K.OSLAYER, 0) == 70 and M.resistChance(K.OVORPAL, 10) == 90, "chances to resist dulling")
+   local function Dulled(id, rule)
+      Fresh(3)
+      G.rules.toughWeapons = rule
+      G.iven[1], G.ivenarg[1], G.c[K.WIELD] = id, 0, 1
+      G.c[K.DEXTERITY], G.c[K.LEVEL] = 30, 40  -- (it hits)
+      G.mon[31][8], G.hitp[31][8] = K.RUSTMONSTER, 1000000
+      for _ = 1, 200 do M.hitmonster(31, 8) end
+      return G.ivenarg[1] < 0
+   end
+   check(Dulled(K.OLANCE, false), "the lance is dulled by the rust monster as in the original")
+   check(not Dulled(K.OLANCE, true), "the lance is never dulled with tough weapons")
+   check(Dulled(K.ODAGGER, true), "a plain dagger still dulls with tough weapons")
+   G.rules.toughWeapons = false
+end
+
 -- starting over from a god mode game
 G.god, G.wizard = true, true
 ns.Debug.newGame()
+ui:InjectKey("ENTER")  -- (the settings)
 check(ui.wait == "key" and ns.picker.frame.shown and not G.god and not G.wizard, "a new game starts from the class picker, without god mode")
 print("ALL OK")

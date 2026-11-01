@@ -68,7 +68,9 @@ end
 function Create.makePlayer(class)
    local bar = ns.mod.db.char.actionbar  -- (the slots of an earlier game, wizard tests too, are not for this one)
    if bar then wipe(bar) end
-   c[K.HARDGAME] = ns.mod.db.profile.difficulty or 0  -- (the setting at the start of the game)
+   local profile = ns.mod.db.profile
+   c[K.HARDGAME] = profile.difficulty or 0  -- (the settings at the start of the game)
+   G.rules = { elevatorLimit = profile.elevatorLimit or 0, toughWeapons = profile.toughWeapons or false }
    c[K.LEVEL] = 1
    c[K.REGENCOUNTER] = 16
    c[K.ECOUNTER] = 96  -- start regeneration correctly

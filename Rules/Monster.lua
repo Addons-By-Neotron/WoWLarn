@@ -312,6 +312,23 @@ local DULLABLE = {
    [K.OVORPAL] = true, [K.OBELT] = true,
 }
 
+-- FIX: not in the C. The tough weapons option: the better the weapon, the better it resists
+-- being dulled. The Lance of Death never dulls; the best weapons start at 70%, and every plus
+-- adds 5% (to 90% at most).
+local TOUGH = {
+   [K.OSLAYER] = true, [K.OVORPAL] = true, [K.OSWORDofSLASHING] = true, [K.OLONGSWORD] = true,
+   [K.O2SWORD] = true, [K.OBATTLEAXE] = true,
+}
+function Monster.resistChance(id, plus)
+   if id == K.OLANCE then return 100 end
+   return math.min((TOUGH[id] and 70 or 0) + 5 * math.max(plus, 0), 90)
+end
+
+function Monster.resistsDulling(slot)
+   if not G.rules.toughWeapons then return false end
+   return rnd(100) <= Monster.resistChance(iven[slot], ivenarg[slot])
+end
+
 -- C: hitmonster(). The player attacks the monster at (x, y).
 function Monster.hitmonster(x, y)
    if c[K.TIMESTOP] ~= 0 then return end  -- not if time stopped
@@ -341,7 +358,9 @@ function Monster.hitmonster(x, y)
    -- If the monster was hit, deal with weapon dulling.
    local wield = c[K.WIELD]
    if flag and (monst == K.RUSTMONSTER or monst == K.DISENCHANTRESS or monst == K.CUBE) and wield > 0 then
-      if (ivenarg[wield] > -10 and DULLABLE[iven[wield]]) or ivenarg[wield] > 0 then
+      if Monster.resistsDulling(wield) then
+         Msg(L["Your weapon shrugs off the %s."], G.lastmonst)
+      elseif (ivenarg[wield] > -10 and DULLABLE[iven[wield]]) or ivenarg[wield] > 0 then
          Msg(L["Your weapon is dulled by the %s."], G.lastmonst)
          ns.Bestiary.special(monst, ns.Bestiary.DULLS)
          ivenarg[wield] = ivenarg[wield] - 1
