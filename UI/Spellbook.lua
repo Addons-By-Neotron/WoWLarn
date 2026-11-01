@@ -30,7 +30,7 @@ ns.spellbook = spellbook
 
 local COLUMNS = 3
 local COLUMN_W, ROW_H = 220, 22
-local HEADER_H, LINE_H = 26, 14
+local HEADER_H, LINE_H, FOOTER_H = 26, 14, 36
 
 function spellbook:Create(parent)
    local frame = ns.CreatePanel(parent)
@@ -44,6 +44,15 @@ function spellbook:Create(parent)
 
    self.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
    self.title:SetPoint("TOPLEFT", 8, -6)
+
+   local close = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+   close:SetSize(80, 22)
+   close:SetPoint("BOTTOMRIGHT", -8, 8)
+   close:SetText(L["Close"])
+   close:SetScript("OnClick", function()
+      ns.main:SetFocus(true)
+      ns.ui:InjectKey(ns.ESC)
+   end)
 
    self.buttons = {}
    for index = 1, K.SPNUM do
@@ -125,7 +134,7 @@ function spellbook:Open(all)
          button:Hide()
       end
    end
-   self.frame:SetHeight(HEADER_H + math.max(1, math.ceil(shown / COLUMNS)) * ROW_H + 8)
+   self.frame:SetHeight(HEADER_H + math.max(1, math.ceil(shown / COLUMNS)) * ROW_H + FOOTER_H)
    self.frame:Show()
 end
 
@@ -169,6 +178,6 @@ function spellbook:ShowDiscoveries()
       text:SetText(table.concat(lines[column], "\n"))
       text:Show()
    end
-   self.frame:SetHeight(HEADER_H + math.max(1, #lines[1]) * LINE_H + 8)
+   self.frame:SetHeight(HEADER_H + math.max(1, #lines[1]) * LINE_H + FOOTER_H)
    self.frame:Show()
 end

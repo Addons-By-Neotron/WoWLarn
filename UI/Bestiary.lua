@@ -29,18 +29,18 @@ local window = {}
 ns.bestiaryWindow = window
 
 local LIST_W, ROW_H, ROWS = 190, 18, 26
-local DETAIL_W, MODEL_H = 330, 240
+local DETAIL_W, MODEL_H, FOOTER_H = 330, 240, 32
 local MODEL_ROOM = 1.7  -- the models are made for a frame a tile wide: farther away in this larger one
 
 -- Tall enough for the details of a monster with many special attacks.
 function window:Fit()
    local needed = 32 + MODEL_H + 6 + self.name:GetStringHeight() + 8 + self.details:GetStringHeight() + 14
-   self.frame:SetHeight(math.max(40 + ROWS * ROW_H, needed))
+   self.frame:SetHeight(math.max(40 + ROWS * ROW_H, needed) + FOOTER_H)
 end
 
 function window:Create()
    local frame = ns.CreatePanel(UIParent, "WoWLarnBestiary", { 0.04, 0.04, 0.06, 0.97 })
-   frame:SetSize(LIST_W + DETAIL_W + 40, 40 + ROWS * ROW_H)
+   frame:SetSize(LIST_W + DETAIL_W + 40, 40 + ROWS * ROW_H + FOOTER_H)
    frame:SetPoint("CENTER", 120, 0)
    frame:SetFrameStrata("FULLSCREEN_DIALOG")  -- (above the main window, whose many layers are all in DIALOG)
    frame:SetToplevel(true)
@@ -67,6 +67,11 @@ function window:Create()
          self:Update()
       end)
    end
+   local close = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+   close:SetSize(80, 22)
+   close:SetPoint("BOTTOMRIGHT", -12, 8)
+   close:SetText(L["Close"])
+   close:SetScript("OnClick", function() frame:Hide() end)
    SortButton(L["Name"], "name", -12)
    SortButton(L["Level"], "level", -72)
 

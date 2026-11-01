@@ -59,6 +59,15 @@ function inventory:Create(parent)
    self.summary:SetJustifyH("LEFT")
    self.summary:SetJustifyV("BOTTOM")
 
+   local close = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+   close:SetSize(80, 22)
+   close:SetPoint("BOTTOMRIGHT", -8, 6)
+   close:SetText(L["Close"])
+   close:SetScript("OnClick", function()
+      ns.main:SetFocus(true)
+      ns.ui:InjectKey(ns.ESC)
+   end)
+
    self.rows = {}
    for slot = 1, K.IVENSIZE do
       local column = math.floor((slot - 1) / ROWS)
