@@ -79,6 +79,7 @@ function ui:Resume(...)
       geterrorhandler()(err)
    elseif coroutine.status(co) == "dead" then
       self.co = nil
+      self.endTime = GetTime()
       ns.prompt:Clear()
    end
 end
@@ -92,6 +93,7 @@ end
 -- How long movement keys are ignored after a monster you can't see has hit you, so a held key
 -- (or its repeat) doesn't carry you on while you still don't know what hit you.
 local UNSEEN_PAUSE = 0.5
+local GAME_OVER_PAUSE = 1.5  -- how long keys do not start a new game after one has ended
 
 function ui:Unseen()
    self.unseenUntil = GetTime() + UNSEEN_PAUSE
@@ -105,6 +107,9 @@ function ui:InjectKey(key)
    if self.wait == "key" then
       self:Resume(key)
    elseif not self.co then
+      -- (not a key that is held down or hammered on as the game ends: it would start the next game
+      -- before you have seen how this one ended)
+      if self.endTime and GetTime() - self.endTime < GAME_OVER_PAUSE then return end
       self:NewGame(key)
    end
    -- Otherwise the game is napping: input is dropped.

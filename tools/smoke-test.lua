@@ -61,7 +61,7 @@ local function strip(s) return (s:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
 local function lines() local out = {} for i, l in ipairs(LOG) do out[i] = strip(l) end return out end
 local function last() local l = lines() return l[#l] end
 local function check(cond, msg) if not cond then print("FAIL: " .. msg); os.exit(1) end end
-local function keys(s) ui.unseenUntil = nil; for ch in s:gmatch(".") do ui:InjectKey(ch) end end  -- (the clock stands still here)
+local function keys(s) ui.unseenUntil = nil; ui.endTime = nil; for ch in s:gmatch(".") do ui:InjectKey(ch) end end  -- (the clock stands still here)
 
 ---------------------------------------------------------------- data
 check(#ns.MonsterData == 65, "65 monsters, got " .. #ns.MonsterData)
@@ -1643,6 +1643,18 @@ G.god, G.wizard = true, true
 ns.Debug.newGame()
 ui:InjectKey("ENTER")  -- (the settings)
 check(ui.wait == "key" and ns.picker.frame.shown and not G.god and not G.wizard, "a new game starts from the class picker, without god mode")
+-- a key pressed as the game ends does not start the next one
+do
+   local oldCo, oldWait = ui.co, ui.wait
+   ui.co, ui.wait, ui.startKey = nil, nil, nil; ui.endTime = GetTime()
+   ui:InjectKey("l")
+   check(ui.startKey == nil, "no new game right after one has ended")
+   ui.endTime = GetTime() - 2
+   ui:InjectKey("l")
+   check(ui.startKey == "l", "a new game after the pause")
+   ui.co, ui.wait, ui.endTime = oldCo, oldWait, nil
+end
+
 -- warnings that have to be answered
 do
    local oldCo, oldWait = ui.co, ui.wait

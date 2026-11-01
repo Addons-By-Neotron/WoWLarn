@@ -38,6 +38,10 @@ local KEYMAP = {
 
 local ARROWS = { UP = true, DOWN = true, LEFT = true, RIGHT = true }
 
+-- A direction key held down goes on moving, at about the pace of walking (a run is faster).
+local HOLD_DELAY, HOLD_STEP = 0.3, 0.12  -- seconds before it starts, and between steps
+local MOVE_LETTERS = "hjklyubn"
+
 local function SavePosition(frame)
    local point, _, _, x, y = frame:GetPoint()
    local window = ns.mod.db.profile.window
@@ -133,8 +137,17 @@ function main:Create()
    frame:SetScript("OnMouseDown", function() self:SetFocus(true) end)
    frame:SetScript("OnKeyDown", function(_, key) self:OnKeyDown(key) end)
    frame:SetScript("OnChar", function(_, char)
-      if self.focused then ns.ui:InjectKey(char) end
+      if not self.focused then return end
+      if self.skipChar == char then  -- (the repeat of the system: the steps come from OnUpdate)
+         self.skipChar = nil
+         return
+      end
+      ns.ui:InjectKey(char)
    end)
+   frame:SetScript("OnKeyUp", function(_, key)
+      if key == self.held then self.held, self.skipChar = nil, nil end
+   end)
+   frame:SetScript("OnUpdate", function() self:OnHold() end)
    frame:SetScript("OnShow", function() self:OnShow() end)
    frame:SetScript("OnHide", function()
       self:SetFocus(false)
@@ -165,6 +178,14 @@ function main:OnKeyDown(key)
       return
    end
    frame:SetPropagateKeyboardInput(false)
+   local move = ARROWS[key] and key or (#key == 1 and MOVE_LETTERS:find(key:lower(), 1, true) and key:lower())
+   if move and not IsShiftKeyDown() then
+      if self.held == key then  -- (held down: the system repeats the key)
+         if not ARROWS[key] then self.skipChar = move end
+         return
+      end
+      self.held, self.heldMove, self.heldAt = key, move, GetTime() + HOLD_DELAY
+   end
    if key == "PAGEUP" then
       ns.log:PageUp()
    elseif key == "PAGEDOWN" then
@@ -173,6 +194,21 @@ function main:OnKeyDown(key)
       local name = KEYMAP[key]
       if IsShiftKeyDown() and ARROWS[name] then name = "SHIFT-" .. name end  -- run
       ns.ui:InjectKey(name)
+   end
+end
+
+-- While a direction key is held: a step now and then, if the game waits for a command.
+function main:OnHold()
+   local held = self.held
+   if not held then return end
+   if not self.focused or (IsKeyDown and not IsKeyDown(held)) then
+      self.held, self.skipChar = nil, nil
+      return
+   end
+   local now = GetTime()
+   if now >= self.heldAt and ns.ui:IsReady() then
+      self.heldAt = now + HOLD_STEP
+      ns.ui:InjectKey(self.heldMove)
    end
 end
 
