@@ -1591,6 +1591,15 @@ do
    G.c[K.LANCEDEATH] = 0
 end
 
+-- a key that starts a new game and then repeats does not skip the settings window
+ui.co = nil; ui.wait = nil
+ui:InjectKey("ENTER")
+check(ns.gameOptions.frame.shown, "Enter starts a new game with the settings")
+ui:InjectKey("ENTER")
+check(ns.gameOptions.frame.shown and not ns.picker.frame.shown, "the repeat of the key does not skip the settings")
+ui:InjectKey(ns.ESC)
+check(ns.picker.frame.shown, "another key goes on")
+
 -- starting over from a god mode game
 G.god, G.wizard = true, true
 ns.Debug.newGame()

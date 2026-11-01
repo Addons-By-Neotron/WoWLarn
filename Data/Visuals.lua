@@ -691,23 +691,6 @@ function V.ClassIcon(class)
    return ICONS .. class.icon
 end
 
--- The icon to draw the player as while in a form (a druid's bear, cat or bird): the class icon, or nil if not shapeshifted.
--- A form does not fit the model of a tile, which would need another turn for every facing, so
--- the map draws the icon instead; the log says so once.
-local shifted = false
-function V.FormIcon()
-   local form = GetShapeshiftForm and GetShapeshiftForm() or 0
-   if not form or form == 0 then
-      shifted = false
-      return nil
-   end
-   if not shifted then
-      shifted = true
-      ns.ui:Log("system", L["You are shapeshifted, so you are drawn as an icon."])
-   end
-   return V.ClassIcon(ns.G.class)  -- (until there are generic models by class)
-end
-
 -- Textures of the ground, walls and lava: file data ids, by region and slot.  A tile takes one of
 -- the list by chance (the same one every time).  They are picked from the dungeon and tileset
 -- textures of the game (checked by the listfile, not by eye: /larn tex, in debug builds, steps

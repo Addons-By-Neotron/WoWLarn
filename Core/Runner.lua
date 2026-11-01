@@ -56,7 +56,9 @@ function ui:IsActive()
    return self.co ~= nil
 end
 
-function ui:NewGame()
+-- startKey: the key that starts it, if one does.
+function ui:NewGame(startKey)
+   self.startKey, self.startTime = startKey, GetTime()
    ns.scoreboard:Hide()
    self.co = coroutine.create(ns.Game.Run)
    self.wait = nil
@@ -103,7 +105,7 @@ function ui:InjectKey(key)
    if self.wait == "key" then
       self:Resume(key)
    elseif not self.co then
-      self:NewGame()
+      self:NewGame(key)
    end
    -- Otherwise the game is napping: input is dropped.
 end
@@ -428,7 +430,11 @@ end
 function ui:PickSettings()
    ns.gameOptions:Show()
    local key
-   repeat key = self:GetKey() until key == "ENTER" or key == ESC
+   repeat
+      key = self:GetKey()
+      -- (not the repeat of the key that started the game: that would skip the window)
+      local repeated = key == self.startKey and GetTime() - self.startTime < 0.6
+   until (key == "ENTER" or key == ESC) and not repeated
    ns.gameOptions:Hide()
 end
 

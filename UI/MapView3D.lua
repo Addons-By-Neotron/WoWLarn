@@ -623,7 +623,7 @@ end
 -- The facing and the animation of the player model.
 function map3d.PlayerModel()
    local entry = map3d.playerAnim
-   return Facing(G.facing), entry and entry.expires > GetTime() and entry.anim or nil
+   return Facing(G.facing), (G.c[K.HP] <= 0 and ANIM.death) or entry and entry.expires > GetTime() and entry.anim or nil
 end
 map3d.Model = Model
 
@@ -821,14 +821,10 @@ function map3d:Draw()
       local mx, my, scale = Project((posX - 0.5) * TILE, (posY - 0.5) * TILE, 0)
       if mx then
          local size = TILE * 0.9 * scale
-         local formIcon = not ns.mod.db.profile.ascii and V.FormIcon()
-         local models = ns.mod.db.profile.models ~= false and not ns.mod.db.profile.ascii and not formIcon
-         if formIcon then
-            Shadow(layer, (posX - 0.5) * TILE, (posY - 0.5) * TILE, TILE * 0.42)
-            Icon(layer, formIcon, mx, my + size * 0.15, size, size)
-         elseif models then
+         local models = ns.mod.db.profile.models ~= false and not ns.mod.db.profile.ascii
+         if models then
             local entry = self.playerAnim
-            local anim = entry and entry.expires > GetTime() and entry.anim or (walking and ANIM.walk or ANIM.stand)
+            local anim = (G.c[K.HP] <= 0 and ANIM.death) or entry and entry.expires > GetTime() and entry.anim or (walking and ANIM.walk or ANIM.stand)
             Shadow(layer, (posX - 0.5) * TILE, (posY - 0.5) * TILE, TILE * 0.42)
             local flash = self.flash
             if flash and flash.expires > GetTime() then  -- (fades out)
