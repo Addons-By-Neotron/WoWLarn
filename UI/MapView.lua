@@ -388,7 +388,9 @@ function map:Draw()
          local facing, anim = ns.map3d.PlayerModel()
          cell.actor:Hide()
          cell.glyph:Hide()
-         ns.map3d.Model(frame, "player", self.offsetX + (col - 0.5) * TILE,
+         local look = ns.Create.gameLook()
+         ns.map3d.playerLook = look
+         ns.map3d.Model(frame, look or "player", self.offsetX + (col - 0.5) * TILE,
             self.offsetY + row * TILE - TILE * 0.05, TILE * 0.9, facing, anim)
       else
          cell.actor:SetTexture(V.ClassIcon(G.class))

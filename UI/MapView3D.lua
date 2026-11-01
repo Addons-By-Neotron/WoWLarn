@@ -171,6 +171,11 @@ end
 
 map3d.CameraScale = CameraScale
 
+-- True if the look is the player's: "player", or the model of the race picked for the game.
+local function Own(look)
+   return look == "player" or (look ~= nil and look == map3d.playerLook)
+end
+
 -- A creature standing on the floor at (x, y) in the view: a model of the unit ("player") or of
 -- a display, width pixels wide and about twice as tall.
 -- owner: a table that keeps its own frame (a dying monster), so the shifting of the pool of
@@ -219,6 +224,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
       elseif look < 0 then  -- (a model file data id, negated)
          frame.model:SetModel(-look)
       else
+         if Own(look) then frame.model:ClearModel() end  -- (the frame may have held the unit)
          frame.model:SetDisplayInfo(look)
       end
       frame.facing, frame.anim = nil, nil
@@ -238,16 +244,16 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    -- every model gets a frame MODEL_ROOM times larger around the same centre, and is scaled
    -- down by the same factor to look the same size (always, so nothing changes when it dies)
    local k = MODEL_ROOM
-   local room = look ~= "player" and V.Room(look) or PLAYER_ROOM
+   local room = not Own(look) and V.Room(look) or PLAYER_ROOM
    local own = look == "player" and V.PlayerScale() or 1  -- (a short race: the model is smaller, so the feet are brought down again)
-   y = y + (look ~= "player" and V.Lower(look) or (1 - 1 / own) / 2 * MODEL_ASPECT * 0.9) * width
+   y = y + (not Own(look) and V.Lower(look) or (1 - 1 / own) / 2 * MODEL_ASPECT * 0.9) * width
    frame:ClearAllPoints()
    frame:SetPoint("CENTER", layer, "TOPLEFT", x, -(y - width * MODEL_ASPECT / 2))
    frame:SetSize(width * k * room, width * k * room * MODEL_ASPECT)
    -- (every time: the client resets the scale when it reloads or restarts the model)
    if k ~= 1 and frame.model.SetModelScale then frame.model:SetModelScale(1 / k) end
    -- (after the size: the client sets up the camera again when a frame is resized)
-   local scale = look ~= "player" and V.Scale(look) * V.Room(look) or own * PLAYER_ROOM  -- (a larger frame, the camera further back)
+   local scale = not Own(look) and V.Scale(look) * V.Room(look) or own * PLAYER_ROOM  -- (a larger frame, the camera further back)
    if frame.scale ~= scale then
       frame.scale = scale
       CameraScale(frame.model, scale)
@@ -837,7 +843,9 @@ function map3d:Draw()
                   Quad(layer, { color[1], color[2], color[3], 0.9 * fade }, ax, ay, bx, by, cx, cy, dx, dy, SHADOW)
                end
             end
-            Model(layer, "player", mx, my + size * 0.1, size * 1.1, Facing(G.facing), anim)
+            local look = ns.Create.gameLook()
+            map3d.playerLook = look
+            Model(layer, look or "player", mx, my + size * 0.1, size * 1.1, Facing(G.facing), anim)
          elseif ns.mod.db.profile.ascii then  -- the original @
             Glyph(layer, "@", V.PLAYER_COLOR, mx, my + size * 0.1, size)
          else

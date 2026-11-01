@@ -101,6 +101,12 @@ function Create.look(token)
    return models and models[Create.gender()]
 end
 
+-- The model of the player in the game: the one picked when the game was started, else (shapeshifted)
+-- the one of the race and the sex of the player, else nil: the player as they are.
+function Create.gameLook()
+   return G.raceLook or (Create.shifted() and Create.look(G.raceToken) or nil)
+end
+
 -- 1 for a man, 2 for a woman: the pick, else that of the WoW character.
 function Create.gender()
    return ns.mod.db.profile.gender or ((UnitSex and UnitSex("player") == 3) and 2 or 1)

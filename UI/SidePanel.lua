@@ -387,7 +387,7 @@ function side:UpdateStats()
    local T = ns.Tables
    self.title:SetText(format("%s - %s", G.name, T.class[level]))
    local race = G.raceName or (UnitRace and UnitRace("player"))
-   local look = G.raceLook or (ns.Create.shifted() and ns.Create.look(G.raceToken) or nil)
+   local look = ns.Create.gameLook()
    if self.look ~= look then  -- the model picked for the race, else the player (as a race when shapeshifted)
       self.look = look
       self.player:ClearModel()  -- (a model of a unit does not take a display)
