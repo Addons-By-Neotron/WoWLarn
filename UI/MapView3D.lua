@@ -317,9 +317,12 @@ end
 -- A picture standing upright in the middle of a tile, a little above the floor, like a
 -- wall texture (it is foreshortened as the camera looks down on it), with a shadow below.
 local PICTURE_LIFT = 0.1  -- of a tile, how far above the floor it floats
+local BOB, BOB_SPEED = 0.035, 2.2  -- of a tile, how far it bobs up and down, and how fast (radians per second)
 local function PictureQuad(layer, texture, tileX, tileY, size, ahead)
    local wx, wy = (tileX - 0.5) * TILE, (tileY - 0.5) * TILE
-   local half, z0 = size * TILE / 2, PICTURE_LIFT * TILE
+   map3d.bobbing = true  -- (the view is drawn again and again while one is in sight)
+   local bob = BOB * math.sin(GetTime() * BOB_SPEED + tileX * 7 + tileY * 13)  -- (each at its own point of the swing)
+   local half, z0 = size * TILE / 2, (PICTURE_LIFT + bob) * TILE
    local z1 = z0 + size * TILE
    local ax, ay = Project(wx - half, wy, z1)
    local bx, by = Project(wx + half, wy, z1)
@@ -693,10 +696,11 @@ function map3d:EnsureDriver()
    local since = 0
    self.driver:SetScript("OnUpdate", function(driver, elapsed)
       since = since + elapsed
-      if since < 0.03 then return end
+      local interval = (map3d.t0 or map3d.tweening) and 0.03 or 0.06  -- (a bob needs fewer frames than a step)
+      if since < interval then return end
       since = 0
       Redraw()
-      if not map3d.t0 and not map3d.tweening then driver:SetScript("OnUpdate", nil) end
+      if not map3d.t0 and not map3d.tweening and not map3d.bobbing then driver:SetScript("OnUpdate", nil) end
    end)
 end
 
@@ -770,7 +774,7 @@ function map3d:Draw()
    FOCAL = CAMERA_DISTANCE * TILE_PIXELS * (ns.mod.db.profile.zoom3d or 1) / TILE
    camera.centerX = width / 2
    camera.centerY = height * PLAYER_AT
-   self.tweening = false
+   self.tweening, self.bobbing = false, false
    self.drawn = (self.drawn or 0) + 1
    local posX, posY, walking = self:Position()
    camera.x = (posX - 0.5) * TILE
@@ -838,7 +842,7 @@ function map3d:Draw()
          end
       end
    end
-   if self.t0 or self.tweening then self:EnsureDriver() end
+   if self.t0 or self.tweening or self.bobbing then self:EnsureDriver() end
    for key, ghost in pairs(self.ghosts) do  -- (hiding a model restarts it: only those not drawn)
       if ghost.drawn ~= self.drawn then
          if ghost.frame then ghost.frame:Hide() end
