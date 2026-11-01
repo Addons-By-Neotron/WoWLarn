@@ -68,6 +68,7 @@ end
 local function Sign(value) return value > 0 and 1 or value < 0 and -1 or 0 end
 local MODEL_ASPECT = 1.7  -- how much taller than wide a model is drawn
 local SETTLE = 3  -- seconds a model gets its camera scale set again after loading
+local PLAYER_ROOM = 2  -- how much larger a frame the player model gets, to the sides and up: a shapeshifted druid is wider than a tile
 local MODEL_ROOM = 1  -- (see Model; above 1 the models are scaled down in larger frames, which proved unreliable)
 local ANIM = { stand = 0, death = 1, walk = 4, wound = 14, attack = 16 }  -- model animations
 local TWEEN = 0.16  -- seconds a step takes
@@ -236,7 +237,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    -- every model gets a frame MODEL_ROOM times larger around the same centre, and is scaled
    -- down by the same factor to look the same size (always, so nothing changes when it dies)
    local k = MODEL_ROOM
-   local room = look ~= "player" and V.Room(look) or 1
+   local room = look ~= "player" and V.Room(look) or PLAYER_ROOM
    local own = look == "player" and V.PlayerScale() or 1  -- (a short race: the model is smaller, so the feet are brought down again)
    y = y + (look ~= "player" and V.Lower(look) or (1 - 1 / own) / 2 * MODEL_ASPECT * 0.9) * width
    frame:ClearAllPoints()
@@ -245,7 +246,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    -- (every time: the client resets the scale when it reloads or restarts the model)
    if k ~= 1 and frame.model.SetModelScale then frame.model:SetModelScale(1 / k) end
    -- (after the size: the client sets up the camera again when a frame is resized)
-   local scale = look ~= "player" and V.Scale(look) * V.Room(look) or own  -- (a larger frame, the camera further back)
+   local scale = look ~= "player" and V.Scale(look) * V.Room(look) or own * PLAYER_ROOM  -- (a larger frame, the camera further back)
    if frame.scale ~= scale then
       frame.scale = scale
       CameraScale(frame.model, scale)
