@@ -313,11 +313,10 @@ local DULLABLE = {
 }
 
 -- FIX: not in the C. The tough weapons option: the better the weapon, the better it resists
--- being dulled. The Lance of Death never dulls; the best weapons start at 70%, and every plus
--- adds 5% (to 90% at most).
+-- being dulled. The Lance of Death never dulls; the magical weapons (Slayer, Vorpal Blade,
+-- Sword of Slashing) start at 70%, and every plus adds 5% (to 90% at most).
 local TOUGH = {
-   [K.OSLAYER] = true, [K.OVORPAL] = true, [K.OSWORDofSLASHING] = true, [K.OLONGSWORD] = true,
-   [K.O2SWORD] = true, [K.OBATTLEAXE] = true,
+   [K.OSLAYER] = true, [K.OVORPAL] = true, [K.OSWORDofSLASHING] = true,
 }
 function Monster.resistChance(id, plus)
    if id == K.OLANCE then return 100 end
