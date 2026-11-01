@@ -324,9 +324,9 @@ local function PictureQuad(layer, texture, tileX, tileY, size, ahead)
    local wx, wy = (tileX - 0.5) * TILE, (tileY - 0.5) * TILE
    map3d.bobbing = true  -- (the view is drawn again and again while one is in sight)
    local bob = BOB * math.sin(GetTime() * BOB_SPEED + tileX * 7 + tileY * 13)  -- (each at its own point of the swing)
-   local centre = (PICTURE_LIFT + bob + size / 2) * TILE
-   local sx, sy, scale = Project(wx, wy, centre)
+   local sx, sy, scale = Project(wx, wy, (PICTURE_LIFT + size / 2) * TILE)
    if not sx then return end
+   sy = sy - bob * TILE * scale  -- (on the screen, not in the world: straight above, a height would hardly show)
    local half = size * TILE * scale / 2
    Shadow(layer, wx, wy, size * TILE * 0.4)
    Quad(layer, Shade({ 1, 1, 1 }, ahead, 1), sx - half, sy - half, sx + half, sy - half, sx + half, sy + half, sx - half, sy + half, texture)
