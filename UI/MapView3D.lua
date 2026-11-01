@@ -135,6 +135,11 @@ local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture, uv)
       quad:SetSize(1, 1)
       layer.quads[layer.usedQuads] = quad
    end
+   local sub = type(texture) == "string" and 1 or 0  -- (the shadows and glows over the floor, whatever the order the quads were made in)
+   if quad.sub ~= sub then
+      quad.sub = sub
+      quad:SetDrawLayer("ARTWORK", sub)
+   end
    local blend = (type(texture) == "number") and "DISABLE" or "BLEND"
    if quad.blend ~= blend then
       quad.blend = blend
