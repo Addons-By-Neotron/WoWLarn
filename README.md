@@ -20,6 +20,14 @@ Works on Retail and Classic.
 - `t` lists the places you have found (stairs, elevators, shops, altars, fountains, the way out)
   and walks you to the one you pick, by the shortest way. It goes through doors, and stops for
   monsters, hits, traps and objects, always saying why.
+- A run (capital letter, or shift and an arrow key) stops when a way opens to the side (a
+  crossing, a door, the mouth of a room), in front of a known trap or pit, and when a monster you
+  can see is close, so you have time to react.
+- The spellbook is grouped by what the spells do (damage, control, buffs, healing and cures,
+  utility), with an icon for each. Click a spell to cast it, or type its three letters.
+- A potion or scroll you have identified can be destroyed (`x` when you step on it), to clear the
+  bad ones off the floor. In the stores and the bank, sales and gold ask in a window, with a
+  slider for amounts and a button to sell all your gems.
 - The bestiary (`B`) lists the monsters you have met and what you have seen them do. Items
   describe their powers once you have seen them work.
 - What is on a tile (stairs, altars, doors, items) comes up when you step on it.
@@ -45,7 +53,11 @@ knows the potions and scrolls it starts with. A new game starts with a settings 
 difficulty, and optional changes, all off by default: tough weapons (the better a weapon, and the
 more plus it has, the better it resists the rust monster and its kin; the Lance of Death never
 dulls), an elevator limit (the most levels an express elevator can take you), and Races (a few
-stat points from your character's race). A game keeps the settings it was started with.
+stat points from the race you pick). A game keeps the settings it was started with. The same
+window lets you pick the look of your character: your own, or a model of any playable race
+(retail's allied races included), a man or a woman, with a preview. The race and class show on the
+character sheet, and the bonus of the race on the tooltip of each stat. What you learn (the
+bestiary and what you know of items) is kept for good, across games and characters.
 
 The eight classes keep the Ularn stats. Note they are not balanced: the Hunter is the best all
 rounder, and the Glass Cannon (the WoW warlock) starts with 1 hit point and the Lance of Death.

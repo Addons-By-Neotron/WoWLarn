@@ -240,10 +240,10 @@ One main game frame (movable, resizable, scale setting, position saved in profil
 ### 6.4 Dialog windows (all on the same frame strata, closed by Esc)
 
 - **Inventory:** a 26-slot grid of item icons with names and enchantments, wielded/worn markers and pack weight. In `PickItem` mode, valid items are highlighted.
-- **Spellbook:** known spells with code, name, description (`speldescript`) and level; click to cast.
+- **Spellbook:** known spells in groups (`SpellInfo.GROUPS`: damage, control, buffs, healing and cures, utility; what is in none is a utility), each with a title and a line, then rows of an icon (`Visuals.SPELL_ICON` by the three letters) and the name with its code; click to cast. The tooltip has the description (`speldescript`) and level.
 - **Discoveries:** identified potions, scrolls and spells (`seemagic`).
 - **Store windows** (`UI/Store.lua`, one window for all of them): the Thrift Shoppe (the original DND store; rows with icons and prices, several pages), bank (deposit/withdraw/appraise gems), school (courses), trading post, LRS (taxes), home (status/win), and the goblin alchemist (Grizzik's, §13). The buttons run along the bottom: the pager on the left, what can be done here (the bank: Deposit, Withdraw, Sell, Sell all) and Leave on the right. A sale is confirmed in a small window (`store:Confirm`), and gold amounts are asked with a slider window (`store:Amount`).
-- **A new game:** first the settings window (`UI/GameOptions.lua`: difficulty and the optional changes of §14), then the class picker (§9). The name is the WoW character name.
+- **A new game:** first the settings window (`UI/GameOptions.lua`: difficulty, the optional changes of §14 and the race pick, with a preview model), then the class picker (§9). The name is the WoW character name.
 - **Help** (`UI/HelpWindow.lua`, the `?` key): the command table and sections of text from `Data/Help.lua`, in a scrolling window. The story at the start of a game is a plain text window (the store window in text mode).
 - **Scoreboard, death/win screens:** text panels styled like WoW quest or letter frames. Tax letters (`bill.c`) appear as mail-style letters.
 - The inventory, spellbook and bestiary have a Close button at the bottom.
@@ -337,7 +337,7 @@ The 8 Ularn classes are re-themed as WoW classes. **Mechanics are unchanged:** s
 
 - Druid (and Death Knight etc. on Retail) are unused for now. They are possible later as new classes with their own stat lines.
 - The class picker pre-selects the player's own WoW class (`UnitClass("player")`) when it maps to one.
-- **Races (later):** an optional second pick that applies small stat modifiers (e.g. Dwarf +2 CON, Gnome +2 INT, Night Elf +2 DEX), plus the player-model look in the side panel. Not part of the original game, so it is behind an option and noted as a gameplay change.
+- **Races:** the settings window has a race pick (a dropdown of `ns.RaceList`, "Your own" by default, and a male/female toggle) with a preview model. The race only changes the look: the model in the side panel (`G.raceLook`, a display id from `ns.RaceModels` in `Data/Races.lua`, retail data, so the allied races are there) and the name on the sheet. With the Races option on, the race also adds small stat bonuses (`RACES` in `Rules/Create.lua`: allied races count as the race they come from, except where they have their own entry; some bonuses are negative). "Your own" is the race of the WoW character (`UnitRace`) and its own model. `Create.raceInfo(token)` gives the name, the bonuses and the token; the game keeps `G.raceName`, `G.raceToken`, `G.raceLook` (saved) and `G.race` (set only if the bonuses were added). The stat tooltips show the bonus as a line of its own, taken out of Base. Not part of the original game, so it is behind an option and noted as a gameplay change.
 
 ---
 
@@ -483,6 +483,8 @@ Marked `FIX:` in the code where they change a rule. Optional ones are chosen in 
 - **Optional:** difficulty (`c[HARDGAME]`); tough weapons (`Monster.resistChance`: the Lance of Death never dulls, the Slayer, Vorpal Blade and Sword of Slashing resist 70%, every plus adds 5%, 90% at most); an elevator limit (the most levels a ride covers, `Object.lua`); races (§9).
 - **Go to** (`Rules/Travel.lua`, key `t`): lists the places found (stairs, elevators, shops, altars, the way out...), by name, and walks to the one picked over the ground on the map. The path is the cheapest one: a closed door costs 9, an object 26, a known trap 61, so it goes round them when it can. The walk stops for a monster within two steps (going round walls), a hit, an object stepped on, a trap in the way, a shut door; it says why. Hidden traps are sprung and the walk goes on.
 - **Destroy:** a known potion or scroll on the floor can be destroyed (`x`).
+- **Running** (`Run` in `Core/Game.lua`): a run (capital letter, or shift and an arrow key) stops when a way opens to the side that was shut on the tile before (`NewSideOpening`, straight runs only; not when blind), in front of a known trap or pit (`Travel.knownTrap`), and when a visible monster is within two steps (`Travel.monsterNear`, the test Go to uses); it says why where there is something to say.
+- **Knowledge is permanent:** the bestiary and what is known of item powers are in `db.global` and outlast a game; the identified potions and scrolls are part of a game (`G.potionknown`, `G.scrollknown`).
 - **Messages:** the experience of a kill; a metamorph changing into a dragon; a staff or cube turning an attack aside; an unseen attacker pauses running (`ui:Unseen`).
 - **Knowledge:** the potions and scrolls of the starting kit are known; item powers are found out by seeing them work (`Info/ItemInfo.lua`).
 - **Names:** the DND store is the Thrift Shoppe, the warlock class is the Glass Cannon (token WARLOCK), the potion of dizziness is the potion of weakness (`K.PDIZZINESS`), the gnome is the leper gnome.
