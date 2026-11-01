@@ -235,7 +235,7 @@ function ItemInfo.lines(id, arg)
          lines[#lines + 1] = L["You don't know what it does yet."]
       end
    end
-   local effect = (not POWER[id] or id == K.OSWORDofSLASHING or id == K.OPSTAFF or id == K.OAMULET) and ns.Equipment.effect(id, arg)  -- (the sword and the staff keep their stat line: it shows when you pick them up)
+   local effect = (not POWER[id] or id == K.OSWORDofSLASHING or id == K.OSLAYER or id == K.OPSTAFF or id == K.OAMULET) and ns.Equipment.effect(id, arg)  -- (the swords and the staff keep their stat line: it shows when you pick them up)
    if effect then
       lines[#lines + 1] = effect
       lines[#lines + 1] = L["Works as long as you carry it."]
