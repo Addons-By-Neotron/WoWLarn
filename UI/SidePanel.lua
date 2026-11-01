@@ -390,6 +390,7 @@ function side:UpdateStats()
    local look = G.raceLook or (ns.Create.shifted() and ns.Create.look(G.raceToken) or nil)
    if self.look ~= look then  -- the model picked for the race, else the player (as a race when shapeshifted)
       self.look = look
+      self.player:ClearModel()  -- (a model of a unit does not take a display)
       if look then self.player:SetDisplayInfo(look) else pcall(self.player.SetUnit, self.player, "player") end
       pcall(self.player.SetPortraitZoom, self.player, 0.8)
    end
