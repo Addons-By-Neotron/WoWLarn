@@ -30,6 +30,7 @@ local V = {}
 ns.Visuals = V
 
 local ICONS = "Interface\\Icons\\"
+local IMAGES = "Interface\\AddOns\\WoWLarn\\Media\\Weapons\\"  -- the pictures of the map (transparent, see tools/rotate-images.py)
 
 V.object = {
    [K.OENTRANCE] = { icon = "INV_Misc_Map_01" },
@@ -55,19 +56,19 @@ V.object = {
    [K.OSAPPHIRE] = { icon = "INV_Misc_Gem_Sapphire_01" },
    [K.OCHEST] = { icon = "INV_Box_01" },
    -- weapons and armor: icons of WoW items of the same sort (from wowhead)
-   [K.ODAGGER] = { icon = "INV_Weapon_ShortBlade_05" },       -- Worn Dagger
-   [K.OSPEAR] = { icon = "INV_Spear_02" },
-   [K.OFLAIL] = { icon = "INV_Mace_01" },                     -- Flail
-   [K.OBATTLEAXE] = { icon = "INV_ThrowingAxe_05" },          -- Battle Axe
-   [K.OLONGSWORD] = { icon = "INV_Sword_23" },                -- Longsword
-   [K.O2SWORD] = { icon = "INV_Sword_40" },                   -- Claymore
-   [K.OSWORD] = { icon = "INV_Sword_22" },                    -- Teebu's Blazing Longsword (the sunsword)
-   [K.OSWORDofSLASHING] = { icon = "INV_Sword_36" },          -- Thrash Blade
-   [K.OSLAYER] = { icon = "INV_Sword_03" },                   -- Demonslayer
-   [K.OVORPAL] = { icon = "INV_Sword_25" },                   -- Dazzling Longsword
-   [K.OHAMMER] = { icon = "INV_Hammer_07" },                  -- Maul
-   [K.OLANCE] = { icon = "INV_Spear_07" },                    -- Dragonslayer's Lance
-   [K.OPSTAFF] = { icon = "INV_Staff_13" },                   -- Staff of Jordan
+   [K.ODAGGER] = { icon = 135641, image = "dagger" },       -- Worn Dagger
+   [K.OSPEAR] = { icon = 135127, image = "spear" },
+   [K.OFLAIL] = { icon = 133476, image = "flail" },                     -- Flail
+   [K.OBATTLEAXE] = { icon = 132407, image = "battleaxe" },          -- Battle Axe
+   [K.OLONGSWORD] = { icon = 135328, image = "longsword" },                -- Longsword
+   [K.O2SWORD] = { icon = 135326, image = "2hs" },                   -- Claymore
+   [K.OSWORD] = { icon = "INV_Sword_22", image = "sunsword" },                    -- Teebu's Blazing Longsword (the sunsword)
+   [K.OSWORDofSLASHING] = { icon = 135346, image = "slash" },          -- Thrash Blade
+   [K.OSLAYER] = { icon = 135359, image = "slayer" },                   -- Demonslayer
+   [K.OVORPAL] = { icon = 135291, image = "vorpal" },                   -- Dazzling Longsword
+   [K.OHAMMER] = { icon = 133066, image = "hammer" },                  -- Maul
+   [K.OLANCE] = { icon = 135131, image = "lanceofdeath" },                    -- Dragonslayer's Lance
+   [K.OPSTAFF] = { icon = 135157, image = "staffofpower" },                   -- Staff of Jordan
    [K.OBELT] = { icon = "INV_Belt_09" },                      -- Belt of Might
    [K.OLEATHER] = { icon = "INV_Chest_Leather_01" },
    [K.OSTUDLEATHER] = { icon = "INV_Chest_Leather_02" },      -- Bone-studded Leather
@@ -165,7 +166,17 @@ function V.ObjectIcon(id, arg)
       return ICONS .. V.POTION_ICON[arg]
    end
    local visual = V.object[id]
-   return visual and visual.icon and (ICONS .. visual.icon)
+   local icon = visual and visual.icon
+   if type(icon) == "number" then return icon end  -- (a file data id)
+   return icon and (ICONS .. icon)
+end
+
+-- What the map draws for an object: its own picture if it has one (true as the second value:
+-- it has its own transparency, and is not cut at the edges like an icon), else its icon.
+function V.ObjectPicture(id, arg)
+   local visual = V.object[id]
+   if visual and visual.image then return IMAGES .. visual.image, true end
+   return V.ObjectIcon(id, arg), false
 end
 
 -- Monsters are drawn as their ASCII letter until they get icons and models (milestone 10).

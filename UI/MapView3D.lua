@@ -143,16 +143,17 @@ local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture, uv)
 end
 
 -- A picture standing on the floor at (x, y) in the view, width pixels wide.
-local function Icon(layer, texture, x, y, width, height)
+local function Icon(layer, texture, x, y, width, height, picture)
    layer.usedIcons = layer.usedIcons + 1
    local icon = layer.icons[layer.usedIcons]
    if not icon then
       icon = layer:CreateTexture(nil, "OVERLAY")
-      icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
       layer.icons[layer.usedIcons] = icon
    end
    icon:SetTexture(texture)
-   icon:SetBlendMode(ns.mod.db.profile.opaqueIcons and "BLEND" or "ADD")  -- (add: the black of the icon is left out)
+   -- (a picture is transparent already and shown whole; an icon is cut at the edges, and added: its black is left out)
+   if picture then icon:SetTexCoord(0, 1, 0, 1) else icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) end
+   icon:SetBlendMode((picture or ns.mod.db.profile.opaqueIcons) and "BLEND" or "ADD")
    icon:ClearAllPoints()
    icon:SetPoint("BOTTOM", layer, "TOPLEFT", x, -y)
    icon:SetSize(width, height)
@@ -543,10 +544,11 @@ local function DrawTile(layers, x, y, ground)
             end
          end
          if object ~= 0 then  -- (what lies under the monster stays, a little smaller)
-            local under = not ns.mod.db.profile.ascii and V.ObjectIcon(object)
+            local under, picture
+            if not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object) end
             if under then
                local size = TILE * 0.5 * scale
-               Icon(layers[ACTOR], under, mx, my + size * 0.1, size, size)
+               Icon(layers[ACTOR], under, mx, my + size * 0.1, size, size, picture)
             end
          end
          Shadow(layers[ACTOR], wx, wy, TILE * 0.42)
@@ -557,10 +559,11 @@ local function DrawTile(layers, x, y, ground)
    elseif ghost then
       -- (drawn above)
    elseif object ~= 0 then
-      local icon = not ns.mod.db.profile.ascii and V.ObjectIcon(object)
+      local icon, picture
+      if not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object) end
       local size = TILE * 0.6 * scale
       if icon then
-         Icon(layers[ACTOR], icon, mx, my + size * 0.1, size, size)
+         Icon(layers[ACTOR], icon, mx, my + size * 0.1, size, size, picture)
       else
          Glyph(layers[ACTOR], V.ObjectGlyph(object), V.GLYPH_COLOR, mx, my + size * 0.1, size)
       end

@@ -1,0 +1,13 @@
+Slayer: 135359 slayer.webp
+dagger: 135641  dagger.webp
+staff of power: 135157 staffofpower.webp
+spear: 135127 spear.webp
+flail: 133476 flail.webp
+battle axe: 132407 battleaxe.webp
+lance of death: 135131
+longsword:  135328 longsword.webp
+ vorpal blade:135291 vorpal.webp
+two-handed sword: 135326 2hs.webp
+sword of slashing: 135346 slash.webp
+sunsword: sunsword.webp
+flailing hammer: 133066 hammer.webp
