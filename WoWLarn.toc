@@ -65,6 +65,7 @@ UI\ModelViewer.lua
 UI\Zoo.lua
 UI\ClassPicker.lua
 UI\GameOptions.lua
+UI\HelpWindow.lua
 UI\MainFrame.lua
 Core\Game.lua
 #@debug@

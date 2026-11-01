@@ -66,7 +66,7 @@ check(#ns.MonsterData == 65, "65 monsters, got " .. #ns.MonsterData)
 check(K.PTREASURE == 20 and K.STRENGTH == 1 and K.OENTRANCE == 54, "shifted constants")
 check(ns.Tables.objectname[K.ODNDSTORE] == "the DND Store", "object names")
 check(ns.Tables.class[1] == "novice explorer", "class titles")
-check(#ns.HelpPages == 5, "help pages")
+check(#ns.HelpPages == 1 and #ns.HelpSections > 3, "help texts")
 -- Lua 5.1 (unlike LuaJIT and 5.4) rejects a nested opening bracket inside a long string.
 do
    local source = io.open(root .. "/Data/Help.lua"):read("*a")
@@ -543,7 +543,7 @@ keys("L"); check(G.playerx == 5, "run stops on an object, x=" .. G.playerx)
 check(last():find("the bank of Ularn"), "object message, got " .. tostring(last()))
 keys("i"); G.item[5][7] = 0  -- stay outside
 keys("S"); check(not ns.main.frame.shown, "S closes the window")
-ns.main:Show(); keys("."); keys("?"); check(ns.store.frame.shown, "help shown in the window"); keys(" "); check(not ns.store.frame.shown, "help window closes")
+ns.main:Show(); keys("."); keys("?"); check(ns.helpWindow.frame.shown, "help shown in the window"); keys(" "); check(not ns.helpWindow.frame.shown, "help window closes")
 keys("x"); check(last():find("not implemented"), "unknown command")
 ui:InjectKey("ESC"); check(not ns.main.focused, "Esc releases the keyboard")
 keys("Q"); keys("n"); check(ui:IsActive(), "quit declined")

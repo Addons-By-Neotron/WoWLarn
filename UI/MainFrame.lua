@@ -105,6 +105,7 @@ function main:Create()
    ns.spellbook:Create(map)
    ns.store:Create(map)
    ns.scoreboard:Create(frame)
+   ns.helpWindow:Create(frame)
 
    local side = ns.side:Create(frame)
    side:SetWidth(SIDE_W)

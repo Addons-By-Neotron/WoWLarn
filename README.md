@@ -13,7 +13,7 @@ Works on Retail and Classic.
 - Keys are the Ularn keys: `hjklyubn` move (capital letters run), `c` cast, `r` read, `q` quaff,
   `w` wield, `W` wear, `d` drop, `i` inventory, `e` eat, `D` discoveries, `,` use what is here,
   `.` rest, `t` go to a place, `S` close the window, `?` help. The button bar at the bottom of the
-  window does the same with the mouse. `?` and the story at the start of a game open in a window
+  window does the same with the mouse. `?` (a scrolling help window) and the story at the start of a game open in a window
   over the map.
 - The action bar has ten slots for spells, potions and scrolls, on the keys `1` to `0`.
   Right-click a slot to choose what it holds.

@@ -1,10 +1,8 @@
--- The help texts. Page 1 is the story shown at the start of a game, page 2 the commands (the ?
--- key); the rest explain the special cases. Written by hand, based on the Ularn help file.
+-- The help texts: the story shown at the start of a game (ns.HelpPages[1]) and the sections of
+-- the help window, the ? key (ns.HelpSections; UI/HelpWindow.lua). Written by hand, based on the
+-- Ularn help file.
 
 local _, ns = ...
-
-local H = "|cffffd100"  -- headings
-local R = "|r"
 
 ns.HelpPages = {
    [[
@@ -27,81 +25,53 @@ journey into these caverns.
 
 
     Good Luck!  (You're going to need it.)]],
-   H.."Commands"..R..[=[
+}
 
-h j k l  move left, down, up, right          y u b n  move diagonally
-H J K L Y U B N  run in that direction (or shift and an arrow key)     .  stay here
-,  use what is here (stairs, altars, fountains...)
-c  cast a spell        r  read a scroll        q  quaff a potion
-e  eat a cookie        w  wield a weapon       W  wear armor
-T  take off armor      d  drop an item         i  look in your pack
-D  discoveries         ^  find traps           C  close a door
-Z  teleport            g  your pack weight     P  your tax status
-t  go to a place you found     B  the bestiary (button)
-v  version             S  close the window     Q  quit the game
-?  this help
-
-The buttons at the bottom of the window do the same with the mouse.
-Click the window to capture the keyboard, Esc releases it.  Hover over the
-map, your stats, your effects and your items for tooltips.
-
-Press t (or the map button) to go to a stairway, shop, altar and so on that you
-have found.  You walk the shortest way, and stop at monsters, objects and traps.]=],
-   H.."Special notes"..R..[=[
-
-When dropping gold, if you type '*' as the amount, all your gold gets dropped.
-In general, typing '*' means all of what you are interested in.  This is true
-when visiting the bank, or when contributing at altars.
-
-In the stores, the trading post, the school and the home, Esc gets you out, or
-click Leave.  The Thrift Shoppe has several pages: space or > turns to the next,
-< to the previous.
-
-When casting a spell, type 'D' as the first letter to see the spells you know,
-then type the three letter code of the spell, or click the spell.  Typing 'D'
-at any other time shows all the spells you know, and the potions and scrolls
-you have identified so far.
-
-What is on a tile (stairs, altars, doors, items) comes up when you step on it.
-Press ',' to bring it up again.
-
-Going to a place: t lists the stairs, elevators, shops, altars, fountains and so
-on that you have found, by name, with the steps to each.  The walk goes round
-walls, traps and objects, through doors (you get the usual question), and stops
-when a monster is near, when you are hit, or when you step on an object.  It
-always says why it stopped.
-
-The action bar at the bottom of the map holds ten slots for spells, potions
-and scrolls, on the keys 1 to 0.  Right-click a slot to choose what it holds,
-click it (or press its key) to use it.
-
-The bestiary (the B button) lists the monsters you have met, and what you have
-seen them do.  Items show what you have learned about them when you hover over
-them; a power is only described once you have seen it work.
-
-The classes are the Ularn ones, with WoW names.  The Glass Cannon starts with
-1 hit point and the Lance of Death: it kills almost anything, until something
-touches it.
-
-A monster that is hit by an unseen attacker (an invisible stalker, a demon
-lord without the Eye of Larn) stops your running for a moment.
-
-A new game starts with a settings window: the difficulty, and some optional
-changes (all off by default): tough weapons, which resist being dulled the
-better they are (the Lance of Death never dulls), a limit on how far an express
-elevator can take you, and a few stat points from your character's race.  A
-game keeps the settings it was started with.]=],
-   H.."The high scores"..R..[=[
-
-There are two lists, one for winners and one for characters that died, shared
-by all your characters.  Each game gets its own entry, best score first, and
-only the top ten of each list are kept.  When a character dies, its pack is
-stored with the score, so you can hover over an entry to see what it carried.
-The difficulty of the game is noted too.  Type /larn scores to see the lists.]=],
-   H.."About"..R..[=[
-
-WoWLarn is a port of Ularn 1.5 to World of Warcraft.
-
-Ularn was written in 1987 by Phil Cordier at UC Santa Cruz, based on Larn by
-Noah Morgan, and updated in 2001 by Josh Brandt and David Richerby.]=],
+-- Each section: a title, a table of commands { keys, what it does } and/or text (paragraphs
+-- are separated by an empty line; the window wraps them).
+ns.HelpSections = {
+   { title = "Commands",
+     commands = {
+        { "h j k l", "Move left, down, up, right" },
+        { "y u b n", "Move diagonally" },
+        { "H J K L Y U B N", "Run (shift and an arrow key runs too)" },
+        { ".", "Rest here" },
+        { ",", "Use what is here: stairs, altars, fountains..." },
+        { "t", "Go to a place you have found" },
+        { "c", "Cast a spell" },
+        { "r", "Read a scroll" },
+        { "q", "Quaff a potion" },
+        { "e", "Eat a cookie" },
+        { "w", "Wield a weapon" },
+        { "W", "Wear armor" },
+        { "T", "Take off armor" },
+        { "d", "Drop an item" },
+        { "C", "Close a door" },
+        { "^", "Find traps" },
+        { "Z", "Teleport" },
+        { "i", "Look in your pack" },
+        { "I", "Sort your pack" },
+        { "D", "Discoveries" },
+        { "g", "Your pack weight" },
+        { "V", "Flat tiles or the 2.5D view" },
+        { "v", "Version" },
+        { "S", "Close the window" },
+        { "Q", "Quit the game" },
+        { "?", "This help" },
+     },
+     text = "The buttons below the map do the same with the mouse.  Click the window to capture the keyboard, Esc releases it.  Hover over the map, your stats, your effects and your items for tooltips." },
+   { title = "Going places",
+     text = "Press t (or its button) for a list of the stairs, elevators, shops, altars, fountains and so on that you have found, by name, with the steps to each.  Pick one and you walk there by the shortest way, round walls, traps and objects, and through doors (you get the usual question).\n\nThe walk stops when a monster is near, when you are hit, or when you step on an object, and it always says why.  Stepping on the place you picked does what it always does: stairs, shops, altars and the rest." },
+   { title = "The action bar",
+     text = "The bar at the bottom of the map holds ten slots for spells, potions and scrolls, on the keys 1 to 0.  Right-click a slot to choose what it holds, click it or press its key to use it." },
+   { title = "Special notes",
+     text = "When dropping gold, if you type '*' as the amount, all your gold gets dropped.  In general, typing '*' means all of what you are interested in.  This is true when visiting the bank, or when contributing at altars.\n\nIn the stores, the trading post, the school and the home, Esc gets you out, or click Leave.  The Thrift Shoppe has several pages: space or > turns to the next, < to the previous.\n\nWhen casting a spell, type 'D' as the first letter to see the spells you know, then type the three letter code of the spell, or click the spell.  Typing 'D' at any other time shows all the spells you know, and the potions and scrolls you have identified so far.\n\nWhat is on a tile (stairs, altars, doors, items) comes up when you step on it.  Press ',' to bring it up again.\n\nA monster that hits you without being seen (an invisible stalker, a demon lord without the Eye of Larn) stops your running for a moment." },
+   { title = "Learning about things",
+     text = "The bestiary (the B button) lists the monsters you have met, and what you have seen them do.  Items show what you have learned about them when you hover over them; a power is only described once you have seen it work." },
+   { title = "Classes and settings",
+     text = "The classes are the Ularn ones, with WoW names.  The Glass Cannon starts with 1 hit point and the Lance of Death: it kills almost anything, until something touches it.\n\nA new game starts with a settings window: the difficulty, and some optional changes (all off by default): tough weapons, which resist being dulled the better they are (the Lance of Death never dulls), a limit on how far an express elevator can take you, and a few stat points from your character's race.  A game keeps the settings it was started with." },
+   { title = "The high scores",
+     text = "There are two lists, one for winners and one for characters that died, shared by all your characters.  Each game gets its own entry, best score first, and only the top ten of each list are kept.  When a character dies, its pack is stored with the score, so you can hover over an entry to see what it carried.  The difficulty of the game is noted too.  Type /larn scores to see the lists." },
+   { title = "About",
+     text = "WoWLarn is a port of Ularn 1.5 to World of Warcraft.\n\nUlarn was written in 1987 by Phil Cordier at UC Santa Cruz, based on Larn by Noah Morgan, and updated in 2001 by Josh Brandt and David Richerby." },
 }

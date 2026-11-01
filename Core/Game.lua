@@ -191,7 +191,7 @@ local function Parse()
    elseif key == "?" then
       ui.repcount = 0
       G.nomove = true
-      TextWindow(L["Help"], ns.HelpPages[2])
+      ns.helpWindow:Run()
    else
       ui.repcount = 0
       G.nomove = true
