@@ -46,6 +46,20 @@ function spellbook:Create(parent)
    self.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
    self.title:SetPoint("TOPLEFT", 8, -6)
 
+   -- The list scrolls when it is taller than the game window.
+   local scroll = CreateFrame("ScrollFrame", nil, frame)
+   scroll:SetPoint("TOPLEFT", 0, -HEADER_H)
+   scroll:SetPoint("BOTTOMRIGHT", 0, FOOTER_H)
+   scroll:EnableMouseWheel(true)
+   scroll:SetScript("OnMouseWheel", function(self, delta)
+      local most = math.max(0, self:GetScrollChild():GetHeight() - self:GetHeight())
+      self:SetVerticalScroll(math.min(most, math.max(0, self:GetVerticalScroll() - delta * SPELL_H * 2)))
+   end)
+   local content = CreateFrame("Frame", nil, scroll)
+   content:SetSize(COLUMNS * COLUMN_W + 16, 1)
+   scroll:SetScrollChild(content)
+   self.scroll, self.content = scroll, content
+
    local close = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
    close:SetSize(80, 22)
    close:SetPoint("BOTTOMRIGHT", -8, 8)
@@ -57,7 +71,7 @@ function spellbook:Create(parent)
 
    self.buttons = {}
    for index = 1, K.SPNUM do
-      local button = CreateFrame("Button", nil, frame)
+      local button = CreateFrame("Button", nil, content)
       button:SetSize(COLUMN_W - 4, SPELL_H - 2)
       button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
       button.icon = button:CreateTexture(nil, "ARTWORK")
@@ -97,9 +111,9 @@ function spellbook:Create(parent)
    -- The titles of the groups of spells, each with a line under it.
    self.groups = {}
    for number = 1, #ns.SpellInfo.GROUPS do
-      local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+      local title = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
       title:SetJustifyH("LEFT")
-      local line = frame:CreateTexture(nil, "ARTWORK")
+      local line = content:CreateTexture(nil, "ARTWORK")
       line:SetColorTexture(0.6, 0.5, 0.3, 0.6)
       line:SetHeight(1)
       title:Hide()
@@ -110,8 +124,8 @@ function spellbook:Create(parent)
    -- The three columns of text of the list of discoveries.
    self.columns = {}
    for column = 1, COLUMNS do
-      local text = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-      text:SetPoint("TOPLEFT", 8 + (column - 1) * COLUMN_W, -HEADER_H)
+      local text = content:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+      text:SetPoint("TOPLEFT", 8 + (column - 1) * COLUMN_W, 0)
       text:SetJustifyH("LEFT")
       text:SetJustifyV("TOP")
       text:SetWidth(COLUMN_W - 8)
@@ -130,6 +144,14 @@ function spellbook:Close()
    if self.frame then self.frame:Hide() end
 end
 
+-- Sizes the window to a list of the given height, as tall as the game window allows.
+function spellbook:Fit(height)
+   self.content:SetHeight(height)
+   local most = self.frame:GetParent():GetHeight() - 20
+   self.frame:SetHeight(math.min(height + HEADER_H + FOOTER_H, most))
+   self.scroll:SetVerticalScroll(0)
+end
+
 -- Shows the spells that are known (all of them if all is set, as for the genie), to pick
 -- one by clicking it.
 function spellbook:Open(all)
@@ -139,7 +161,7 @@ function spellbook:Open(all)
    for _, text in ipairs(self.columns) do text:Hide() end
    for _, button in ipairs(self.buttons) do button:Hide() end
    local SI = ns.SpellInfo
-   local y = HEADER_H
+   local y = 0
    for number, group in ipairs(self.groups) do
       local spells = {}
       for index = 1, K.SPNUM do
@@ -168,7 +190,7 @@ function spellbook:Open(all)
          y = y + math.ceil(#spells / COLUMNS) * SPELL_H + 8
       end
    end
-   self.frame:SetHeight(y + FOOTER_H)
+   self:Fit(y)
    self.frame:Show()
 end
 
@@ -213,6 +235,6 @@ function spellbook:ShowDiscoveries()
       text:SetText(table.concat(lines[column], "\n"))
       text:Show()
    end
-   self.frame:SetHeight(HEADER_H + math.max(1, #lines[1]) * LINE_H + FOOTER_H)
+   self:Fit(math.max(1, #lines[1]) * LINE_H)
    self.frame:Show()
 end
