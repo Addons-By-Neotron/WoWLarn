@@ -379,8 +379,17 @@ function Object.lookForObject()
       else
          Msg(L["You find a magic potion."])
       end
-      local choice = ui:Choose(L["Do you (d) drink it, (t) take it, or (i) ignore it?"], "dt")
-      if choice == "d" then
+      local known = G.potionknown[arg] ~= 0
+      local choice
+      if known then  -- FIX: not in the C. A potion that is known can be destroyed, to clear the bad ones away.
+         choice = ui:Choose(L["Do you (d) drink it, (t) take it, (x) destroy it, or (i) ignore it?"], "dtx")
+      else
+         choice = ui:Choose(L["Do you (d) drink it, (t) take it, or (i) ignore it?"], "dt")
+      end
+      if choice == "x" then
+         Msg(L["You destroy the potion of %s."], T.potionname[arg])
+         Forget()
+      elseif choice == "d" then
          Forget()  -- destroy the potion
          ns.Magic.quaffPotion(arg)
       elseif choice == "t" then
@@ -395,13 +404,19 @@ function Object.lookForObject()
       else
          Msg(L["You find a magic scroll."])
       end
+      local known = G.scrollknown[arg] ~= 0  -- FIX: not in the C. A scroll that is known can be destroyed.
       local choice
       if c[K.BLINDCOUNT] == 0 then
-         choice = ui:Choose(L["Do you (r) read it, (t) take it, or (i) ignore it?"], "rt")
+         choice = known and ui:Choose(L["Do you (r) read it, (t) take it, (x) destroy it, or (i) ignore it?"], "rtx")
+            or ui:Choose(L["Do you (r) read it, (t) take it, or (i) ignore it?"], "rt")
       else
-         choice = ui:Choose(L["Do you (t) take it, or (i) ignore it?"], "t")
+         choice = known and ui:Choose(L["Do you (t) take it, (x) destroy it, or (i) ignore it?"], "tx")
+            or ui:Choose(L["Do you (t) take it, or (i) ignore it?"], "t")
       end
-      if choice == "r" then
+      if choice == "x" then
+         Msg(L["You destroy the scroll of %s."], T.scrollname[arg])
+         Forget()
+      elseif choice == "r" then
          Forget()  -- destroy it
          ns.Magic.readScroll(arg)
       elseif choice == "t" then

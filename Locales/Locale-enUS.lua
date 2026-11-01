@@ -1233,3 +1233,9 @@ L["Your character's race adds a few points to the stats of the new game.  Not pa
 L["A new game"] = true
 L["Choose how hard it gets, then press Start (or Enter)."] = true
 L["Start"] = true
+L["You stop: there is a trap in the way."] = true
+L["Do you (d) drink it, (t) take it, (x) destroy it, or (i) ignore it?"] = true
+L["You destroy the potion of %s."] = true
+L["Do you (r) read it, (t) take it, (x) destroy it, or (i) ignore it?"] = true
+L["Do you (t) take it, (x) destroy it, or (i) ignore it?"] = true
+L["You destroy the scroll of %s."] = true

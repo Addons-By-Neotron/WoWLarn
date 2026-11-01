@@ -659,6 +659,11 @@ Step(K.OGOLDPILE, 77); check(G.c[K.GOLD] == 77 and G.item[31][8] == 0, "picked u
 Step(K.OPOTION, K.PSTRENGTH); check(ui.wait == "key", "potion asks")
 keys("t"); check(G.iven[1] == K.OPOTION and G.item[31][8] == 0, "took the potion")
 Step(K.OSCROLL, K.SBLANK); keys("i"); check(G.item[31][8] == K.OSCROLL and G.iven[1] == 0, "ignored the scroll")
+G.potionknown[K.PSTRENGTH], G.scrollknown[K.SBLANK] = 1, 1
+Step(K.OPOTION, K.PSTRENGTH); keys("x"); check(G.item[31][8] == 0 and G.iven[1] == 0 and last():find("destroy the potion"), "a known potion can be destroyed")
+Step(K.OSCROLL, K.SBLANK); keys("x"); check(G.item[31][8] == 0 and G.iven[1] == 0 and last():find("destroy the scroll"), "a known scroll can be destroyed")
+G.potionknown[K.PSTRENGTH] = 0
+Step(K.OPOTION, K.PSTRENGTH); keys("x"); check(G.item[31][8] == K.OPOTION and ui.wait == "key", "an unknown potion can not"); keys("i")
 Step(K.OCOOKIE, 0); keys("e"); check(G.item[31][8] == 0 and table.concat(lines(), "|"):find("tasted good"), "ate a cookie from the floor")
 Step(K.OLONGSWORD, 2); keys("t"); check(G.iven[1] == K.OLONGSWORD and G.ivenarg[1] == 2, "took a sword")
 Step(K.OBOOK, 0); keys("r"); local s = 0; for i = 1, K.SPNUM do s = s + G.spelknow[i] end
