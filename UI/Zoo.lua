@@ -28,7 +28,6 @@ ns.zoo = zoo
 
 local COLUMNS, TILE_W, CELL_W, CELL_H = 13, 50, 64, 118
 local ZOOMS = { 1, 1.5, 2 }
-local SHADOW = "Interface\\AddOns\\WoWLarn\\Media\\Shadow"
 local FLOOR = { 0.28, 0.27, 0.25, 1 }
 
 function zoo:Create()
@@ -62,9 +61,6 @@ function zoo:Create()
       cell:SetPoint("TOPLEFT", (id % COLUMNS) * CELL_W, -math.floor(id / COLUMNS) * CELL_H)
       cell.floor = cell:CreateTexture(nil, "BACKGROUND")
       cell.floor:SetColorTexture(FLOOR[1], FLOOR[2], FLOOR[3], 1)
-      cell.shadow = cell:CreateTexture(nil, "BORDER")
-      cell.shadow:SetTexture(SHADOW)
-      cell.shadow:SetVertexColor(0, 0, 0, 0.6)
       cell.label = cell:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
       cell.label:SetPoint("BOTTOM", 0, 2)
       cell.label:SetWidth(CELL_W - 2)
@@ -115,14 +111,10 @@ function zoo:Update()
       local column, row = id % COLUMNS, math.floor(id / COLUMNS)
       local x, y = column * CELL_W + CELL_W / 2, (row + 1) * CELL_H - 16  -- (the bottom of the tile)
       cell.floor:SetShown(self.flat)
-      cell.shadow:SetShown(self.flat and look ~= nil and ns.mod.db.profile.shadows ~= false)
       if self.flat then
          cell.floor:ClearAllPoints()
          cell.floor:SetSize(width, width * 0.5)
          cell.floor:SetPoint("BOTTOM", 0, 16)
-         cell.shadow:ClearAllPoints()
-         cell.shadow:SetSize(width * 0.84, width * 0.42)
-         cell.shadow:SetPoint("BOTTOM", 0, 16 + width * 0.04)
          if look then map3d.Model(layer, look, x, y - width * 0.25, width * (id == 0 and 1.2 or 1), turn) end
       elseif look then
          map3d.DrawTile(layer, look, x, y - width * 0.25, 1, FLOOR, turn)
