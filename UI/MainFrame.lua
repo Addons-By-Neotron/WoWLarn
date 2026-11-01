@@ -36,6 +36,8 @@ local KEYMAP = {
    UP = "UP", DOWN = "DOWN", LEFT = "LEFT", RIGHT = "RIGHT",
 }
 
+local ARROWS = { UP = true, DOWN = true, LEFT = true, RIGHT = true }
+
 local function SavePosition(frame)
    local point, _, _, x, y = frame:GetPoint()
    local window = ns.mod.db.profile.window
@@ -165,7 +167,9 @@ function main:OnKeyDown(key)
    elseif key == "PAGEDOWN" then
       ns.log:PageDown()
    elseif KEYMAP[key] then
-      ns.ui:InjectKey(KEYMAP[key])
+      local name = KEYMAP[key]
+      if IsShiftKeyDown() and ARROWS[name] then name = "SHIFT-" .. name end  -- run
+      ns.ui:InjectKey(name)
    end
 end
 

@@ -40,8 +40,13 @@ ui.dirty = {}
 local DIRECTION = {
    j = 1, l = 2, k = 3, h = 4, u = 5, y = 6, n = 7, b = 8,
    DOWN = 1, RIGHT = 2, UP = 3, LEFT = 4,
+   ["SHIFT-DOWN"] = 1, ["SHIFT-RIGHT"] = 2, ["SHIFT-UP"] = 3, ["SHIFT-LEFT"] = 4,
 }
-local ARROW_COMMAND = { UP = "k", DOWN = "j", LEFT = "h", RIGHT = "l" }
+-- (an arrow key moves, with shift it runs)
+local ARROW_COMMAND = {
+   UP = "k", DOWN = "j", LEFT = "h", RIGHT = "l",
+   ["SHIFT-UP"] = "K", ["SHIFT-DOWN"] = "J", ["SHIFT-LEFT"] = "H", ["SHIFT-RIGHT"] = "L",
+}
 
 ----------------------------------------------------------------
 -- Coroutine plumbing

@@ -30,7 +30,7 @@ journey into these caverns.
    H.."Commands"..R..[=[
 
 h j k l  move left, down, up, right          y u b n  move diagonally
-H J K L Y U B N  run in that direction          .  stay here
+H J K L Y U B N  run in that direction (or shift and an arrow key)     .  stay here
 ,  use what is here (stairs, altars, fountains...)
 c  cast a spell        r  read a scroll        q  quaff a potion
 e  eat a cookie        w  wield a weapon       W  wear armor

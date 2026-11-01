@@ -1455,6 +1455,10 @@ do
       check(G.level >= 8 and G.level <= 9, "elevator up stays within the limit: " .. G.level)
    end
    ns.mod.db.profile.elevatorLimit = nil
+   -- shift and an arrow key run
+   Ready(); Clear(); G.lookedHere = nil
+   ui:InjectKey("RIGHT"); check(G.playerx == 31, "an arrow key steps")
+   ui:InjectKey("SHIFT-RIGHT"); check(G.playerx > 33, "shift and an arrow key run, got " .. G.playerx)
    ns.mod.db.profile.fast = false
    G.god = false
 end
