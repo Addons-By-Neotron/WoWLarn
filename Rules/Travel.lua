@@ -163,6 +163,7 @@ function Travel.list()
          if names[id] and (x ~= G.playerx or y ~= G.playery) and Remembered(x, y) and cost[x][y] then
             local label = names[id]
             local ride = G.elevators[G.level * 10000 + x * 100 + y]  -- (where it took you last time)
+            if id == K.OSTAIRSUP and G.level == K.DBOTTOM + 1 then label = label .. " " .. L["(a dead end)"] end  -- (the stairs up on V1 lead nowhere)
             if ride and (id == K.OELEVATORUP or id == K.OELEVATORDOWN) then
                label = label .. " " .. string.format(L["to floor %s"], ns.Tables.levelname[ride + 1])
             end
