@@ -423,6 +423,84 @@ end
 
 local TINT = { 1, 1, 1 }  -- what the textures of this level are tinted by, set when drawing
 
+----------------------------------------------------------------
+-- Scenery: the fixtures of the dungeon as little blocks standing on their tile
+----------------------------------------------------------------
+
+-- A block from (x0, y0) to (x1, y1) of the tile, in fractions of it, from height z0 to z1 (also
+-- fractions of a tile), as the walls are drawn: the top and the sides that face the camera.
+local function Box(layer, ahead, tileX, tileY, x0, y0, x1, y1, z0, z1, color, topColor)
+   local wx0, wx1 = (tileX - 1 + x0) * TILE, (tileX - 1 + x1) * TILE
+   local wy0, wy1 = (tileY - 1 + y0) * TILE, (tileY - 1 + y1) * TILE
+   z0, z1 = z0 * TILE, z1 * TILE
+   local tax, tay = Project(wx0, wy0, z1)
+   local tbx, tby = Project(wx1, wy0, z1)
+   local tcx, tcy = Project(wx1, wy1, z1)
+   local tdx, tdy = Project(wx0, wy1, z1)
+   local fax, fay = Project(wx0, wy0, z0)
+   local fbx, fby = Project(wx1, wy0, z0)
+   local fcx, fcy = Project(wx1, wy1, z0)
+   local fdx, fdy = Project(wx0, wy1, z0)
+   if not (tax and tbx and tcx and tdx and fax and fbx and fcx and fdx) then return end
+   Quad(layer, Shade(topColor or color, ahead, 1.15), tax, tay, tbx, tby, tcx, tcy, tdx, tdy)
+   Quad(layer, Shade(color, ahead, 0.8), tdx, tdy, tcx, tcy, fcx, fcy, fdx, fdy)  -- facing the camera
+   if camera.x > wx1 then
+      Quad(layer, Shade(color, ahead, 0.6), tbx, tby, tcx, tcy, fcx, fcy, fbx, fby)  -- the east side
+   elseif camera.x < wx0 then
+      Quad(layer, Shade(color, ahead, 0.6), tax, tay, tdx, tdy, fdx, fdy, fax, fay)  -- the west side
+   end
+end
+
+local STONE, PALE, GOLD = { 0.62, 0.6, 0.58 }, { 0.78, 0.76, 0.72 }, { 0.85, 0.68, 0.2 }
+local WOOD, WATER, DARK = { 0.5, 0.33, 0.17 }, { 0.25, 0.55, 0.95 }, { 0.04, 0.03, 0.03 }
+
+-- The shapes: lists of { x0, y0, x1, y1, z0, z1, color, top color }, in fractions of a tile.
+local SCENERY = {
+   [K.OALTAR] = { { 0.2, 0.25, 0.8, 0.75, 0, 0.28, STONE }, { 0.14, 0.2, 0.86, 0.8, 0.28, 0.38, PALE },
+      { 0.46, 0.4, 0.54, 0.6, 0.38, 0.5, GOLD } },
+   [K.OTHRONE] = { { 0.22, 0.3, 0.78, 0.8, 0, 0.3, GOLD }, { 0.22, 0.22, 0.78, 0.36, 0.3, 0.9, GOLD },
+      { 0.16, 0.36, 0.26, 0.8, 0.3, 0.5, GOLD }, { 0.74, 0.36, 0.84, 0.8, 0.3, 0.5, GOLD } },
+   [K.OSTATUE] = { { 0.25, 0.25, 0.75, 0.75, 0, 0.14, STONE }, { 0.38, 0.38, 0.62, 0.62, 0.14, 0.78, PALE },
+      { 0.4, 0.4, 0.6, 0.6, 0.78, 0.95, PALE } },
+   [K.OFOUNTAIN] = { { 0.12, 0.12, 0.88, 0.88, 0, 0.2, STONE }, { 0.22, 0.22, 0.78, 0.78, 0.2, 0.22, WATER },
+      { 0.45, 0.45, 0.55, 0.55, 0.22, 0.55, WATER } },
+   [K.ODEADFOUNTAIN] = { { 0.12, 0.12, 0.88, 0.88, 0, 0.2, { 0.45, 0.43, 0.4 } },
+      { 0.22, 0.22, 0.78, 0.78, 0.2, 0.22, { 0.3, 0.24, 0.18 } } },
+   [K.OMIRROR] = { { 0.18, 0.45, 0.82, 0.55, 0, 0.85, { 0.35, 0.35, 0.4 } },
+      { 0.24, 0.5, 0.76, 0.56, 0.06, 0.8, { 0.7, 0.9, 0.98 } } },
+   [K.OSTAIRSUP] = { { 0.1, 0.7, 0.9, 0.95, 0, 0.1, { 0.72, 0.62, 0.45 } }, { 0.1, 0.45, 0.9, 0.7, 0, 0.2, { 0.72, 0.62, 0.45 } },
+      { 0.1, 0.2, 0.9, 0.45, 0, 0.3, { 0.72, 0.62, 0.45 } } },
+   [K.OSTAIRSDOWN] = { { 0.1, 0.1, 0.9, 0.9, 0, 0.01, DARK }, { 0.1, 0.1, 0.9, 0.3, 0, 0.1, { 0.72, 0.62, 0.45 } },
+      { 0.1, 0.3, 0.9, 0.5, 0, 0.05, { 0.55, 0.47, 0.34 } } },
+   [K.OELEVATORUP] = { { 0.1, 0.1, 0.9, 0.9, 0, 0.08, { 0.6, 0.62, 0.7 } }, { 0.3, 0.3, 0.7, 0.7, 0.08, 0.1, { 0.4, 0.9, 0.5 } } },
+   [K.OELEVATORDOWN] = { { 0.1, 0.1, 0.9, 0.9, 0, 0.08, { 0.6, 0.62, 0.7 } }, { 0.3, 0.3, 0.7, 0.7, 0.08, 0.1, { 0.95, 0.45, 0.4 } } },
+   [K.OPIT] = { { 0.12, 0.12, 0.88, 0.88, 0, 0.01, DARK } },
+   [K.OTRAPDOOR] = { { 0.12, 0.12, 0.88, 0.88, 0, 0.04, WOOD } },
+}
+SCENERY[K.OTHRONE2] = SCENERY[K.OTHRONE]
+SCENERY[K.ODEADTHRONE] = { { 0.22, 0.3, 0.78, 0.8, 0, 0.3, { 0.4, 0.37, 0.33 } }, { 0.22, 0.22, 0.78, 0.36, 0.3, 0.9, { 0.4, 0.37, 0.33 } } }
+
+-- Draws what object stands on the tile as blocks, if it is something with a shape.  A door
+-- spans the gap between the walls at its sides.
+local function Scenery(layer, x, y, object, ahead)
+   if ns.mod.db.profile.ascii or ns.mod.db.profile.scenery == false then return false end
+   local shape = SCENERY[object]
+   if object == K.OCLOSEDDOOR or object == K.OOPENDOOR then
+      local across = IsBlock(x - 1, y) and IsBlock(x + 1, y)  -- (the walls are at its sides: it spans east to west)
+      local closed = object == K.OCLOSEDDOOR
+      if across then
+         shape = closed and { { 0, 0.4, 1, 0.6, 0, 0.9, WOOD } } or { { 0, 0.4, 0.14, 0.6, 0, 0.9, WOOD }, { 0.86, 0.4, 1, 0.6, 0, 0.9, WOOD } }
+      else
+         shape = closed and { { 0.4, 0, 0.6, 1, 0, 0.9, WOOD } } or { { 0.4, 0, 0.6, 0.14, 0, 0.9, WOOD }, { 0.4, 0.86, 0.6, 1, 0, 0.9, WOOD } }
+      end
+   end
+   if not shape then return false end
+   for _, box in ipairs(shape) do
+      Box(layer, ahead, x, y, box[1], box[2], box[3], box[4], box[5], box[6], box[7], box[8])
+   end
+   return true
+end
+
 -- The floor tile (x, y), and what stands on it.
 local function DrawTile(layers, x, y, ground)
    local x0, x1, y0, y1 = (x - 1) * TILE, x * TILE, (y - 1) * TILE, y * TILE
@@ -559,7 +637,9 @@ local function DrawTile(layers, x, y, ground)
    elseif object ~= 0 then
       local icon = not ns.mod.db.profile.ascii and V.ObjectIcon(object)
       local size = TILE * 0.6 * scale
-      if icon then
+      if Scenery(layers[ACTOR], x, y, object, ahead) then
+         -- (drawn as blocks)
+      elseif icon then
          Icon(layers[ACTOR], icon, mx, my + size * 0.1, size, size)
       else
          Glyph(layers[ACTOR], V.ObjectGlyph(object), V.GLYPH_COLOR, mx, my + size * 0.1, size)
