@@ -1263,15 +1263,11 @@ check(not Has(blocked, 32, 8) and not Has(blocked, 34, 8), "a wall stops the con
 local diagonal = ns.Spells.coneTiles(1, 1, 5)
 check(Has(diagonal, 33, 11) and Has(diagonal, 34, 10) and not Has(diagonal, 28, 8), "a cone can go diagonally")
 
--- a mimic is a chest until it fights, then a blob
+-- a mimic is drawn as another monster, and as the oozeling only when it dies
 Fresh(3)
-G.mon[31][8] = K.MIMIC; G.hitp[31][8] = 50; G.look[31][8] = 7
-check(ns.Visuals.MimicDisplay(G.look[31][8]) < 0, "a mimic looks like a chest at first")
-ns.Monster.hitmonster(31, 8)
-check(G.look[31][8] < 0 and ns.Visuals.MimicDisplay(G.look[31][8]) > 0, "a mimic that is hit is a blob")
-G.mon[32][8] = K.MIMIC; G.look[32][8] = 0
-ns.Monster.hitplayer(32, 8)
-check(G.look[32][8] < 0, "a mimic that attacks drops its disguise")
+G.mon[31][8] = K.MIMIC; G.look[31][8] = 7
+check(ns.Visuals.MonsterDisplay(K.MIMIC, 7) > 0, "a dying mimic has a model")
+check(ns.Display.visibleMonster(31, 8) ~= 0, "a mimic shows as a monster")
 
 -- a disenchanted ring takes its loss at once (the C let the player keep it)
 Fresh(3)

@@ -290,7 +290,7 @@ V.DISPLAY = {
    [K.GREENURCHIN] = 13109,  -- (Phase Lasher)
    [K.XVART] = Displays(506, 391, 486, 11293),  -- (Bluegill and Saltscale murlocs)
    [K.PURPLEWORM] = Displays(7549, 13009),  -- (Murk Worm and Rock Worm)
-   [K.MIMIC] = Displays(7763, 15436),  -- (the oozeling: what it is under the chest, see MimicDisplay)
+   [K.MIMIC] = Displays(7763, 15436),  -- (the oozeling: only for its death, it looks like another monster before that, see Display.visibleMonster)
    [K.METAMORPH] = Displays(4629, 7857, 14703),  -- (Haunting Phantasm and the two wraiths)
    [K.FORVALAKA] = Displays(633, 11452),  -- (Shadowmaw panthers)
    [K.ZILLER] = Displays(6087, 2187, 6086, 1531),  -- (Zhevra Runner, Charger, Courser and Tamed Zhevra)
@@ -649,15 +649,6 @@ function V.MonsterDisplay(id, look)
    if display == nil then return nil end
    local list = Choices(display)
    return list[((look or 1) - 1) % #list + 1]
-end
-
--- A mimic looks like a treasure chest until it fights (G.look is made negative, see
--- Monster.revealMimic), and is a blob then, and when it dies.  (A negative number is a model
--- file data id, negated: the chests are objects, not creatures.)
-V.MIMIC_CHEST = Displays(-196976, -196979, -196982, -196987, -196988, -196989, -197063, -341746, -341870)
-function V.MimicDisplay(look)
-   if look < 0 then return V.MonsterDisplay(K.MIMIC, -look) end
-   return V.MIMIC_CHEST[(look - 1) % #V.MIMIC_CHEST + 1]
 end
 
 -- All the displays a monster can have, the backup too: the one chosen in the model viewer,

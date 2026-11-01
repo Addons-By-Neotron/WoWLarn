@@ -168,23 +168,13 @@ end
 
 -- Shows a display in the viewer.
 function viewer:Show(display)
-   if display < 0 then  -- (a model file, not a creature: only the ones the game uses, the others can crash the client)
-      local known
-      for _, id in ipairs(ns.Visuals.MIMIC_CHEST) do
-         if id == display then known = true end
-      end
-      if not known then
-         ns.mod:Print(L["Only a positive display can be tried."])
-         return
-      end
+   if display < 0 then  -- (a model file, not a creature: showing the wrong one can crash the client)
+      ns.mod:Print(L["Only a positive display can be tried."])
+      return
    end
-   self.display = display < 0 and display or math.max(1, display)
+   self.display = math.max(1, display)
    self.scale = ns.Visuals.Scale(self.display)
-   if self.display < 0 then
-      self.model:SetModel(-self.display)  -- (a model file data id, negated)
-   else
-      self.model:SetDisplayInfo(self.display)
-   end
+   self.model:SetDisplayInfo(self.display)
    self.model:SetFacing(ns.Visuals.Turn(self.display))
    ns.map3d.CameraScale(self.model, self.scale)
    self.edit:SetText(tostring(self.display))
@@ -265,7 +255,6 @@ function viewer:Sync()
 end
 
 function viewer:Step(by)
-   if self.display < 0 then return end
    self:Show(self.display + by)
 end
 
