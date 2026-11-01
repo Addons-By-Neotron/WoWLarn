@@ -128,6 +128,7 @@ function Scores.record(cause)
 
    local board = Board()
    local score = c[K.GOLD]
+   if ns.mod.db.global.scoreItems then score = score + ns.Town.carriedValue() end  -- FIX: not in the C. An option: what you carry counts
    local entry = {
       key = Scores.key(), who = G.name, class = G.class and ns.ClassName(G.class) or "?", score = score,
       hardlev = c[K.HARDGAME], level = G.level, what = cause, time = idiv(G.gtime, 100),

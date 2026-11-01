@@ -1033,6 +1033,17 @@ do
    local entry = ns.Scores.record(5)
    check(entry and entry.score == 1500 and #ns.Scores.dead() >= 1, "death scored with the bank")
    check(ns.Scores.deathLine(5):find("killed by"), ns.Scores.deathLine(5))
+   G.c[K.GOLD] = 1000; G.c[K.BANKACCOUNT] = 500
+   local keptId, keptArg = G.iven[1], G.ivenarg[1]
+   G.iven[1], G.ivenarg[1] = 0, 0
+   local rest = ns.Town.carriedValue()
+   G.iven[1], G.ivenarg[1] = K.ODIAMOND, 10
+   ns.mod.db.global.scoreItems = true
+   check(ns.Town.carriedValue() == rest + 1000, "a diamond of 10 is worth 1000 at the bank")
+   entry = ns.Scores.record(5)
+   check(entry and entry.score == 1500 + rest + 1000, "the score counts the pack when asked: " .. tostring(entry and entry.score))
+   ns.mod.db.global.scoreItems = nil
+   G.iven[1], G.ivenarg[1] = keptId, keptArg
    G.c[K.GOLD] = 2000
    entry = ns.Scores.record(ns.Scores.WIN)
    check(#ns.Scores.dead() >= 1 and #ns.Scores.winners() == 1, "a win keeps the deaths")

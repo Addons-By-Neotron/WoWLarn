@@ -482,6 +482,18 @@ local function TradeValue(slot)
    end
 end
 
+-- What the pack would fetch if it were sold: gems at the bank, the rest at the trading post
+-- (what the trading post does not buy, like unidentified potions, counts for nothing).
+function Town.carriedValue()
+   local total = 0
+   for slot = 1, K.IVENSIZE do
+      if iven[slot] ~= 0 then
+         total = total + (GEMS[iven[slot]] and GemValue(slot) or TradeValue(slot) or 0)
+      end
+   end
+   return total
+end
+
 -- C: otradepost().
 function Town.tradingPost()
    local store, ui = ns.store, ns.ui

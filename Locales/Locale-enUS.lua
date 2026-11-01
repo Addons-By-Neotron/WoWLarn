@@ -1295,3 +1295,5 @@ L["to floor %s"] = true
 L["The elevator took you to floor %s."] = true
 L["Slayer as in the source"] = true
 L["The Slayer is meant to halve what demons do to you.  The original source has an arithmetic slip that makes them miss almost every time.  Off halves their damage; on keeps the slip."] = true
+L["Score counts what you carry"] = true
+L["The score is your gold and bank balance, as in the original.  On, what the bank and the trading post would pay for the items in your pack counts too.  It applies to every game from now on."] = true

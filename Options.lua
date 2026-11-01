@@ -131,6 +131,14 @@ local function BuildOptions()
                   ns.ui:RefreshNow("map")
                end,
             },
+            scoreItems = {
+               type = "toggle",
+               name = L["Score counts what you carry"],
+               desc = L["The score is your gold and bank balance, as in the original.  On, what the bank and the trading post would pay for the items in your pack counts too.  It applies to every game from now on."],
+               order = 17.5,
+               get = function() return mod.db.global.scoreItems end,
+               set = function(_, value) mod.db.global.scoreItems = value end,
+            },
             opaqueIcons = {
                type = "toggle",
                name = L["Square icons"],
