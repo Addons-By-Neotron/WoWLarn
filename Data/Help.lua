@@ -38,7 +38,7 @@ T  take off armor      d  drop an item         i  look in your pack
 D  discoveries         ^  find traps           C  close a door
 Z  teleport            g  your pack weight     P  your tax status
 t  go to a place you found     B  the bestiary (button)
-v  version             S  save and close       Q  quit the game
+v  version             S  close the window     Q  quit the game
 ?  this help
 
 The buttons at the bottom of the window do the same with the mouse.
