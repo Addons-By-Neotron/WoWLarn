@@ -1601,6 +1601,31 @@ check(ns.gameOptions.frame.shown and not ns.picker.frame.shown, "the repeat of t
 ui:InjectKey(ns.ESC)
 check(ns.picker.frame.shown, "another key goes on")
 
+-- the Slayer halves what demons do, or (as in the source) makes them miss
+do
+   Fresh(3)
+   G.god = true
+   G.c[K.AC], G.c[K.HP], G.c[K.HPMAX], G.c[K.WIELD] = 10, 9999, 9999, 1
+   G.iven[1] = K.OSLAYER
+   G.mon[31][8], G.hitp[31][8] = K.DEMONLORD, 150
+   local function Hits(bug)
+      G.rules.slayerBug = bug
+      local n = 0
+      for _ = 1, 40 do
+         LOG = {}
+         ns.Monster.hitplayer(31, 8)
+         local text = table.concat(lines(), "|")
+         local dmg = tonumber(text:match("hit you for (%d+) damage"))
+         if dmg and dmg > 0 then n = n + 1 end
+      end
+      return n
+   end
+   check(Hits(false) == 40, "the Slayer halves the damage and demons still hit")
+   check(Hits(true) == 0, "with the source's slip demons never hurt a Slayer wielder")
+   G.rules.slayerBug = false
+   G.god = false
+end
+
 -- starting over from a god mode game
 G.god, G.wizard = true, true
 ns.Debug.newGame()

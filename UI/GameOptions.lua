@@ -40,6 +40,8 @@ local SETTINGS = {
      desc = L["How hard the game is.  Monsters are tougher and the dungeon is meaner."] },
    { key = "toughWeapons", name = L["Tough weapons"],
      desc = L["Weapons resist being dulled by the rust monster and its kin: the better the weapon and the more plus it has, the better.  The Lance of Death is never dulled."] },
+   { key = "slayerBug", name = L["Slayer as in the source"],
+     desc = L["The Slayer is meant to halve what demons do to you.  The original source has an arithmetic slip that makes them miss almost every time.  Off halves their damage; on keeps the slip."] },
    { key = "elevatorLimit", slider = true, min = 0, max = 14, off = L["off"],
      name = L["Elevator limit"],
      desc = L["The most levels an express elevator can take you, up or down.  Off leaves it to chance, as in the original: a ride from level 3 can end on level 15."] },

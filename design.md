@@ -159,7 +159,7 @@ These are where most porting bugs will come from. Follow them everywhere.
 7. **Integer widths:** C `char`/`short` fields clamp or overflow. Port explicit clamps (like those in `sethard`) exactly. Where C silently relied on `char` overflow, note it with a `-- C: char overflow` comment and clamp.
 8. **RNG:** keep `rnd(x) = random(1..x)`, `rund(x) = random(0..x-1)`. Use WoW's `math.random` / `fastrandom`. Replayable games aren't a goal.
 9. **Messages:** `lprintf` formats → `ui:Message` with `string.format`. Watch for `%d` with non-integers, which errors in Lua; floor first. Drop cursor positioning, padding and screen-clearing; the UI handles layout.
-10. **Bugs in the original:** port faithfully by default. Fix only clear crashes or memory-corruption bugs, and mark each fix `-- FIX:` with the reason. Gameplay quirks, such as the odd Slayer damage formula in `hitplayer` (`dam=(int)(1 - (0.1*rnd(5))*dam)`), stay as-is unless noted in §12.
+10. **Bugs in the original:** port faithfully by default. Fix only clear crashes or memory-corruption bugs, and mark each fix `-- FIX:` with the reason. Gameplay quirks stay as-is unless noted in §12 or §14. (The odd Slayer damage formula in `hitplayer`, `dam=(int)(1 - (0.1*rnd(5))*dam)`, which makes demons miss every time, is fixed to the documented halving; the setting "Slayer as in the source" brings it back.)
 11. **Globals:** none, other than the SavedVariables (`WoWLarnDB`) and the frame names needed for `UISpecialFrames`.
 
 ---
@@ -480,6 +480,7 @@ Each milestone is playable or testable in game.
 
 Marked `FIX:` in the code where they change a rule. Optional ones are chosen in the settings window of a new game (`UI/GameOptions.lua`), kept with the game (`G.rules`, saved) and off by default.
 
+- **Slayer:** a wielder of the Slayer takes half the damage of demon lords, princes and Lucifer (what the comment and the spoiler file of Ularn say). The C has `dam = 1 - (0.1 * rnd(5)) * dam`, which is far below zero, so they miss almost always; the setting "Slayer as in the source" (`G.rules.slayerBug`) keeps that. Larn has no such effect at all.
 - **Optional:** difficulty (`c[HARDGAME]`); tough weapons (`Monster.resistChance`: the Lance of Death never dulls, the Slayer, Vorpal Blade and Sword of Slashing resist 70%, every plus adds 5%, 90% at most); an elevator limit (the most levels a ride covers, `Object.lua`); races (§9).
 - **Go to** (`Rules/Travel.lua`, key `t`): lists the places found (stairs, elevators, shops, altars, the way out...), by name, and walks to the one picked over the ground on the map. The path is the cheapest one: a closed door costs 9, an object 26, a known trap 61, so it goes round them when it can. The walk stops for a monster within two steps (going round walls), a hit, an object stepped on, a trap in the way, a shut door; it says why. Hidden traps are sprung and the walk goes on.
 - **Destroy:** a known potion or scroll on the floor can be destroyed (`x`).

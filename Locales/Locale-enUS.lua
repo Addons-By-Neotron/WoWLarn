@@ -1293,3 +1293,5 @@ L["Pick a race"] = true
 L["Green and red are what it adds to your stats when the Races setting is on."] = true
 L["to floor %s"] = true
 L["The elevator took you to floor %s."] = true
+L["Slayer as in the source"] = true
+L["The Slayer is meant to halve what demons do to you.  The original source has an arithmetic slip that makes them miss almost every time.  Off halves their damage; on keeps the slip."] = true

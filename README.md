@@ -53,7 +53,7 @@ knows the potions and scrolls it starts with. A new game starts with a settings 
 difficulty, and optional changes, all off by default: tough weapons (the better a weapon, and the
 more plus it has, the better it resists the rust monster and its kin; the Lance of Death never
 dulls), an elevator limit (the most levels an express elevator can take you), and Races (a few
-stat points from the race you pick). A game keeps the settings it was started with. The same
+stat points from the race you pick), and "Slayer as in the source" (the Slayer halves what demons do to you; the original code has a slip that makes them miss almost always, and this setting keeps it). A game keeps the settings it was started with. The same
 window lets you pick the look of your character: your own, or a model of any playable race
 (retail's allied races included), a man or a woman, with a preview. The race and class show on the
 character sheet, and the bonus of the race on the tooltip of each stat. What you learn (the

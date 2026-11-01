@@ -694,7 +694,11 @@ function Monster.hitplayer(x, y)
    local wielded = c[K.WIELD] > 0 and iven[c[K.WIELD]] or 0
    -- demon lords, princes and the god of hellfire do less damage to the wielder of Slayer
    if mster >= DEMONLORD and wielded == K.OSLAYER then
-      dam = Trunc(1 - (0.1 * rnd(5)) * dam)
+      if G.rules.slayerBug then
+         dam = Trunc(1 - (0.1 * rnd(5)) * dam)  -- (as in the C: it comes out far below zero, so the demon always misses)
+      else
+         dam = Trunc(dam / 2)  -- FIX: not in the C. What the comment and the spoiler file say: halved
+      end
    end
 
    -- the spirit naga's and poltergeist's damage is halved with the scarab of negate spirit
