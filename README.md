@@ -41,7 +41,7 @@ Works on Retail and Classic.
   has to be answered (Enter, Space, Esc or OK), so a held key cannot carry on through it
   ("Warnings" in the addon options).
   The score is gold plus the bank balance; the option "Score counts what you carry" (in the
-  addon options, for every game) adds what the bank and the trading post would pay for your pack.
+  addon options, for every game) adds what the bank and the trading post would pay for your pack, apart from the gear you started with.
 
 ## The 2.5D view
 

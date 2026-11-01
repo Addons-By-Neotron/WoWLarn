@@ -482,12 +482,16 @@ local function TradeValue(slot)
    end
 end
 
--- What the pack would fetch if it were sold: gems at the bank, the rest at the trading post
+-- What the pack would fetch if it were sold, apart from the gear the player started with: gems at the bank, the rest at the trading post
 -- (what the trading post does not buy, like unidentified potions, counts for nothing).
 function Town.carriedValue()
    local total = 0
+   local start = {}  -- (what the player started with is not counted: a class that starts with a lance of death)
+   for id, count in pairs(G.startGear) do start[id] = count end
    for slot = 1, K.IVENSIZE do
-      if iven[slot] ~= 0 then
+      if iven[slot] ~= 0 and (start[iven[slot]] or 0) > 0 then
+         start[iven[slot]] = start[iven[slot]] - 1
+      elseif iven[slot] ~= 0 then
          total = total + (GEMS[iven[slot]] and GemValue(slot) or TradeValue(slot) or 0)
       end
    end

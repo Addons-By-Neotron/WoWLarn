@@ -1044,6 +1044,13 @@ do
    entry = ns.Scores.record(5)
    check(entry and entry.score == 1500 + rest + 1000, "the score counts the pack when asked: " .. tostring(entry and entry.score))
    ns.mod.db.global.scoreItems = nil
+   -- the gear a game starts with does not count
+   G.iven[1], G.ivenarg[1] = K.OLANCE, 0
+   local without = ns.Town.carriedValue()
+   local before = G.startGear[K.OLANCE]
+   G.startGear[K.OLANCE] = 1
+   check(ns.Town.carriedValue() < without and ns.Town.carriedValue() == rest, "the lance a class starts with is not counted")
+   G.startGear[K.OLANCE] = before
    G.iven[1], G.ivenarg[1] = keptId, keptArg
    G.c[K.GOLD] = 2000
    entry = ns.Scores.record(ns.Scores.WIN)
@@ -1647,11 +1654,11 @@ check(ui.wait == "key" and ns.picker.frame.shown and not G.god and not G.wizard,
 do
    local oldCo, oldWait = ui.co, ui.wait
    ui.co, ui.wait, ui.startKey = nil, nil, nil; ui.endTime = GetTime()
-   ui:InjectKey("l")
+   ui:InjectKey("a")
    check(ui.startKey == nil, "no new game right after one has ended")
    ui.endTime = GetTime() - 2
-   ui:InjectKey("l")
-   check(ui.startKey == "l", "a new game after the pause")
+   ui:InjectKey("a")
+   check(ui.startKey == "a", "a new game after the pause")
    ui.co, ui.wait, ui.endTime = oldCo, oldWait, nil
 end
 

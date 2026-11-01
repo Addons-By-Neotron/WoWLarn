@@ -169,6 +169,7 @@ function Create.makePlayer(class)
    end
    for slot, entry in ipairs(class.kit) do
       iven[slot] = entry[1]
+      G.startGear[entry[1]] = (G.startGear[entry[1]] or 0) + 1
       ivenarg[slot] = entry[2] == "random" and rnd(6) or entry[2]
       -- FIX: not in the C. The potions and scrolls of the kit are known to their owner.
       if entry[1] == K.OPOTION then

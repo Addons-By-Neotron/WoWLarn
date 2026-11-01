@@ -81,6 +81,7 @@ G.potionknown = {}  -- 1..MAXPOTION
 G.loot = {}         -- items carried by the monsters, [x * 100 + y] = { { id, arg }, ... } (C: mitem[][].it)
 G.levels = {}       -- saved levels, [level + 1]
 G.visited = {}      -- [level + 1] = true once a level has been made
+G.startGear = {}    -- [object id] = how many of it the player started with (they do not count for the score)
 G.elevators = {}    -- [level * 10000 + x * 100 + y] = the level the express elevator there took the player to last
 for _, name in ipairs(LEVEL_GRIDS) do
    G[name] = Grid()
@@ -110,7 +111,7 @@ function G.Reset()
    for _, name in ipairs(LEVEL_GRIDS) do
       FillGrid(G[name], 0)
    end
-   G.levels, G.visited, G.elevators = {}, {}, {}
+   G.levels, G.visited, G.elevators, G.startGear = {}, {}, {}, {}
    G.loot = {}
    G.monster = nil      -- per-game copy of ns.MonsterData, made by Monster.init
    G.lastmonst = ""     -- name of the monster last hit (C: lastmonst)
