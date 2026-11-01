@@ -44,7 +44,7 @@ local WORTH = {
 }
 local ALWAYS = {
    [K.OLARNEYE] = LEGENDARY, [K.OCOOKIE] = POOR, [K.OLANCE] = EPIC, [K.OVORPAL] = EPIC,
-   [K.OSLAYER] = EPIC, [K.OHAMMER] = EPIC, [K.OSPHTALISMAN] = EPIC,
+   [K.OSLAYER] = EPIC, [K.OHAMMER] = EPIC, [K.OSPHTALISMAN] = EPIC, [K.OPSTAFF] = EPIC,
 }
 -- Special weapons: never worth less than this, whatever their enchantment.
 local AT_LEAST = { [K.OSWORDofSLASHING] = RARE }
