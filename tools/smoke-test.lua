@@ -1470,9 +1470,10 @@ do
    G.c[K.GOLD], G.c[K.BANKACCOUNT] = 100, 0
    keys("l"); keys("g")
    check(ns.store.frame.shown, "the bank opens")
-   ui:InjectKey("SELL1"); check(ns.store.confirm.shown, "selling a stone asks first")
+   ui:InjectKey("SELLPICKED"); check(not ns.store.confirm.shown, "the Sell button needs a stone picked first")
+   ui:InjectKey("PICK1"); ui:InjectKey("SELLPICKED"); check(ns.store.confirm.shown, "selling a stone asks first")
    ui:InjectKey("n"); check(not ns.store.confirm.shown and G.iven[1] == K.ODIAMOND, "no keeps the stone")
-   ui:InjectKey("SELL1"); ui:InjectKey("y")
+   ui:InjectKey("PICK1"); ui:InjectKey("SELLPICKED"); ui:InjectKey("y")
    check(G.iven[1] == 0 and G.c[K.GOLD] == 1100, "yes sells the stone, gold " .. G.c[K.GOLD])
    ui:InjectKey("*"); check(ns.store.confirm.shown, "sell all asks first")
    ui:InjectKey("y")

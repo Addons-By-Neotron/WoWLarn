@@ -31,7 +31,7 @@ ns.store = store
 
 local COLUMNS, ROWS = 2, 13
 local ROW_H, ROW_W = 24, 270
-local HEADER_H, INTRO_H, TEXT_H, FOOTER_H = 24, 54, 250, 44
+local HEADER_H, INTRO_H, TEXT_H, FOOTER_H = 24, 54, 250, 76
 
 function store:Create(parent)
    local frame = ns.CreatePanel(parent)
@@ -52,49 +52,53 @@ function store:Create(parent)
    self.intro:SetJustifyH("LEFT")
    self.intro:SetJustifyV("TOP")
 
-   -- leave the building (the same as Esc) and page through a long list ("<" and ">" are the
-   -- keys the game code listens for)
+   -- the buttons along the bottom: the pages of a long list on the left ("<" and ">" are the keys
+   -- the game code listens for), then what can be done here (the game code says what and which
+   -- key each sends), and Leave (the same as Esc) on the right
    local function Key(key)
       ns.main:SetFocus(true)
       ns.ui:InjectKey(key)
    end
    local leave = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-   leave:SetSize(70, 20)
-   leave:SetPoint("TOPRIGHT", -6, -4)
+   leave:SetSize(80, 22)
+   leave:SetPoint("BOTTOMRIGHT", -8, 8)
    leave:SetText(L["Leave"])
    leave:SetScript("OnClick", function() Key(ns.ESC) end)
    self.leave = leave
    self.pager = CreateFrame("Frame", nil, frame)
-   self.pager:SetSize(120, 20)
-   self.pager:SetPoint("RIGHT", leave, "LEFT", -8, 0)
+   self.pager:SetSize(120, 22)
+   self.pager:SetPoint("BOTTOMLEFT", 8, 8)
    self.pager:Hide()
    local previous = CreateFrame("Button", nil, self.pager, "UIPanelButtonTemplate")
-   previous:SetSize(24, 20)
+   previous:SetSize(24, 22)
    previous:SetPoint("LEFT")
    previous:SetText("<")
    previous:SetScript("OnClick", function() Key("<") end)
    local following = CreateFrame("Button", nil, self.pager, "UIPanelButtonTemplate")
-   following:SetSize(24, 20)
+   following:SetSize(24, 22)
    following:SetPoint("RIGHT")
    following:SetText(">")
    following:SetScript("OnClick", function() Key(">") end)
-   -- one more button for the building (sell all); the game code says what it is and which key it sends
-   self.action = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-   self.action:SetSize(90, 20)
-   self.action:SetPoint("RIGHT", self.pager, "LEFT", -8, 0)
-   self.action:SetScript("OnClick", function(button) Key(button.key) end)
-   self.action:Hide()
+   self.actions = {}
+   for index = 1, 4 do
+      local button = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+      button:SetSize(100, 22)
+      button:SetPoint("RIGHT", index == 1 and leave or self.actions[index - 1], "LEFT", -6, 0)
+      button:SetScript("OnClick", function(self) Key(self.key) end)
+      button:Hide()
+      self.actions[index] = button
+   end
    self.pageText = self.pager:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
    self.pageText:SetPoint("LEFT", previous, "RIGHT")
    self.pageText:SetPoint("RIGHT", following, "LEFT")
 
    self.status = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-   self.status:SetPoint("BOTTOMLEFT", 8, 26)
-   self.status:SetPoint("BOTTOMRIGHT", -8, 26)
+   self.status:SetPoint("BOTTOMLEFT", 8, 54)
+   self.status:SetPoint("BOTTOMRIGHT", -8, 54)
    self.status:SetJustifyH("LEFT")
    self.note = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-   self.note:SetPoint("BOTTOMLEFT", 8, 6)
-   self.note:SetPoint("BOTTOMRIGHT", -8, 6)
+   self.note:SetPoint("BOTTOMLEFT", 8, 34)
+   self.note:SetPoint("BOTTOMRIGHT", -8, 34)
    self.note:SetJustifyH("LEFT")
 
    -- the question before a sale: a small window over the list, answered with y and n
@@ -165,6 +169,10 @@ function store:Create(parent)
    for index = 1, COLUMNS * ROWS do
       local button = CreateFrame("Button", nil, frame)
       button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+      button.selected = button:CreateTexture(nil, "BACKGROUND")
+      button.selected:SetAllPoints()
+      button.selected:SetColorTexture(1, 0.82, 0, 0.2)
+      button.selected:Hide()
       button.icon = button:CreateTexture(nil, "ARTWORK")
       button.icon:SetSize(ROW_H - 6, ROW_H - 6)
       button.icon:SetPoint("LEFT", 2, 0)
@@ -214,7 +222,7 @@ function store:Open(title, intro, columns)
    self.introHeight = self.columns == 0 and TEXT_H or INTRO_H
    self.intro:SetFontObject(self.columns == 0 and "GameFontHighlight" or "GameFontHighlightSmall")
    self.title:SetText(title)
-   self.action:Hide()
+   self:SetActions()
    self.confirm:Hide()
    self.amount:Hide()
    self.leave:SetText(self.columns == 0 and L["OK"] or L["Leave"])
@@ -233,7 +241,7 @@ function store:SetPages(page, pages)
    if pages then self.pageText:SetText(format(L["Page %d / %d"], page, pages)) end
 end
 
--- rows: { key = "a", send = the key a click sends (default: key), text = "...", price = "...", icon = object id, arg = its argument (the
+-- rows: { key = "a", send = the key a click sends (default: key), selected = true to highlight it, text = "...", price = "...", icon = object id, arg = its argument (the
 -- tooltip of an item), dim = true, tip = "..." }
 -- Rows fill the first column top to bottom, then the second.
 function store:SetRows(rows)
@@ -248,6 +256,7 @@ function store:SetRows(rows)
          button:ClearAllPoints()
          button:SetPoint("TOPLEFT", 8 + column * ROW_W, -(HEADER_H + self.introHeight + ((index - 1) % perColumn) * ROW_H))
          button.key, button.tip, button.id, button.arg = row.send or row.key, row.tip, row.icon, row.arg or 0
+         button.selected:SetShown(row.selected == true)
          local icon = row.icon and V.ObjectIcon(row.icon)
          if icon then
             button.icon:SetTexture(icon)
@@ -272,12 +281,19 @@ function store:SetRows(rows)
    end
 end
 
--- A button next to Leave: label, and the key that clicking it sends. Nil hides it.
-function store:SetAction(label, key)
+-- The buttons next to Leave, the first one nearest to it: { { label, key }, ... } with the key that
+-- clicking it sends. No list hides them all.
+function store:SetActions(list)
    if not self.frame then return end
-   self.action.key = key
-   if label then self.action:SetText(label) end
-   self.action:SetShown(label ~= nil)
+   list = list or {}
+   for index, button in ipairs(self.actions) do
+      local action = list[index]
+      if action then
+         button.key = action[2]
+         button:SetText(action[1])
+      end
+      button:SetShown(action ~= nil)
+   end
 end
 
 -- Asks to confirm a sale in a small window; answered with the y and n keys (or the buttons).

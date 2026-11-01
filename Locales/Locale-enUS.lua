@@ -1239,3 +1239,7 @@ L["You destroy the potion of %s."] = true
 L["Do you (r) read it, (t) take it, (x) destroy it, or (i) ignore it?"] = true
 L["Do you (t) take it, (x) destroy it, or (i) ignore it?"] = true
 L["You destroy the scroll of %s."] = true
+L["Deposit"] = true
+L["Withdraw"] = true
+L["Sell"] = true
+L["Click a stone to pick it first."] = true
