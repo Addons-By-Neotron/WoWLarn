@@ -29,8 +29,9 @@ local spellbook = {}
 ns.spellbook = spellbook
 
 local COLUMNS = 3
-local COLUMN_W, ROW_H = 220, 22
+local COLUMN_W, ROW_H = 220, 22  -- (the list of discoveries)
 local HEADER_H, LINE_H, FOOTER_H = 26, 14, 36
+local ICON, SPELL_H, GROUP_H = 28, 36, 30  -- (the spells: the icon, a row, and the title of a group)
 
 function spellbook:Create(parent)
    local frame = ns.CreatePanel(parent)
@@ -57,10 +58,13 @@ function spellbook:Create(parent)
    self.buttons = {}
    for index = 1, K.SPNUM do
       local button = CreateFrame("Button", nil, frame)
-      button:SetSize(COLUMN_W - 4, ROW_H - 2)
+      button:SetSize(COLUMN_W - 4, SPELL_H - 2)
       button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+      button.icon = button:CreateTexture(nil, "ARTWORK")
+      button.icon:SetSize(ICON, ICON)
+      button.icon:SetPoint("LEFT", 2, 0)
       button.text = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-      button.text:SetPoint("LEFT", 4, 0)
+      button.text:SetPoint("LEFT", button.icon, "RIGHT", 6, 0)
       button.text:SetPoint("RIGHT", -2, 0)
       button.text:SetJustifyH("LEFT")
       button.index = index
@@ -88,6 +92,19 @@ function spellbook:Create(parent)
       button:SetScript("OnLeave", GameTooltip_Hide)
       button:Hide()
       self.buttons[index] = button
+   end
+
+   -- The titles of the groups of spells, each with a line under it.
+   self.groups = {}
+   for number = 1, #ns.SpellInfo.GROUPS do
+      local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+      title:SetJustifyH("LEFT")
+      local line = frame:CreateTexture(nil, "ARTWORK")
+      line:SetColorTexture(0.6, 0.5, 0.3, 0.6)
+      line:SetHeight(1)
+      title:Hide()
+      line:Hide()
+      self.groups[number] = { title = title, line = line }
    end
 
    -- The three columns of text of the list of discoveries.
@@ -120,21 +137,38 @@ function spellbook:Open(all)
    local T = ns.Tables
    self.title:SetText(all and L["All spells"] or L["Your spells"])
    for _, text in ipairs(self.columns) do text:Hide() end
-   local shown = 0
-   for index, button in ipairs(self.buttons) do
-      if all or G.spelknow[index] ~= 0 then
-         button:ClearAllPoints()
-         button:SetPoint("TOPLEFT", 8 + (shown % COLUMNS) * COLUMN_W, -(HEADER_H + math.floor(shown / COLUMNS) * ROW_H))
-         local _, short = ns.SpellInfo.info(index)
-         button.text:SetText("|cffffd100" .. T.spelcode[index] .. "|r  " .. T.spelname[index]
-            .. (short and ("  |cff66ff66" .. short .. "|r") or "") .. (ns.SpellInfo.risky(index) and "  |cffff4d4d!|r" or ""))
-         button:Show()
-         shown = shown + 1
-      else
-         button:Hide()
+   for _, button in ipairs(self.buttons) do button:Hide() end
+   local SI = ns.SpellInfo
+   local y = HEADER_H
+   for number, group in ipairs(self.groups) do
+      local spells = {}
+      for index = 1, K.SPNUM do
+         if SI.group(index) == number and (all or G.spelknow[index] ~= 0) then spells[#spells + 1] = index end
+      end
+      group.title:SetShown(#spells > 0)
+      group.line:SetShown(#spells > 0)
+      if #spells > 0 then
+         group.title:ClearAllPoints()
+         group.title:SetPoint("TOPLEFT", 8, -y)
+         group.title:SetText(SI.GROUPS[number].name)
+         group.line:ClearAllPoints()
+         group.line:SetPoint("TOPLEFT", 8, -(y + GROUP_H - 6))
+         group.line:SetPoint("TOPRIGHT", -8, -(y + GROUP_H - 6))
+         y = y + GROUP_H
+         for shown, index in ipairs(spells) do
+            local button = self.buttons[index]
+            button:ClearAllPoints()
+            button:SetPoint("TOPLEFT", 8 + ((shown - 1) % COLUMNS) * COLUMN_W, -(y + math.floor((shown - 1) / COLUMNS) * SPELL_H))
+            local _, short = SI.info(index)
+            button.icon:SetTexture("Interface\\Icons\\" .. (ns.Visuals.SPELL_ICON[T.spelcode[index]] or "INV_Misc_Book_08"))
+            button.text:SetText(T.spelname[index] .. "  |cffffd100" .. T.spelcode[index] .. "|r"
+               .. (short and ("  |cff66ff66" .. short .. "|r") or "") .. (SI.risky(index) and "  |cffff4d4d!|r" or ""))
+            button:Show()
+         end
+         y = y + math.ceil(#spells / COLUMNS) * SPELL_H + 8
       end
    end
-   self.frame:SetHeight(HEADER_H + math.max(1, math.ceil(shown / COLUMNS)) * ROW_H + FOOTER_H)
+   self.frame:SetHeight(y + FOOTER_H)
    self.frame:Show()
 end
 
@@ -144,6 +178,7 @@ function spellbook:ShowDiscoveries()
    local T = ns.Tables
    self.title:SetText(L["Discoveries"])
    for _, button in ipairs(self.buttons) do button:Hide() end
+   for _, group in ipairs(self.groups) do group.title:Hide(); group.line:Hide() end
 
    local lines = { {}, {}, {} }
    local function Add(title, names)

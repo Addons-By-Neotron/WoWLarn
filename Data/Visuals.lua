@@ -146,13 +146,18 @@ V.POTION_ICON = {
 -- The icon of a spell by its three letters (for the action bar); the others get a book.
 V.SPELL_ICON = {
    pro = "Spell_Holy_PowerWordShield", mle = "Spell_Nature_StarFall", sle = "Spell_Nature_Sleep",
-   chm = "Spell_Shadow_Charm", web = "Ability_Ensnare", hel = "Spell_Holy_Heal", inv = "Spell_Nature_Invisibility",
+   chm = "Spell_Shadow_Charm", web = "Ability_Ensnare", hel = "Spell_Holy_Heal", inv = "Spell_Magic_LesserInvisibility",
    bal = "Spell_Fire_FlameBolt", cld = "Spell_Frost_FrostNova", has = "Spell_Nature_Bloodlust",
    lit = "Spell_Nature_Lightning", drl = "Spell_Shadow_LifeDrain02", ply = "Spell_Nature_Polymorph",
    hld = "Spell_Frost_ChainsOfIce", tel = "Spell_Arcane_Blink", mfi = "Spell_Fire_Immolation",
    sph = "Spell_Shadow_ShadowWordDominate", sum = "Spell_Shadow_SummonVoidWalker", fgr = "Spell_Holy_Excorcism",
    cbl = "Spell_Holy_RemoveCurse", enl = "Spell_Holy_MindVision", stp = "Spell_Frost_Stun", sca = "Spell_Shadow_PsychicScream",
    lor = "INV_Misc_Book_09",
+   ssp = "INV_Spear_05", cre = "Spell_Shadow_SummonImp", pha = "Spell_Shadow_GatherShadows",
+   can = "Spell_Holy_DispelMagic", ckl = "Spell_Nature_CorrosiveBreath", vpr = "Spell_Nature_EarthShock",
+   dry = "INV_Drink_05", glo = "Spell_Holy_DivineIntervention", flo = "Spell_Frost_SummonWaterElemental",
+   gen = "Spell_Shadow_DeathCoil", wtw = "Spell_Shadow_Teleport", alt = "Spell_Arcane_Arcane04",
+   per = "Spell_Holy_Aspiration", mkw = "Spell_Nature_EarthBindTotem"
 }
 -- The spells that put an effect on you have the icon of that effect.
 for spell, counter in pairs({ pro = K.PROTECTIONTIME, dex = K.DEXCOUNT, str = K.STRCOUNT }) do

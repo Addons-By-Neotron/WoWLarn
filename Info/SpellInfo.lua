@@ -151,6 +151,30 @@ function SpellInfo.risky(spell)
 end
 
 -- How the spell reaches its target: "Self", "In a line", "Around you", "Next to you"...
+-- The groups of the spellbook, in order: what a spell is for.  What is in none of the first
+-- ones is a utility.
+local GROUPS = {
+   { name = L["Damage"], spells = { K.SP_MAGIC_MISSILE, K.SP_SONIC_SPEAR, K.SP_PHANTASMAL_FORCES, K.SP_FIREBALL,
+      K.SP_COLD, K.SP_CLOUD_KILL, K.SP_DEHYDRATION, K.SP_LIGHTNING, K.SP_DRAIN_LIFE, K.SP_FLOOD,
+      K.SP_FINGER_OF_DEATH, K.SP_MAGIC_FIRE, K.SP_SPHERE_OF_ANNIHILATION, K.SP_GENOCIDE, K.SP_SUMMON_DEMON } },
+   { name = L["Control"], spells = { K.SP_SLEEP, K.SP_CHARM_MONSTER, K.SP_WEB, K.SP_POLYMORPH, K.SP_SCARE_MONSTER,
+      K.SP_HOLD_MONSTER, K.SP_TIME_STOP, K.SP_TELEPORT_AWAY } },
+   { name = L["Buffs"], spells = { K.SP_PROTECTION, K.SP_DEXTERITY, K.SP_STRENGTH, K.SP_INVISIBILITY,
+      K.SP_HASTE_SELF, K.SP_INVULNERABILITY, K.SP_WALK_THROUGH_WALLS, K.SP_PERMANENCE } },
+   { name = L["Healing and cures"], spells = { K.SP_HEALING, K.SP_CURE_BLINDNESS } },
+   { name = L["Utility"], spells = {} },
+}
+local GROUP_OF = {}
+for number, group in ipairs(GROUPS) do
+   for _, spell in ipairs(group.spells) do GROUP_OF[spell] = number end
+end
+SpellInfo.GROUPS = GROUPS
+
+-- The number of the group of the spell.
+function SpellInfo.group(spell)
+   return GROUP_OF[spell] or #GROUPS
+end
+
 function SpellInfo.kind(spell)
    return KIND[spell]
 end
