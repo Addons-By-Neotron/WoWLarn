@@ -207,6 +207,19 @@ local function BuildOptions()
                order = 20,
                width = "full",
             },
+            easy = {
+               type = "header",
+               name = L["Optional changes to the game"],
+               order = 40,
+            },
+            elevatorLimit = {
+               type = "range",
+               name = L["Elevator limit"],
+               desc = L["The most levels an express elevator can take you, up or down.  Off (0) leaves it to chance, as in the original: a ride from level 3 can end on level 15.  Applies to the next ride."],
+               order = 41,
+               min = 0, max = 14, step = 1,
+               width = "full",
+            },
          },
       },
    }

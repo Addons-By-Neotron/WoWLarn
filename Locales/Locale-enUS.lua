@@ -1214,3 +1214,6 @@ L["You stop: the door is shut."] = true
 L["You stop: there is something here."] = true
 L["You stop: you were moved."] = true
 L["The %s changes into a %s!"] = true
+L["Optional changes to the game"] = true
+L["Elevator limit"] = true
+L["The most levels an express elevator can take you, up or down.  Off (0) leaves it to chance, as in the original: a ride from level 3 can end on level 15.  Applies to the next ride."] = true

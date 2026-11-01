@@ -673,7 +673,7 @@ keys("l"); check(ui.wait == "key", "door asks"); keys("o")
 check(G.item[31][8] == K.OOPENDOOR or G.playerx == 30, "door opened or held")
 if G.item[31][8] == K.OOPENDOOR then keys("C"); check(true) end
 Clear(); G.item[30][8] = K.OOPENDOOR; keys("C"); check(G.item[30][8] == K.OCLOSEDDOOR, "closed the door")
-Clear(); G.item[31][8] = K.OTRAPDOOR; keys("^"); check((last() or ""):find("Trapdoor"), "found the trap door: " .. tostring(last()) .. " wait=" .. tostring(ui.wait))
+Clear(); G.item[31][8] = K.OTRAPDOOR; keys("^"); check((last() or ""):find("Trapdoor"), "found the trap door: " .. tostring(last()) .. " wait=" .. tostring(ui.wait) .. " pos=" .. G.playerx .. "," .. G.playery .. " item=" .. tostring(G.item[31][8]) .. " elev=" .. K.OELEVATORDOWN)
 -- a chest
 Clear(); G.item[31][8] = K.OCHEST; G.iarg[31][8] = 2; keys("l"); check(ui.wait == "key", "chest asks")
 keys("t"); check(G.iven[1] == K.OCHEST, "took the chest")
@@ -1336,6 +1336,7 @@ check(not G.wizard and G.cheated and ns.Scores.record(ns.Scores.QUIT) == nil, "w
 -- go to a place that was found
 do
    ns.mod.db.profile.fast = true  -- (no naps)
+   G.god = true  -- (the rides land among monsters)
    Fresh(3)
    for y = 1, K.MAXY do if y ~= 2 then G.item[35][y] = K.OWALL end end  -- a wall with a gap
    G.item[40][8] = K.OSTAIRSDOWN
@@ -1431,6 +1432,31 @@ do
    ns.Travel.go(34, K.MAXY)
    check(G.level == 0, "the walk leaves the dungeon")
    ns.mod.db.profile.fast = false
+end
+
+-- the elevator limit option
+do
+   ui.co = nil; ui:NewGame(); ui:InjectKey("UP"); ui:InjectKey("ENTER"); keys(" ")
+   check(ui.atCommand, "a new game waits for a command")
+   ns.mod.db.profile.fast = true  -- (no naps)
+   G.god = true  -- (the rides land among monsters)
+   ns.mod.db.profile.elevatorLimit = 2
+   local function Ready()  -- (where the ride ended may ask something)
+      for _ = 1, 5 do if not ui.atCommand then keys("i") end end
+      check(ui.atCommand, "back at the command prompt")
+   end
+   for _ = 1, 40 do
+      Ready()
+      G.c[K.CONFUSE] = 0  -- (a trap on the last landing may have left it)
+      ns.Create.newCaveLevel(3); Clear(); G.lookedHere = nil; G.item[31][8] = K.OELEVATORDOWN; keys("l")
+      check(G.level >= 4 and G.level <= 5, "elevator down stays within the limit: " .. G.level)
+      Ready()
+      ns.Create.newCaveLevel(10); Clear(); G.lookedHere = nil; G.item[31][8] = K.OELEVATORUP; keys("l")
+      check(G.level >= 8 and G.level <= 9, "elevator up stays within the limit: " .. G.level)
+   end
+   ns.mod.db.profile.elevatorLimit = nil
+   ns.mod.db.profile.fast = false
+   G.god = false
 end
 
 -- starting over from a god mode game

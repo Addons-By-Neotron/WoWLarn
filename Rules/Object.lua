@@ -268,7 +268,10 @@ local function Elevator(dir)
       end
       G.playerx, G.playery = ns.rnd(MAXX - 2) + 1, ns.rnd(MAXY - 2) + 1
       ui:Nap(2000)
-      Create.newCaveLevel(ns.rund(G.level))
+      local new = ns.rund(G.level)
+      local limit = ns.mod.db.profile.elevatorLimit or 0  -- FIX: not in the C. An option: the most levels a ride covers
+      if limit > 0 then new = math.max(new, G.level - limit) end
+      Create.newCaveLevel(new)
    else
       if G.level == DBOTTOM or G.level == VBOTTOM then
          ui:Nap(2000)
@@ -279,7 +282,10 @@ local function Elevator(dir)
       end
       G.playerx, G.playery = ns.rnd(MAXX - 2) + 1, ns.rnd(MAXY - 2) + 1
       ui:Nap(2000)
-      Create.newCaveLevel(G.level + ns.rnd(math.max(DBOTTOM - G.level, 1)))
+      local ride = ns.rnd(math.max(DBOTTOM - G.level, 1))
+      local limit = ns.mod.db.profile.elevatorLimit or 0  -- FIX: not in the C. An option: the most levels a ride covers
+      if limit > 0 then ride = math.min(ride, limit) end
+      Create.newCaveLevel(G.level + ride)
    end
    ns.Player.positionPlayer()
    ui:Refresh("all")
