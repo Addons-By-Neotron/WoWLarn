@@ -42,7 +42,8 @@ local COMMANDS = {
    { key = "^", name = L["Find traps"], icon = "Ability_Rogue_FindWeakness" },
    { key = ".", name = L["Rest"], icon = "Spell_Nature_Sleep" },
    { key = "t", name = L["Go to"], icon = "INV_Misc_Map_01" },
-   { key = "Z", name = L["Teleport"], icon = "Spell_Arcane_Blink" },
+   { key = "Z", name = L["Teleport"], icon = "Spell_Arcane_Blink", minLevel = 10,
+     tip = L["Teleports you to a random location.  It can change the level too: up to two levels up or down."] },
    { key = "D", name = L["Discoveries"], icon = "INV_Misc_Book_08" },
    { key = "?", name = L["Help"], icon = "INV_Misc_QuestionMark" },
    { key = "B", name = L["Bestiary"], icon = "INV_Misc_Head_Dragon_01", bestiary = true },
@@ -53,6 +54,10 @@ local function OnEnter(self)
    GameTooltip:SetOwner(self, "ANCHOR_TOP")
    GameTooltip:SetText(self.command.name)
    GameTooltip:AddLine(format(L["Key: %s"], self.command.key), 0.7, 0.7, 0.7)
+   if self.command.tip then GameTooltip:AddLine(self.command.tip, 1, 0.82, 0, true) end
+   if self.command.minLevel and ns.G.c[ns.K.LEVEL] < self.command.minLevel then
+      GameTooltip:AddLine(format(L["Needs character level %d"], self.command.minLevel), 1, 0.3, 0.3)
+   end
    GameTooltip:Show()
 end
 
@@ -93,6 +98,18 @@ function bar:Create(parent)
    end
    self.frame = frame
    return frame
+end
+
+-- The buttons that need a level are grey until the character has it.
+function bar:Update()
+   for _, button in pairs(self.buttons or {}) do
+      local minLevel = button.command.minLevel
+      if minLevel then
+         local grey = ns.G.c[ns.K.LEVEL] < minLevel
+         button:GetNormalTexture():SetDesaturated(grey)
+         button:SetAlpha(grey and 0.5 or 1)
+      end
+   end
 end
 
 -- The view button shows which view is on.

@@ -239,6 +239,7 @@ function ui:Flush()
    if dirty.stats then
       dirty.stats = nil
       ns.side:UpdateStats()
+      ns.bar:Update()
    end
    if dirty.inv then
       dirty.inv = nil

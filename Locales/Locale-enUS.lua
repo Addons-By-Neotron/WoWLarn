@@ -1243,3 +1243,4 @@ L["Deposit"] = true
 L["Withdraw"] = true
 L["Sell"] = true
 L["Click a stone to pick it first."] = true
+L["Teleports you to a random location.  It can change the level too: up to two levels up or down."] = true
