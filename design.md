@@ -234,7 +234,7 @@ One main game frame (movable, resizable, scale setting, position saved in profil
   - inventory `i`, wield `w`, wear `W`, take off `T`, drop `d`
   - quaff `q`, read `r`, eat `e`, cast `c`
   - close door `C`, find traps `^`, rest `.`, teleport `Z` (shown at level ≥ 10), discoveries `D`
-  - help `?`, save & close `S`
+  - help `?`, go to a place `t`, close the window `S` (the game is saved whenever the window hides and at logout)
   - A disabled state is shown when a command can't be used (no potions, blind, time stop), using the same checks as `parse`.
 
 ### 6.4 Dialog windows (all on the same frame strata, closed by Esc)
@@ -242,9 +242,11 @@ One main game frame (movable, resizable, scale setting, position saved in profil
 - **Inventory:** a 26-slot grid of item icons with names and enchantments, wielded/worn markers and pack weight. In `PickItem` mode, valid items are highlighted.
 - **Spellbook:** known spells with code, name, description (`speldescript`) and level; click to cast.
 - **Discoveries:** identified potions, scrolls and spells (`seemagic`).
-- **Store windows:** DND store (item list with icons and prices, sell/buy), bank (deposit/withdraw/appraise gems), school (courses), trading post, LRS (taxes), home (status/win), and the goblin alchemist (Grizzik's, §13).
-- **Character creation:** class picker (§9) and name (default: your WoW character name), plus difficulty for a new game.
-- **Help, scoreboard, death/win screens:** text panels styled like WoW quest or letter frames. Tax letters (`bill.c`) appear as mail-style letters.
+- **Store windows** (`UI/Store.lua`, one window for all of them): the Thrift Shoppe (the original DND store; rows with icons and prices, several pages), bank (deposit/withdraw/appraise gems), school (courses), trading post, LRS (taxes), home (status/win), and the goblin alchemist (Grizzik's, §13). The buttons run along the bottom: the pager on the left, what can be done here (the bank: Deposit, Withdraw, Sell, Sell all) and Leave on the right. A sale is confirmed in a small window (`store:Confirm`), and gold amounts are asked with a slider window (`store:Amount`).
+- **A new game:** first the settings window (`UI/GameOptions.lua`: difficulty and the optional changes of §14), then the class picker (§9). The name is the WoW character name.
+- **Help** (`UI/HelpWindow.lua`, the `?` key): the command table and sections of text from `Data/Help.lua`, in a scrolling window. The story at the start of a game is a plain text window (the store window in text mode).
+- **Scoreboard, death/win screens:** text panels styled like WoW quest or letter frames. Tax letters (`bill.c`) appear as mail-style letters.
+- The inventory, spellbook and bestiary have a Close button at the bottom.
 
 ---
 
@@ -382,7 +384,7 @@ Each milestone is playable or testable in game.
    - `G.monster` is a per-game copy of `ns.MonsterData` (`Monster.init`, called from `makePlayer`), because genocide changes the flags; `G.loot[x * 100 + y]` holds what a monster carries (C: `mitem[][].it`) and is saved with the level
    - monsters are drawn as their ASCII letter in red (tiles and minimap); invisible stalkers, demons without the eye of Larn and the mimic follow `Display.visibleMonster`
    - deliberate carry-overs from the C: a fire-breathing monster still hurts a fire-resistant player (the C `else` only guards the message); the scared-monster branch of `movemt` reads the `tmpitem` left over from an earlier move, as the C does
-   - difficulty: `Monster.init` scales the monsters by `c[HARDGAME]` (C: `sethard`); no option sets the difficulty yet, so it is always 0
+   - difficulty: `Monster.init` scales the monsters by `c[HARDGAME]` (C: `sethard`); the difficulty is chosen in the settings window of a new game (default 0)
    - the spheres of annihilation (`movsphere`, `rmsphere`, the `OANNIHILATION` branch of `mmove`) came with the spells in milestone 6
    - still to do from this list: monster icons or portraits on the tiles and the target model with animations (they need the models of milestone 10; the glyphs are the fallback), the death screen and scoreboard (milestone 9)
 5. **Items** (done):
@@ -412,7 +414,7 @@ Each milestone is playable or testable in game.
     - pooled `PlayerModel` actors with display lookup, per-monster tune, the depth fix (`Seat` technique) and animations
     - move tweens, spell effects, lighting/fog for remembered cells
     - debug model viewer for curating `Data/Visuals.lua`
-11. **Options + polish (races done):** the Races option adds small stat bonuses for the race of the WoW character at the start of a new game (`Rules/Create.lua`, no extra pick). Left: more monster renames, colour options, ASCII mode for the 2.5D view.
+11. **Options + polish (races done):** the Races option (a checkbox in the new-game settings window) adds small stat bonuses for the race of the WoW character at the start of a new game (`Rules/Create.lua`, no extra pick). Left: more monster renames, colour options, ASCII mode for the 2.5D view.
    Original list: difficulty, monster renames, fast mode (no naps), tile size, ASCII fallback renderer, colors, LDB/minimap launcher, races (§9).
 
 ---
@@ -471,3 +473,17 @@ Each milestone is playable or testable in game.
      - Saved games store the equipped slots.
      - The inventory window gets an "equipped" mark, and the item tooltips and icons matter more.
    - **Balance:** capping rings to two cuts the strongest builds of the original, so decide whether this is worth it. A softer option keeps the stacking and only adds the equip step for the display.
+
+---
+
+## 14. Additions and changes from the original
+
+Marked `FIX:` in the code where they change a rule. Optional ones are chosen in the settings window of a new game (`UI/GameOptions.lua`), kept with the game (`G.rules`, saved) and off by default.
+
+- **Optional:** difficulty (`c[HARDGAME]`); tough weapons (`Monster.resistChance`: the Lance of Death never dulls, the Slayer, Vorpal Blade and Sword of Slashing resist 70%, every plus adds 5%, 90% at most); an elevator limit (the most levels a ride covers, `Object.lua`); races (§9).
+- **Go to** (`Rules/Travel.lua`, key `t`): lists the places found (stairs, elevators, shops, altars, the way out...), by name, and walks to the one picked over the ground on the map. The path is the cheapest one: a closed door costs 9, an object 26, a known trap 61, so it goes round them when it can. The walk stops for a monster within two steps (going round walls), a hit, an object stepped on, a trap in the way, a shut door; it says why. Hidden traps are sprung and the walk goes on.
+- **Destroy:** a known potion or scroll on the floor can be destroyed (`x`).
+- **Messages:** the experience of a kill; a metamorph changing into a dragon; a staff or cube turning an attack aside; an unseen attacker pauses running (`ui:Unseen`).
+- **Knowledge:** the potions and scrolls of the starting kit are known; item powers are found out by seeing them work (`Info/ItemInfo.lua`).
+- **Names:** the DND store is the Thrift Shoppe, the warlock class is the Glass Cannon (token WARLOCK), the potion of dizziness is the potion of weakness (`K.PDIZZINESS`), the gnome is the leper gnome.
+- **Amulet of invisibility:** each amulet adds `128 * (1 + plus)` turns to the invisibility spell, and carrying one keeps see invisible from running out.
