@@ -85,6 +85,11 @@ local function Seen(x, y)
    return id
 end
 
+-- True if the player knows of a trap or a pit on the tile.
+function Travel.knownTrap(x, y)
+   return TRAP[item[x][y]] == true
+end
+
 local function Remembered(x, y)
    return ns.Display.remembered(x, y)
 end
@@ -204,6 +209,8 @@ local function MonsterNear()
    end
    return false
 end
+
+Travel.monsterNear = MonsterNear
 
 -- Walks to the tile, one step at a time, with the monsters moving as in a run. Stops on
 -- the first object it steps on (the game then deals with it, as for any step), but goes on

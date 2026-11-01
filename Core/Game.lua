@@ -46,10 +46,35 @@ end
 local MOVE = { j = 1, l = 2, k = 3, h = 4, u = 5, y = 6, n = 7, b = 8 }
 local RUN = { J = 1, L = 2, K = 3, H = 4, U = 5, Y = 6, N = 7, B = 8 }
 
+-- True if the tile can be walked into (not a wall, nor the edge of the map).
+local function Open(x, y)
+   return x >= 1 and x <= K.MAXX and y >= 1 and y <= K.MAXY and (ns.G.item[x][y] ~= K.OWALL or c[K.WTW] ~= 0)
+end
+
+-- True if a way opens to the side of the tile that was shut to the side of the tile before it
+-- (a run along a straight line, not a diagonal one): a crossing, a door, or the mouth of a room.
+-- A blind player does not see it.
+local function NewSideOpening(dir, fromx, fromy, x, y)
+   local dx, dy = Display.DIROFFX[dir], Display.DIROFFY[dir]
+   if dx ~= 0 and dy ~= 0 then return false end
+   return (Open(x + dy, y + dx) and not Open(fromx + dy, fromy + dx))
+      or (Open(x - dy, y - dx) and not Open(fromx - dy, fromy - dx))
+end
+
 -- C: run().
 local function Run(dir)
    local moved = 1
    while moved ~= 0 do
+      if ns.Travel.monsterNear() then  -- (time to react)
+         ui:Message(L["You stop: a monster is near."])
+         return
+      end
+      local nx, ny = G.playerx + Display.DIROFFX[dir], G.playery + Display.DIROFFY[dir]
+      if nx >= 1 and nx <= K.MAXX and ny >= 1 and ny <= K.MAXY and ns.Travel.knownTrap(nx, ny) then
+         ui:Message(L["You stop in front of a trap."])
+         return
+      end
+      local fromx, fromy = G.playerx, G.playery
       moved = Display.moveplayer(dir)
       if moved > 0 then
          if c[K.HASTEMONST] ~= 0 then Monster.movemonst() end
@@ -58,6 +83,10 @@ local function Run(dir)
          Regen.regen()
       end
       if G.hitflag or G.dead then moved = 0 end
+      if moved ~= 0 and c[K.BLINDCOUNT] == 0 and NewSideOpening(dir, fromx, fromy, G.playerx, G.playery) then
+         Display.showcell(G.playerx, G.playery)
+         return
+      end
       if moved ~= 0 then
          Display.showcell(G.playerx, G.playery)
          ui:Nap(RUN_DELAY)

@@ -1520,6 +1520,34 @@ do
    Ready(); Clear(); G.lookedHere = nil
    ui:InjectKey("RIGHT"); check(G.playerx == 31, "an arrow key steps")
    ui:InjectKey("SHIFT-RIGHT"); check(G.playerx > 33, "shift and an arrow key run, got " .. G.playerx)
+   -- a run stops in front of a known trap
+   Ready(); Clear(); G.lookedHere = nil
+   local tx, ty = G.playerx + 4, G.playery
+   G.item[tx][ty] = K.OPIT
+   ui:InjectKey("SHIFT-RIGHT"); check(G.playerx == tx - 1 and G.playery == ty, "a run stops in front of a pit, got " .. G.playerx)
+   G.item[tx][ty] = 0
+   -- a run stops at a crossing
+   Ready(); Clear(); G.lookedHere = nil
+   local cx, cy = G.playerx, G.playery
+   for x = cx - 1, cx + 12 do G.item[x][cy - 1], G.item[x][cy + 1] = K.OWALL, K.OWALL end
+   G.item[cx + 5][cy + 1] = 0
+   ui:InjectKey("SHIFT-RIGHT")
+   check(G.playerx == cx + 5 and G.playery == cy, "a run stops at a crossing, got " .. G.playerx)
+   -- (blind, it does not notice the crossing)
+   G.playerx = cx; G.c[K.BLINDCOUNT] = 50
+   ui:InjectKey("SHIFT-RIGHT")
+   check(G.playerx > cx + 5, "a blind run does not stop at a crossing, got " .. G.playerx)
+   G.c[K.BLINDCOUNT] = 0
+   for x = cx - 1, cx + 12 do G.item[x][cy - 1], G.item[x][cy + 1] = 0, 0 end
+   -- and in front of a monster in view
+   Ready(); Clear(); G.lookedHere = nil
+   local mx = G.playerx + 6
+   G.know[mx][G.playery] = 1; G.mon[mx][G.playery], G.hitp[mx][G.playery] = K.ANT, 5
+   local startx = G.playerx
+   ui:InjectKey("SHIFT-RIGHT")
+   check(G.playerx > startx and G.playerx < mx - 1 and LOG[#LOG] and tostring(LOG[#LOG]):find("monster is near"),
+      "a run stops before a monster, got " .. G.playerx .. " " .. tostring(LOG[#LOG]))
+   G.mon[mx][G.playery] = 0
    ns.mod.db.profile.fast = false
    G.god = false
 end
