@@ -166,7 +166,7 @@ function mod:PrintHelp()
    self:info("/larn new  - give this game up and start another")
    self:info("/larn models  - the model viewer (choose the look of the monsters)")
    self:info("/larn zoo  - all the monsters in one place")
-   self:info("/larn form [scale|shift|lower|room <number>]  - place the model of your current form")
+   self:info("/larn form  - place the model of the player (size and place of a form)")
    self:info("/larn mapdebug  - what the map is drawing")
    self:info("/larn tex floor|wall|lava <id|+|->  - try textures for this level")
 --@end-debug@
@@ -197,23 +197,8 @@ function mod:ChatCommand(input)
    elseif cmd == "zoo" then
       ns.zoo:Toggle()
 --@debug@
-   elseif cmd:match("^form") then
-      local file = ns.map3d.playerFile
-      if not file then
-         self:Print("form: no player model yet")
-         return
-      end
-      local key, value = cmd:match("^form%s+(%a+)%s+(-?[%d%.]+)")
-      local forms = self.db.global.forms
-      if key then
-         local now = ns.Visuals.Form(file) or {}
-         forms[file] = { scale = now.scale, shift = now.shift, lower = now.lower, room = now.room }
-         forms[file][key] = tonumber(value)
-         ns.ui:RefreshNow("map")
-      end
-      local now = ns.Visuals.Form(file) or {}
-      self:Print(format("   [%d] = { scale = %s, shift = %s, lower = %s, room = %s },  -- the model of the player", file,
-         tostring(now.scale), tostring(now.shift), tostring(now.lower), tostring(now.room)))
+   elseif cmd == "form" then
+      ns.formTuner:Toggle()
 --@end-debug@
    elseif cmd == "reset" then
       ns.main:ResetPosition()
