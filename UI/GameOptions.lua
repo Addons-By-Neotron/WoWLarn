@@ -314,6 +314,10 @@ function options:Show()
    end
    self.loading = false
    self:Update()
+   -- (smaller if the game window is not tall enough: the rest would be cut off)
+   self.frame:SetScale(1)
+   local room = self.frame:GetParent():GetHeight() - 12
+   self.frame:SetScale(math.min(1, room / self.frame:GetHeight()))
    self.frame:Show()
 end
 

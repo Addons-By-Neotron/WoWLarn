@@ -15,6 +15,7 @@ local function newframe(kind)
          if k == "SetShown" then return function(self, v) self.shown = v end end
          if k == "AddMessage" then return function(self, m) LOG[#LOG + 1] = m end end
          if k == "GetPoint" then return function() return "CENTER", nil, nil, 0, 0 end end
+         if k == "GetParent" then return function(self) return self end end
          if k == "GetFrameLevel" then return function() return 1 end end
          if k == "GetWidth" then return function() return 704 end end
          if k == "GetHeight" then return function() return 448 end end
