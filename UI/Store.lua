@@ -36,7 +36,7 @@ local HEADER_H, INTRO_H, TEXT_H, FOOTER_H = 24, 54, 250, 44
 function store:Create(parent)
    local frame = ns.CreatePanel(parent)
    frame:SetFrameStrata("DIALOG")
-   frame:SetFrameLevel(parent:GetFrameLevel() + 100)  -- (the inventory opens above it; the 2.5D view uses the 60 levels above the map)
+   frame:SetFrameLevel(parent:GetFrameLevel() + 1200)  -- (above the action bar; the inventory opens above it; the 2.5D view uses the 60 levels above the map)
    frame:SetWidth(COLUMNS * ROW_W + 16)
    frame:SetPoint("CENTER")
    frame:EnableMouse(true)

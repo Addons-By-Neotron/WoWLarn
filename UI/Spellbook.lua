@@ -35,7 +35,7 @@ local HEADER_H, LINE_H = 26, 14
 function spellbook:Create(parent)
    local frame = ns.CreatePanel(parent)
    frame:SetFrameStrata("DIALOG")
-   frame:SetFrameLevel(parent:GetFrameLevel() + 120)
+   frame:SetFrameLevel(parent:GetFrameLevel() + 1220)
    frame:SetWidth(COLUMNS * COLUMN_W + 16)
    frame:SetPoint("CENTER")
    frame:EnableMouse(true)

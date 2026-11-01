@@ -34,7 +34,7 @@ local HEADER_H = 54
 function scoreboard:Create(parent)
    local frame = ns.CreatePanel(parent, nil, { 0.04, 0.04, 0.06, 0.97 })
    frame:SetFrameStrata("DIALOG")
-   frame:SetFrameLevel(parent:GetFrameLevel() + 150)
+   frame:SetFrameLevel(parent:GetFrameLevel() + 1250)
    frame:SetSize(ROW_W + 16, HEADER_H + K.SCORESIZE * ROW_H + 12)
    frame:SetPoint("CENTER")
    frame:EnableMouse(true)
