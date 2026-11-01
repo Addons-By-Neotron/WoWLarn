@@ -308,7 +308,7 @@ local function GemRows(eyeKnown)
    for slot = 1, K.IVENSIZE do
       if GEMS[iven[slot]] then
          local price = (iven[slot] == K.OLARNEYE and not eyeKnown) and "?" or format("%6d", GemValue(slot))
-         rows[#rows + 1] = { key = Letter(slot), text = ns.Player.itemName(slot),
+         rows[#rows + 1] = { key = Letter(slot), send = "SELL" .. slot, text = ns.Player.itemName(slot),
             price = price, icon = iven[slot], arg = ivenarg[slot] }
       end
    end
@@ -327,12 +327,12 @@ end
 local function Appraise(slot)
    local ui = ns.ui
    Say(L["I see you have %s.  I must commend you.  I didn't think you could get it."], ns.Tables.objectname[K.OLARNEYE])
-   if ui:YesNo(L["Shall I appraise it for you?"]) ~= "y" then return end
+   if ns.store:Confirm(L["Shall I appraise it for you?"]) ~= "y" then return end
    Say(L["Just one moment please..."])
    ui:Nap(1000)
    local amount = EyeValue()
    Say(L["This is an excellent stone.  It is worth %d gold pieces to us."], amount)
-   if ui:YesNo(L["Would you like to sell it?"]) == "y" then
+   if ns.store:Confirm(L["Would you like to sell it?"]) == "y" then
       SellGem(slot)
    else
       Say(L["It is, of course, your privilege to keep the stone."])
@@ -354,8 +354,16 @@ function Town.bank(branch)
    if G.level == 8 then c[K.TELEFLAG] = 0 end
 
    local eyeKnown = false  -- (set once the bank has appraised the Eye of Larn)
+   local function GemCount()
+      local count, total = 0, 0
+      for slot = 1, K.IVENSIZE do
+         if GEMS[iven[slot]] then count, total = count + 1, total + GemValue(slot) end
+      end
+      return count, total
+   end
    local function Show()
       store:SetRows(GemRows(eyeKnown))
+      store:SetAction(GemCount() > 0 and L["Sell all"] or nil, "*")
       local text = format(L["You have %s in the bank."], Gold(c[K.BANKACCOUNT])) .. "   "
          .. format(L["You have %s."], Gold(c[K.GOLD]))
       if c[K.BANKACCOUNT] + c[K.GOLD] >= 500000 then
@@ -379,7 +387,7 @@ function Town.bank(branch)
       if key == ESC then
          break
       elseif key == "d" then
-         local amount = ui:GetNumber(L["Deposit how much?"], c[K.GOLD])
+         local amount = store:Amount(L["Deposit how much?"], c[K.GOLD])
          if amount > c[K.GOLD] then
             Say(L["You don't have that much."])
             ui:Nap(2000)
@@ -389,7 +397,7 @@ function Town.bank(branch)
             c[K.BANKACCOUNT] = c[K.BANKACCOUNT] + amount
          end
       elseif key == "w" then
-         local amount = ui:GetNumber(L["Withdraw how much?"], c[K.BANKACCOUNT])
+         local amount = store:Amount(L["Withdraw how much?"], c[K.BANKACCOUNT])
          if amount > c[K.BANKACCOUNT] then
             Say(L["You don't have that much in the bank!"])
             ui:Nap(2000)
@@ -398,21 +406,31 @@ function Town.bank(branch)
             ns.ui:Sound("coin")
             c[K.BANKACCOUNT] = c[K.BANKACCOUNT] - amount
          end
-      elseif key == "s" then
-         ns.prompt:Set(L["Which stone would you like to sell? [a-z, * for all]"])
-         local choice
-         repeat choice = ui:GetKey() until choice == ESC or choice == "*" or (#choice == 1 and choice >= "a" and choice <= "z")
-         if choice == "*" then
+      elseif key == "*" then  -- the Sell all button
+         local count, total = GemCount()
+         if count > 0 and store:Confirm(format(L["Sell all %d stones for %s?"], count, Gold(total))) == "y" then
             for slot = 1, K.IVENSIZE do
                if GEMS[iven[slot]] then SellGem(slot) end
             end
-         elseif choice ~= ESC then
-            local slot = choice:byte() - 96
-            if GEMS[iven[slot]] then
-               SellGem(slot)
-            else
+         end
+         ui:Refresh("inv")
+      elseif key == "s" or key:match("^SELL%d+$") then  -- a stone: s and its letter, or a click on its row
+         local slot = tonumber(key:match("%d+"))
+         if not slot then
+            ns.prompt:Set(L["Which stone would you like to sell? [a-z]"])
+            local choice
+            repeat choice = ui:GetKey() until choice == ESC or (#choice == 1 and choice >= "a" and choice <= "z")
+            slot = choice ~= ESC and choice:byte() - 96 or nil
+            if slot and not GEMS[iven[slot]] then
                Say(L["Item %s is not a gemstone!"], choice)
                ui:Nap(2000)
+               slot = nil
+            end
+         end
+         if slot and GEMS[iven[slot]] then
+            local name = ns.Player.itemName(slot)
+            if store:Confirm(format(L["%s is worth %s to us.  Do you want to sell it?"], name, Gold(GemValue(slot)))) == "y" then
+               SellGem(slot)
             end
          end
          ui:Refresh("inv")
@@ -473,7 +491,7 @@ function Town.tradingPost()
             Say(L["So sorry but we are not authorized to accept that item."])
          else
             local name = ns.Player.itemName(slot)
-            if ui:YesNo(format(L["%s is worth %s to us.  Do you want to sell it?"], name, Gold(value))) == "y" then
+            if store:Confirm(format(L["%s is worth %s to us.  Do you want to sell it?"], name, Gold(value))) == "y" then
                c[K.GOLD] = c[K.GOLD] + value
                ns.ui:Sound("coin")
                if GEMS[id] then G.gemsSold[id] = true end

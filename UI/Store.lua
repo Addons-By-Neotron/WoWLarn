@@ -78,6 +78,12 @@ function store:Create(parent)
    following:SetPoint("RIGHT")
    following:SetText(">")
    following:SetScript("OnClick", function() Key(">") end)
+   -- one more button for the building (sell all); the game code says what it is and which key it sends
+   self.action = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+   self.action:SetSize(90, 20)
+   self.action:SetPoint("RIGHT", self.pager, "LEFT", -8, 0)
+   self.action:SetScript("OnClick", function(button) Key(button.key) end)
+   self.action:Hide()
    self.pageText = self.pager:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
    self.pageText:SetPoint("LEFT", previous, "RIGHT")
    self.pageText:SetPoint("RIGHT", following, "LEFT")
@@ -90,6 +96,70 @@ function store:Create(parent)
    self.note:SetPoint("BOTTOMLEFT", 8, 6)
    self.note:SetPoint("BOTTOMRIGHT", -8, 6)
    self.note:SetJustifyH("LEFT")
+
+   -- the question before a sale: a small window over the list, answered with y and n
+   local confirm = ns.CreatePanel(frame)
+   confirm:SetSize(340, 96)
+   confirm:SetPoint("CENTER")
+   confirm:SetFrameLevel(frame:GetFrameLevel() + 40)
+   confirm:EnableMouse(true)
+   confirm:Hide()
+   self.confirm = confirm
+   self.confirmText = confirm:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+   self.confirmText:SetPoint("TOPLEFT", 10, -10)
+   self.confirmText:SetPoint("TOPRIGHT", -10, -10)
+   self.confirmText:SetHeight(48)
+   self.confirmText:SetJustifyH("CENTER")
+   self.confirmText:SetJustifyV("TOP")
+   local no = CreateFrame("Button", nil, confirm, "UIPanelButtonTemplate")
+   no:SetSize(90, 22)
+   no:SetPoint("BOTTOM", 50, 10)
+   no:SetText(L["No"])
+   no:SetScript("OnClick", function() Key("n") end)
+   local yes = CreateFrame("Button", nil, confirm, "UIPanelButtonTemplate")
+   yes:SetSize(90, 22)
+   yes:SetPoint("BOTTOM", -50, 10)
+   yes:SetText(L["Yes"])
+   yes:SetScript("OnClick", function() Key("y") end)
+
+   -- how much gold: a slider from 0 to the most there is, or type the number
+   local amount = ns.CreatePanel(frame)
+   amount:SetSize(380, 130)
+   amount:SetPoint("CENTER")
+   amount:SetFrameLevel(frame:GetFrameLevel() + 40)
+   amount:EnableMouse(true)
+   amount:Hide()
+   self.amount = amount
+   self.amountText = amount:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+   self.amountText:SetPoint("TOP", 0, -10)
+   self.amountValueText = amount:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+   self.amountValueText:SetPoint("TOP", 0, -32)
+   local slider = CreateFrame("Slider", nil, amount, "OptionsSliderTemplate")
+   slider:SetSize(320, 16)
+   slider:SetPoint("TOP", 0, -64)
+   slider:SetObeyStepOnDrag(true)
+   slider:SetValueStep(1)
+   slider:SetScript("OnValueChanged", function(_, value)
+      if self.settingAmount then return end
+      self.typing = false
+      self:ShowAmount(math.floor(value + 0.5))
+   end)
+   self.amountSlider = slider
+   self.amountMin = amount:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+   self.amountMin:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 0, -2)
+   self.amountMin:SetText("0")
+   self.amountMax = amount:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+   self.amountMax:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, -2)
+   local function AmountButton(label, key, x)
+      local button = CreateFrame("Button", nil, amount, "UIPanelButtonTemplate")
+      button:SetSize(90, 22)
+      button:SetPoint("BOTTOM", x, 10)
+      button:SetText(label)
+      button:SetScript("OnClick", function() Key(key) end)
+   end
+   AmountButton(L["OK"], "ENTER", -100)
+   AmountButton(L["All"], "*", 0)
+   AmountButton(L["Cancel"], ns.ESC, 100)
 
    self.rows = {}
    for index = 1, COLUMNS * ROWS do
@@ -144,6 +214,9 @@ function store:Open(title, intro, columns)
    self.introHeight = self.columns == 0 and TEXT_H or INTRO_H
    self.intro:SetFontObject(self.columns == 0 and "GameFontHighlight" or "GameFontHighlightSmall")
    self.title:SetText(title)
+   self.action:Hide()
+   self.confirm:Hide()
+   self.amount:Hide()
    self.leave:SetText(self.columns == 0 and L["OK"] or L["Leave"])
    self.intro:SetText(intro or "")
    self.status:SetText("")
@@ -160,7 +233,7 @@ function store:SetPages(page, pages)
    if pages then self.pageText:SetText(format(L["Page %d / %d"], page, pages)) end
 end
 
--- rows: { key = "a", text = "...", price = "...", icon = object id, arg = its argument (the
+-- rows: { key = "a", send = the key a click sends (default: key), text = "...", price = "...", icon = object id, arg = its argument (the
 -- tooltip of an item), dim = true, tip = "..." }
 -- Rows fill the first column top to bottom, then the second.
 function store:SetRows(rows)
@@ -174,7 +247,7 @@ function store:SetRows(rows)
          button:SetSize(width - 4, ROW_H - 2)
          button:ClearAllPoints()
          button:SetPoint("TOPLEFT", 8 + column * ROW_W, -(HEADER_H + self.introHeight + ((index - 1) % perColumn) * ROW_H))
-         button.key, button.tip, button.id, button.arg = row.key, row.tip, row.icon, row.arg or 0
+         button.key, button.tip, button.id, button.arg = row.send or row.key, row.tip, row.icon, row.arg or 0
          local icon = row.icon and V.ObjectIcon(row.icon)
          if icon then
             button.icon:SetTexture(icon)
@@ -197,6 +270,77 @@ function store:SetRows(rows)
    else
       self.frame:SetHeight(HEADER_H + INTRO_H + math.max(lines, 1) * ROW_H + FOOTER_H + 8)
    end
+end
+
+-- A button next to Leave: label, and the key that clicking it sends. Nil hides it.
+function store:SetAction(label, key)
+   if not self.frame then return end
+   self.action.key = key
+   if label then self.action:SetText(label) end
+   self.action:SetShown(label ~= nil)
+end
+
+-- Asks to confirm a sale in a small window; answered with the y and n keys (or the buttons).
+-- Returns "y", "n" or Esc.
+function store:Confirm(text)
+   local ui = ns.ui
+   if not self.frame then return ui:YesNo(text) end
+   self.confirmText:SetText(text)
+   self.confirm:Show()
+   local answer
+   while not answer do
+      local key = ui:GetKey()
+      if key == "y" or key == "Y" then
+         answer = "y"
+      elseif key == "n" or key == "N" then
+         answer = "n"
+      elseif key == ns.ESC or key == " " or key == "ENTER" then
+         answer = ns.ESC
+      end
+   end
+   self.confirm:Hide()
+   return answer
+end
+
+function store:ShowAmount(value)
+   self.amountSet = value
+   self.amountValueText:SetText(value)
+   self.settingAmount = true
+   self.amountSlider:SetValue(value)
+   self.settingAmount = false
+end
+
+-- Asks for a number from 0 to max in a small window: drag the slider, type digits, or press
+-- * (all). Returns the number, or -1 if cancelled (as ui:GetNumber).
+function store:Amount(text, max)
+   local ui = ns.ui
+   if not self.frame then return ui:GetNumber(text, max) end
+   self.amountText:SetText(text)
+   self.amountSlider:SetMinMaxValues(0, math.max(max, 1))
+   self.amountMax:SetText(max)
+   self.typing = false
+   self:ShowAmount(0)
+   self.amount:Show()
+   local result
+   while not result do
+      local key = ui:GetKey()
+      if key == "*" then
+         self.typing = false
+         self:ShowAmount(max)
+      elseif key == "ENTER" then
+         result = self.amountSet
+      elseif key == ns.ESC or key == " " then
+         result = -1
+      elseif key == "BACKSPACE" then
+         self:ShowAmount(math.floor(self.amountSet / 10))
+      elseif key:match("^%d$") then
+         local value = self.typing and self.amountSet * 10 + tonumber(key) or tonumber(key)
+         self.typing = true
+         self:ShowAmount(math.min(value, max))
+      end
+   end
+   self.amount:Hide()
+   return result
 end
 
 function store:SetIntro(text)

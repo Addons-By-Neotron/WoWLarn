@@ -1455,6 +1455,40 @@ do
       check(G.level >= 8 and G.level <= 9, "elevator up stays within the limit: " .. G.level)
    end
    ns.mod.db.profile.elevatorLimit = nil
+   -- the bank: sell one stone, sell all, deposit with the slider window
+   Ready(); Clear(); G.lookedHere = nil; G.taxes = 0
+   G.item[31][8] = K.OBANK
+   G.iven[1], G.ivenarg[1], G.iven[2], G.ivenarg[2], G.iven[3], G.ivenarg[3] = K.ODIAMOND, 10, K.ORUBY, 5, K.OSAPPHIRE, 2
+   G.c[K.GOLD], G.c[K.BANKACCOUNT] = 100, 0
+   keys("l"); keys("g")
+   check(ns.store.frame.shown, "the bank opens")
+   ui:InjectKey("SELL1"); check(ns.store.confirm.shown, "selling a stone asks first")
+   ui:InjectKey("n"); check(not ns.store.confirm.shown and G.iven[1] == K.ODIAMOND, "no keeps the stone")
+   ui:InjectKey("SELL1"); ui:InjectKey("y")
+   check(G.iven[1] == 0 and G.c[K.GOLD] == 1100, "yes sells the stone, gold " .. G.c[K.GOLD])
+   ui:InjectKey("*"); check(ns.store.confirm.shown, "sell all asks first")
+   ui:InjectKey("y")
+   check(G.iven[2] == 0 and G.iven[3] == 0 and G.c[K.GOLD] == 1100 + 500 + 200, "sell all sells the rest, gold " .. G.c[K.GOLD])
+   keys("d"); check(ns.store.amount.shown, "depositing opens the slider window")
+   keys("5"); keys("0"); ui:InjectKey("ENTER")
+   check(G.c[K.BANKACCOUNT] == 50 and G.c[K.GOLD] == 1750, "the typed amount is deposited, bank " .. G.c[K.BANKACCOUNT])
+   keys("w"); ui:InjectKey("*"); ui:InjectKey("ENTER")
+   check(G.c[K.BANKACCOUNT] == 0 and G.c[K.GOLD] == 1800, "all of it is withdrawn")
+   keys("d"); ui:InjectKey(ns.ESC)
+   check(G.c[K.GOLD] == 1800 and not ns.store.amount.shown, "cancelling deposits nothing")
+   ui:InjectKey(ns.ESC)
+   check(not ns.store.frame.shown, "leaving the bank")
+   -- the trading post asks in a window too
+   Ready(); Clear(); G.lookedHere = nil
+   G.item[31][8] = K.OTRADEPOST
+   G.iven[1], G.ivenarg[1] = K.ODIAMOND, 10
+   G.c[K.GOLD] = 0
+   keys("l"); keys("g"); keys("a")
+   check(ns.store.confirm.shown, "the trading post asks before it buys")
+   ui:InjectKey("y")
+   check(G.iven[1] == 0 and G.c[K.GOLD] == 200, "the stone is sold for 20 a point, gold " .. G.c[K.GOLD])
+   ui:InjectKey(ns.ESC)
+   check(not ns.store.frame.shown, "leaving the trading post")
    -- shift and an arrow key run
    Ready(); Clear(); G.lookedHere = nil
    ui:InjectKey("RIGHT"); check(G.playerx == 31, "an arrow key steps")
