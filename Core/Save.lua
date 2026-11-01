@@ -33,7 +33,7 @@ local GRIDS = { "item", "iarg", "know", "hitp", "mon", "stealth", "look", "seen"
 -- The plain values of G (numbers, strings, booleans) that are part of a game.
 local SCALARS = {
    "level", "playerx", "playery", "lastpx", "lastpy", "lasthx", "lasthy", "gtime", "wizard", "cheated", "god", "lastnum",
-   "lastmonst", "facing", "rmst", "name", "sex", "lastBank", "ramboflag", "race",
+   "lastmonst", "facing", "rmst", "name", "sex", "lastBank", "ramboflag", "race", "raceName", "raceToken", "raceLook",
 }
 -- The tables of G that are copied as they are.
 local TABLES = {

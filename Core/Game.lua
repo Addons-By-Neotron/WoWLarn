@@ -249,7 +249,10 @@ function Game.Run()
       ui:Refresh("all")
       Welcome()
       ui:Log("system", L["You set out as %s."], ns.ClassName(class))
-      if G.race then ui:Log("system", L["Your %s blood adds to your abilities."], G.race) end
+      if G.race then
+         local _, bonus = ns.Create.raceInfo(G.raceToken)
+         ui:Log("system", L["Your %s blood adds %s."], G.race, ns.Create.raceText(bonus))
+      end
    end
 
    G.lookedHere = nil  -- where the player last looked at what is on the tile

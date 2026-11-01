@@ -25,6 +25,7 @@ Data\Items.lua
 Data\Maps.lua
 Data\Fortunes.lua
 Data\Visuals.lua
+Data\Races.lua
 Core\Runner.lua
 Rules\Player.lua
 Core\Scores.lua

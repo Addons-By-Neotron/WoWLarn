@@ -20,6 +20,7 @@ along with WoWLarn.  If not, see <https://www.gnu.org/licenses/old-licenses/gpl-
 
 **********************************************************************
 ]]
+local L = LibStub("AceLocale-3.0"):GetLocale("WoWLarn")
 local _, ns = ...
 local K = ns.K
 local G = ns.G
@@ -39,9 +40,9 @@ local hitp = G.hitp
 -- Optional (the Races setting, not in Ularn): the race of the WoW character adds to the stats.
 -- { strength, intelligence, wisdom, constitution, dexterity, charisma }
 local RACES = {
-   Human = { 0, 0, 1, 0, 0, 2 }, Dwarf = { 1, 0, 0, 2, 0, 0 }, NightElf = { 0, 0, 1, 0, 2, 0 },
-   Gnome = { 0, 2, 0, 0, 1, 0 }, Draenei = { 0, 0, 2, 0, 0, 1 }, Worgen = { 1, 0, 0, 0, 2, 0 },
-   Pandaren = { 0, 0, 1, 2, 0, 0 }, Orc = { 2, 0, 0, 1, 0, 0 }, Scourge = { 0, 1, 1, 1, 0, 0 },
+   Human = { 0, 0, 1, 0, 0, 2 }, Dwarf = { 1, 0, 0, 2, 0, 0 }, NightElf = { 0, 1, 1, 0, 1, 0 },
+   Gnome = { 0, 2, 0, -1, 2, 0 }, Draenei = { 0, 0, 2, 0, 0, 1 }, Worgen = { 1, 0, 0, 0, 2, 0 },
+   Pandaren = { 0, 0, 1, 1, 1, 0 }, Orc = { 2, 0, 0, 1, 1, -1 }, Scourge = { 0, 1, 1, 1, 1, -2 },
    Tauren = { 2, 0, 0, 1, 0, 0 }, Troll = { 0, 0, 0, 2, 1, 0 }, BloodElf = { 0, 2, 0, 0, 0, 1 },
    Goblin = { 0, 2, 0, 0, 0, 1 },
 }
@@ -49,18 +50,92 @@ local RACES = {
 -- The allied races count as the race they come from.
 local KIN = {
    VoidElf = "BloodElf", Nightborne = "BloodElf", LightforgedDraenei = "Draenei", DarkIronDwarf = "Dwarf",
-   EarthenDwarf = "Dwarf", KulTiran = "Human", Mechagnome = "Gnome", MagharOrc = "Orc",
-   HighmountainTauren = "Tauren", ZandalariTroll = "Troll", Vulpera = "Goblin",
+   EarthenDwarf = "Dwarf", MagharOrc = "Orc",
+   HighmountainTauren = "Tauren", ZandalariTroll = "Troll",
 }
 RACES.Dracthyr = { 1, 1, 0, 1, 0, 0 }
+RACES.Vulpera = { 0, 0, 0, 0, 2, 1 }
+RACES.Mechagnome = { 0, 2, 0, 1, 1, -2 }
+RACES.KulTiran = { 0, 0, 1, 1, 0, 1 }
+RACES.Skyborne = { 0, 2, 1, 0, 0, 0 }  -- (Forever; the model files call it Skyborne)
+RACES.SkyborneElf = RACES.Skyborne
 RACES.Haranir = { 0, 0, 1, 0, 2, 0 }
+RACES.Harronir = RACES.Haranir  -- (the token in the client files)
 
--- Adds the bonuses of the race of the player; returns its name, or nil.
+-- The race picked in the settings (nil: your own); a pick of another client does not count.
+function Create.raceChoice()
+   local token = ns.mod.db.profile.raceChoice
+   if token and ns.RaceAvailable(token) then return token end
+end
+
+-- The race of the game: the one picked in the settings, else that of the WoW character.
+-- Returns its name, its bonuses (nil if it has none) and its token.
+function Create.raceInfo(token)
+   token = token or Create.raceChoice()
+   if token then return ns.RaceNames[token], RACES[token] or RACES[KIN[token]], token end
+   return Create.ownRaceInfo()
+end
+
+-- The same for the race of the WoW character.
+function Create.ownRaceInfo()
+   if not UnitRace then return nil end
+   local name, own = UnitRace("player")
+   return name, RACES[own] or RACES[KIN[own]], own
+end
+
+-- True if the player is in the shape of an animal (a druid's forms, a shaman's ghost wolf): the
+-- model of the player is not the race any more.
+function Create.shifted()
+   if not (GetShapeshiftForm and UnitClass) then return false end
+   local _, class = UnitClass("player")
+   return (class == "DRUID" or class == "SHAMAN") and (GetShapeshiftForm() or 0) > 0
+end
+
+-- The model to show for the player: the one picked for the race, else (shapeshifted) the one of
+-- the race and the sex of the player, else nil, the player.
+function Create.look(token)
+   local choice = Create.raceChoice()
+   if choice then token = choice
+   elseif not Create.shifted() then return nil end
+   local models = token and ns.RaceModels[token]
+   return models and models[Create.gender()]
+end
+
+-- 1 for a man, 2 for a woman: the pick, else that of the WoW character.
+function Create.gender()
+   return ns.mod.db.profile.gender or ((UnitSex and UnitSex("player") == 3) and 2 or 1)
+end
+
+-- What the bonuses are, in words: "+1 strength, +2 constitution".
+function Create.raceText(bonus)
+   local names = { L["strength"], L["intelligence"], L["wisdom"], L["constitution"], L["dexterity"], L["charisma"] }
+   local parts = {}
+   for i = 1, 6 do
+      if bonus[i] ~= 0 then parts[#parts + 1] = string.format("%+d %s", bonus[i], names[i]) end
+   end
+   return table.concat(parts, ", ")
+end
+
+-- The bonuses in short, in colours, one line each: "+1 WIS" (green), "-1 CON" (red).
+function Create.raceLines(bonus)
+   local names = { L["STR"], L["INT"], L["WIS"], L["CON"], L["DEX"], L["CHA"] }
+   local lines = {}
+   for i = 1, 6 do
+      if bonus[i] ~= 0 then
+         lines[#lines + 1] = string.format("|cff%s%+d %s|r", bonus[i] > 0 and "66ff66" or "ff6666", bonus[i], names[i])
+      end
+   end
+   return table.concat(lines, "\n")
+end
+
+-- Notes the race (and the look picked for it) and adds its bonuses if the game has them;
+-- returns the name of the race if it did, else nil.
 local function ApplyRace()
-   if not ns.mod.db.profile.races or not UnitRace then return nil end
-   local name, token = UnitRace("player")
-   local bonus = RACES[token] or RACES[KIN[token]]
-   if not bonus then return nil end
+   local name, bonus, token = Create.raceInfo()
+   local choice = Create.raceChoice()
+   G.raceName, G.raceToken = name, token
+   G.raceLook = choice and ns.RaceModels[choice] and ns.RaceModels[choice][Create.gender()] or nil
+   if not ns.mod.db.profile.races or not bonus then return nil end
    for i = 1, 6 do c[K.STRENGTH + i - 1] = c[K.STRENGTH + i - 1] + bonus[i] end
    return name
 end

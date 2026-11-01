@@ -30,12 +30,13 @@ local side = {}
 ns.side = side
 
 local GAP = 4
+local STAT_ORDER = { STR = 1, INT = 2, WIS = 3, CON = 4, DEX = 5, CHA = 6 }
 local CELL = 3  -- minimap pixels per tile
 local EFFECT_SIZE, EFFECT_COLUMNS = 24, 8
 local STAT_W, STAT_H, HEADING_H = 114, 14, 20
 local SLOT_SIZE = 26
-local MINIMAP_H, SHEET_H = K.MAXY * CELL + 22, 328
-local MODEL_TOP, MODEL_H = 26, 84
+local MINIMAP_H, SHEET_H = K.MAXY * CELL + 22, 340
+local MODEL_TOP, MODEL_H = 38, 84
 
 local function Section(parent, height, title)
    local panel = ns.CreatePanel(parent)
@@ -150,6 +151,10 @@ function side:Create(parent)
    self.title:SetPoint("TOPLEFT", 6, -6)
    self.title:SetPoint("RIGHT", -6, 0)
    self.title:SetJustifyH("LEFT")
+   self.subtitle = stats:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")  -- the race and the class
+   self.subtitle:SetPoint("TOPLEFT", 6, -20)
+   self.subtitle:SetPoint("RIGHT", -6, 0)
+   self.subtitle:SetJustifyH("LEFT")
    local player = CreateFrame("PlayerModel", nil, stats)
    player:SetPoint("TOPLEFT", 4 + SLOT_SIZE + 4, -MODEL_TOP)
    player:SetPoint("TOPRIGHT", -4, -MODEL_TOP)
@@ -234,6 +239,12 @@ function side:Create(parent)
                GameTooltip:AddLine(self.cell.tip, nil, nil, nil, true)
                if self.cell.stat then
                   local total, base, mods = ns.Equipment.statBreakdown(self.cell.stat)
+                  local bonus = G.race and select(2, ns.Create.raceInfo(G.raceToken))
+                  local racial = bonus and bonus[STAT_ORDER[self.cell.stat]] or 0
+                  if racial ~= 0 then
+                     base = base - racial
+                     table.insert(mods, 1, { L["Racial bonus"], racial })
+                  end
                   GameTooltip:AddDoubleLine(L["Base"], base, 1, 1, 1, 1, 1, 1)
                   for _, mod in ipairs(mods) do
                      local good = mod[2] > 0
@@ -375,6 +386,14 @@ function side:UpdateStats()
    local level = c[K.LEVEL]
    local T = ns.Tables
    self.title:SetText(format("%s - %s", G.name, T.class[level]))
+   local race = G.raceName or (UnitRace and UnitRace("player"))
+   local look = G.raceLook or (ns.Create.shifted() and ns.Create.look(G.raceToken) or nil)
+   if self.look ~= look then  -- the model picked for the race, else the player (as a race when shapeshifted)
+      self.look = look
+      if look then self.player:SetDisplayInfo(look) else pcall(self.player.SetUnit, self.player, "player") end
+      pcall(self.player.SetPortraitZoom, self.player, 0.8)
+   end
+   self.subtitle:SetText(G.class and (race and (race .. " ") or "") .. ns.ClassName(G.class) or "")
    self.depth:SetText(format(L["Depth: %s"], T.levelname[G.level + 1]))
 
    self.hp:SetMinMaxValues(0, math.max(1, c[K.HPMAX]))

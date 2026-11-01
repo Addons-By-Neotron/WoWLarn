@@ -38,6 +38,7 @@ LOCALIZED_CLASS_NAMES_MALE = { MAGE = "Mage", WARRIOR = "Warrior" }
 UnitClass = function() return "Mage", "MAGE" end
 UnitName = function() return "Tester" end
 UnitSex = function() return 2 end
+GetBuildInfo = function() return "1.0", "1", "", 50000 end
 geterrorhandler = function() return function(e) print("ERRHANDLER: " .. tostring(e)) end end
 local timers = {}
 GetTime = function() return 0 end
@@ -66,6 +67,7 @@ check(#ns.MonsterData == 65, "65 monsters, got " .. #ns.MonsterData)
 check(K.PTREASURE == 20 and K.STRENGTH == 1 and K.OENTRANCE == 54, "shifted constants")
 check(ns.Tables.objectname[K.ODNDSTORE] == "the Thrift Shoppe", "object names")
 check(ns.Tables.class[1] == "novice explorer", "class titles")
+check(ns.Create.raceText({ 1, 0, 0, 2, 0, 0 }) == "+1 strength, +2 constitution", "the race bonus in words")
 check(ns.Equipment.effect(K.OAMULET, 5) == "Invisibility lasts 768 turns longer", "the amulet says how much longer invisibility lasts")
 check(#ns.HelpPages == 1 and #ns.HelpSections > 3, "help texts")
 -- Lua 5.1 (unlike LuaJIT and 5.4) rejects a nested opening bracket inside a long string.
@@ -124,6 +126,21 @@ check(G.ivenarg[1] == K.PTREASURE and G.spelknow[2] == 1 and G.spelknow[5] == 1 
 G.Reset(); ns.Create.makePlayer(ns.Classes[8])
 ns.mod.db.profile.races = true; UnitRace = function() return "Dwarf", "Dwarf" end
 G.Reset(); ns.Create.makePlayer(ns.Classes[8]); check(G.race == "Dwarf" and G.c[K.CONSTITUTION] == ns.Classes[8].stats[4] + 2, "race bonus")
+ns.mod.db.profile.raceChoice, ns.mod.db.profile.gender = "Gnome", 2
+G.Reset(); ns.Create.makePlayer(ns.Classes[8])
+check(G.raceName == "Gnome" and G.raceLook == ns.RaceModels.Gnome[2] and G.c[K.CONSTITUTION] == ns.Classes[8].stats[4] - 1, "race pick")
+ns.mod.db.profile.raceChoice = "Skyborne"
+check(ns.Create.raceChoice() == nil, "Skyborne elves are for Forever only")
+local listed = false
+for _, race in ipairs(ns.RaceList) do if race[1] == "Skyborne" then listed = true end end
+check(not listed, "Skyborne is not in the race list outside Forever")
+ns.gameOptions:Show(); ns.gameOptions:OpenRaces()
+check(#ns.gameOptions.races.cells == #ns.RaceList + 1, "the race window has a cell for every race and your own")
+ns.gameOptions.races.cells[3].scripts.OnClick(ns.gameOptions.races.cells[3])
+check(ns.mod.db.profile.raceChoice == ns.RaceList[2][1], "a race is picked by clicking it")
+ns.mod.db.profile.raceChoice = nil; ns.gameOptions:Hide()
+check(ns.RaceAvailable("Gnome") and not ns.RaceAvailable("Haranir") and not ns.RaceAvailable("Pandaren"), "a client has the races of its expansion")
+ns.mod.db.profile.raceChoice, ns.mod.db.profile.gender = nil, nil
 ns.mod.db.profile.races = nil; UnitRace = nil; G.Reset(); ns.Create.makePlayer(ns.Classes[8])
 check(G.c[K.LANCEDEATH] == 1 and G.c[K.WIELD] == 1, "rambo")
 

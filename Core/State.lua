@@ -99,7 +99,8 @@ function G.Reset()
    FillArray(G.ivenarg, K.IVENSIZE, 0)
    FillArray(G.spelknow, K.SPNUM, 0)
    G.spheres = {}  -- the spheres of annihilation of every level, newest first
-   G.race = nil
+   G.race = nil  -- the name of the race if it adds to the stats of this game
+   G.raceName, G.raceToken, G.raceLook = nil, nil, nil  -- the race of the game, and the model picked for it
    G.rules = {}  -- the options this game was started with, see Create.makePlayer
    G.statSnap = nil  -- the abilities as last reported, see Equipment.reportChanges
    FillArray(G.scrollknown, K.MAXSCROLL, 0)
