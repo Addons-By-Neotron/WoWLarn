@@ -150,6 +150,14 @@ local POTION_FILE = {
    "potion_20_treasure_finding", "potion_21_instant_healing", "potion_22_cure_dianthroritis",
    "potion_23_poison", "potion_24_see_invisible",
 }
+-- The picture of a scroll: the rolled one until it is known, then the open one.  On the map
+-- (opened = false) a scroll still lies rolled until the player has stepped on it (or dropped it).
+local SCROLLS = "Interface\\AddOns\\WoWLarn\\Media\\Scrolls\\"
+function V.ScrollPicture(arg, opened)
+   local known = opened ~= false and arg and arg > 0 and ns.G.scrollknown[arg] ~= 0
+   return SCROLLS .. (known and "scroll_01_open_icon.png" or "scroll_00_generic_icon.png")
+end
+
 function V.PotionPicture(arg)
    local known = arg and arg > 0 and ns.G.potionknown[arg] ~= 0 and POTION_FILE[arg]
    return POTIONS .. (known or POTION_FILE[0]) .. "_icon.png"
@@ -180,6 +188,7 @@ end
 
 function V.ObjectIcon(id, arg)
    if id == K.OPOTION then return V.PotionPicture(arg) end
+   if id == K.OSCROLL then return V.ScrollPicture(arg) end
    local visual = V.object[id]
    local icon = visual and visual.icon
    if type(icon) == "number" then return icon end  -- (a file data id)
@@ -188,8 +197,9 @@ end
 
 -- What the map draws for an object: its own picture if it has one (true as the second value:
 -- it has its own transparency, and is not cut at the edges like an icon), else its icon.
-function V.ObjectPicture(id, arg)
+function V.ObjectPicture(id, arg, opened)
    if id == K.OPOTION then return V.PotionPicture(arg), true end
+   if id == K.OSCROLL then return V.ScrollPicture(arg, opened), true end
    local visual = V.object[id]
    if visual and visual.image then return IMAGES .. visual.image .. ".png", true end
    return V.ObjectIcon(id, arg), false

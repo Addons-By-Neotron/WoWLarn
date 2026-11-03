@@ -42,3 +42,4 @@ luac.out
 Libs/
 Libs
 tools/render/preview
+__pycache__

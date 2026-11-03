@@ -212,7 +212,7 @@ local function DrawTile(cell, x, y, ground)
    if monster ~= 0 then
       -- (what lies under the monster stays, as a picture)
       local under, picture = nil, false
-      if object ~= 0 and not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object, G.iarg[x][y]) end
+      if object ~= 0 and not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object) end
       if under then
          cell.icon:SetTexture(under)
          cell.icon:SetBlendMode((picture or ns.mod.db.profile.opaqueIcons) and "BLEND" or "ADD")
@@ -231,7 +231,7 @@ local function DrawTile(cell, x, y, ground)
    end
    cell.glyph:SetTextColor(unpack(V.GLYPH_COLOR))
    local icon, picture = nil, false
-   if object ~= 0 and not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object, G.iarg[x][y]) end
+   if object ~= 0 and not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object) end
    if icon then
       cell.icon:SetTexture(icon)
       cell.icon:SetBlendMode((picture or ns.mod.db.profile.opaqueIcons) and "BLEND" or "ADD")  -- (add: the black of the icon is left out)

@@ -126,7 +126,7 @@ end
 -- texture: a path (the soft round shadows and glows, blended), or a file data id of a piece of
 -- terrain (opaque), with uv = { left, right, top, bottom } the part of it to show.  The quads are
 -- pooled and reused: what it was last used for is set again every time.
-local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture, uv)
+local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture, uv, level)
    layer.usedQuads = layer.usedQuads + 1
    local quad = layer.quads[layer.usedQuads]
    if not quad then
@@ -135,7 +135,7 @@ local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture, uv)
       quad:SetSize(1, 1)
       layer.quads[layer.usedQuads] = quad
    end
-   local sub = type(texture) == "string" and 1 or 0  -- (the shadows and glows over the floor, whatever the order the quads were made in)
+   local sub = level or (type(texture) == "string" and 1 or 0)  -- (the shadows and glows over the floor, whatever the order the quads were made in)
    if quad.sub ~= sub then
       quad.sub = sub
       quad:SetDrawLayer("ARTWORK", sub)
@@ -373,8 +373,9 @@ local function PictureQuad(layer, texture, tileX, tileY, size, ahead)
    if not sx then return end
    sy = sy - bob * TILE * scale  -- (on the screen, not in the world: straight above, a height would hardly show)
    local half = size * TILE * scale / 2
-   Shadow(layer, wx, wy, size * TILE * 0.4)
-   Quad(layer, Shade({ 1, 1, 1 }, ahead, 1), sx - half, sy - half, sx + half, sy - half, sx + half, sy + half, sx - half, sy + half, texture)
+   -- (no shadow: the soft one under a floating picture lay over its lower part; and the picture
+   -- is on a sublevel above any shadow, whatever the order the quads were made in)
+   Quad(layer, Shade({ 1, 1, 1 }, ahead, 1), sx - half, sy - half, sx + half, sy - half, sx + half, sy + half, sx - half, sy + half, texture, nil, 2)
 end
 
 -- A tile with a creature (a display, or "player") on it, as the map draws them, for the
@@ -624,7 +625,7 @@ local function DrawTile(layers, x, y, ground)
          end
          if object ~= 0 then  -- (what lies under the monster stays, a little smaller)
             local under, picture
-            if not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object, G.iarg[x][y]) end
+            if not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object) end
             if under then
                if picture then
                   PictureQuad(layers[ACTOR], under, x, y, 0.5, ahead)
@@ -643,7 +644,7 @@ local function DrawTile(layers, x, y, ground)
       -- (drawn above)
    elseif object ~= 0 then
       local icon, picture
-      if not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object, G.iarg[x][y]) end
+      if not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object) end
       local size = TILE * 0.6 * scale
       if icon and picture then
          PictureQuad(layers[ACTOR], icon, x, y, 0.75, ahead)
