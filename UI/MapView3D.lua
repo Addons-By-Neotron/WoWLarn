@@ -624,7 +624,7 @@ local function DrawTile(layers, x, y, ground)
          end
          if object ~= 0 then  -- (what lies under the monster stays, a little smaller)
             local under, picture
-            if not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object) end
+            if not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object, G.iarg[x][y]) end
             if under then
                if picture then
                   PictureQuad(layers[ACTOR], under, x, y, 0.5, ahead)
@@ -643,7 +643,7 @@ local function DrawTile(layers, x, y, ground)
       -- (drawn above)
    elseif object ~= 0 then
       local icon, picture
-      if not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object) end
+      if not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object, G.iarg[x][y]) end
       local size = TILE * 0.6 * scale
       if icon and picture then
          PictureQuad(layers[ACTOR], icon, x, y, 0.75, ahead)

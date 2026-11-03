@@ -138,10 +138,22 @@ V.CURSE = {
    [K.ITCHING] = true, [K.CLUMSINESS] = true, [K.HALFDAM] = true,
 }
 
--- Potions with an icon of their own (arg is the kind).
-V.POTION_ICON = {
-   [K.PCUREDIANTH] = "INV_Potion_33",  -- Dragonfire Potion: the cure for the daughter
+-- The pictures of the potions (Media/Potions, by potion id).  An unknown potion is drawn as the
+-- generic one (index 0); a known one as itself, also on the floor.
+local POTIONS = "Interface\\AddOns\\WoWLarn\\Media\\Potions\\"
+local POTION_FILE = {
+   [0] = "potion_00_generic", "potion_01_sleep", "potion_02_healing", "potion_03_raise_level",
+   "potion_04_increase_ability", "potion_05_wisdom", "potion_06_strength", "potion_07_raise_charisma",
+   "potion_08_weakness", "potion_09_learning", "potion_10_gold_detection", "potion_11_monster_detection",
+   "potion_12_forgetfulness", "potion_13_water", "potion_14_blindness", "potion_15_confusion",
+   "potion_16_heroism", "potion_17_sturdiness", "potion_18_giant_strength", "potion_19_fire_resistance",
+   "potion_20_treasure_finding", "potion_21_instant_healing", "potion_22_cure_dianthroritis",
+   "potion_23_poison", "potion_24_see_invisible",
 }
+function V.PotionPicture(arg)
+   local known = arg and arg > 0 and ns.G.potionknown[arg] ~= 0 and POTION_FILE[arg]
+   return POTIONS .. (known or POTION_FILE[0]) .. "_icon.png"
+end
 
 -- The icon of a spell by its three letters (for the action bar); the others get a book.
 V.SPELL_ICON = {
@@ -167,9 +179,7 @@ for spell, counter in pairs({ pro = K.PROTECTIONTIME, dex = K.DEXCOUNT, str = K.
 end
 
 function V.ObjectIcon(id, arg)
-   if id == K.OPOTION and arg and V.POTION_ICON[arg] then
-      return ICONS .. V.POTION_ICON[arg]
-   end
+   if id == K.OPOTION then return V.PotionPicture(arg) end
    local visual = V.object[id]
    local icon = visual and visual.icon
    if type(icon) == "number" then return icon end  -- (a file data id)
@@ -179,6 +189,7 @@ end
 -- What the map draws for an object: its own picture if it has one (true as the second value:
 -- it has its own transparency, and is not cut at the edges like an icon), else its icon.
 function V.ObjectPicture(id, arg)
+   if id == K.OPOTION then return V.PotionPicture(arg), true end
    local visual = V.object[id]
    if visual and visual.image then return IMAGES .. visual.image .. ".png", true end
    return V.ObjectIcon(id, arg), false
