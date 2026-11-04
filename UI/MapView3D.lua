@@ -126,6 +126,16 @@ end
 -- texture: a path (the soft round shadows and glows, blended), or a file data id of a piece of
 -- terrain (opaque), with uv = { left, right, top, bottom } the part of it to show.  The quads are
 -- pooled and reused: what it was last used for is set again every time.
+-- Debug view (/larn surfaces): each kind of surface is drawn as a solid colour of its own.  The caller
+-- says what kind it is making by setting surface before the call.
+local SURFACE_COLORS = {
+   floor = { 0.45, 0.45, 0.45 }, lava = { 0.5, 0.05, 0.05 }, shadow = { 0, 0, 0 },
+   ["wall top"] = { 1, 1, 0.2 }, ["wall front"] = { 0.9, 0.15, 0.15 }, ["wall side"] = { 1, 0.55, 0.1 },
+   ["wall strip"] = { 1, 0.45, 0.75 }, picture = { 1, 0, 1 },
+   ["door leaf"] = { 0.2, 0.8, 0.2 }, ["lintel face"] = { 0.2, 0.4, 1 }, ["lintel top"] = { 0.2, 0.9, 0.9 },
+   ["door jamb"] = { 0.7, 0.3, 1 }, ["pillar face"] = { 0.6, 0.4, 0.2 }, ["pillar top"] = { 0.7, 1, 0.2 },
+}
+local surface  -- the kind of the next quad (see SURFACE_COLORS)
 local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture, uv, level)
    layer.usedQuads = layer.usedQuads + 1
    local quad = layer.quads[layer.usedQuads]
@@ -136,6 +146,10 @@ local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture, uv, l
       layer.quads[layer.usedQuads] = quad
    end
    local sub = level or (type(texture) == "string" and 1 or 0)  -- (the shadows and glows over the floor, whatever the order the quads were made in)
+   local debugColor = map3d.surfaces and SURFACE_COLORS[surface]
+   if debugColor and surface ~= "shadow" then
+      texture, color = nil, { debugColor[1], debugColor[2], debugColor[3], color[4] or 1 }
+   end
    if quad.sub ~= sub then
       quad.sub = sub
       quad:SetDrawLayer("ARTWORK", sub)
@@ -149,7 +163,7 @@ local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture, uv, l
       if quad.texture ~= texture then
          quad.texture = texture
          -- (the pictures are 256 pixels and shown at a fraction of that: mipmaps keep them sharp)
-         quad:SetTexture(texture, nil, nil, level == 2 and "TRILINEAR" or nil)
+         quad:SetTexture(texture, nil, nil, (type(texture) == "string" and level and level >= 2) and "TRILINEAR" or nil)
       end
       local l, r, t, b = 0, 1, 0, 1
       if uv then l, r, t, b = uv[1], uv[2], uv[3], uv[4] end
@@ -167,6 +181,7 @@ local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture, uv, l
    quad:SetVertexOffset(2, dx, 1 - dy)
    quad:SetVertexOffset(3, bx - 1, -by)
    quad:SetVertexOffset(4, cx - 1, 1 - cy)
+   surface = nil
    quad:Show()
 end
 
@@ -359,6 +374,7 @@ local function Shadow(layer, wx, wy, radius)
    local cx, cy = Project(wx + radius, wy + radius, 0)
    local dx, dy = Project(wx - radius, wy + radius, 0)
    if ax and bx and cx and dx then
+      surface = "shadow"
       Quad(layer, SHADOW_COLOR, ax, ay - lift, bx, by - lift, cx, cy - lift, dx, dy - lift, SHADOW)
    end
 end
@@ -390,6 +406,7 @@ local function PictureQuad(layer, texture, tileX, tileY, size, ahead, still, ax,
    -- from the bottom, that goes on the floor point; by default the middle of the bottom edge)
    sx = sx + (0.5 - (ax or 0.5)) * 2 * half
    sy = sy + (ay or 0) * 2 * half
+   surface = "picture"
    Quad(layer, WHITE, sx - half, sy - half, sx + half, sy - half, sx + half, sy + half, sx - half, sy + half, texture, nil, 2)
 end
 
@@ -517,6 +534,7 @@ local function IsBlock(x, y)
    return IsWall(x, y) and not V.WallVariant(G.level, x, y)
 end
 
+local TINT_WHITE = { 1, 1, 1 }
 local TINT = { 1, 1, 1 }  -- what the textures of this level are tinted by, set when drawing
 
 -- The part of the tile of a wall block that the block fills: a block is thinner than its tile on
@@ -537,7 +555,111 @@ local function FaceStrip(layer, color, ahead, factor, alpha, texture, uv, ax, ay
    local tbx, tby = Project(bx, by, h)
    if not (gax and gbx and tax and tbx) then return end
    if uv then uv = { uv[1] + (uv[2] - uv[1]) * from, uv[1] + (uv[2] - uv[1]) * to, uv[3], uv[4] } end
+   surface = "wall strip"
    Quad(layer, Shade(color, ahead, factor, alpha), tax, tay, tbx, tby, gbx, gby, gax, gay, texture, uv)
+end
+
+-- A flat object (V.FLAT) laid on the floor of its tile, in the perspective of the floor.
+local function DrawFlat(layers, x, y, object)
+   local flat = V.FLAT[object]
+   local cx, cy, half = (x - 0.5) * TILE, (y - 0.5) * TILE, flat.size * TILE / 2
+   local ax, ay = Project(cx - half, cy - half, 0)
+   local bx, by = Project(cx + half, cy - half, 0)
+   local dx, dy = Project(cx + half, cy + half, 0)
+   local ex, ey = Project(cx - half, cy + half, 0)
+   if not (ax and bx and dx and ex) then return end
+   surface = "picture"
+   Quad(layers[FLOOR], WHITE, ax, ay, bx, by, dx, dy, ex, ey, V.ObjectIcon(object), flat.box, 2)
+end
+
+-- A door, built like the walls from quads: the leaves (the picture of the door) stand in the middle of
+-- the opening between the two wall blocks beside it, and over them a lintel closes the opening up to
+-- the wall height (its face towards the camera and its top, of the wall texture).  The sides of the
+-- opening are the faces of the wall blocks.  It runs across the tile (east to west) or, in a wall that
+-- runs north to south, along it, and keeps the way it faces (G.doorway) when the walls are gone.
+local LEAF_HEIGHT = WALL_HEIGHT * 0.8  -- the opening, under the lintel
+local DOOR_WIDTH = WALL_HEIGHT * 0.8  -- of the opening that holds the leaves: as wide as high (the leaves picture is a square); the rest of the 88 of the wall's opening is stone beside the door
+local LINTEL_THICK = 0.5  -- of the thickness of the wall
+local function DrawDoor(layers, x, y, ahead, object)
+   if G.doorway[x][y] == 0 then  -- (worked out from the walls once: they can be blasted away)
+      local sides = IsBlock(x, y - 1) and IsBlock(x, y + 1) and not (IsBlock(x - 1, y) and IsBlock(x + 1, y))
+      G.doorway[x][y] = sides and 2 or 1
+   end
+   local sideways = G.doorway[x][y] == 2
+   local x0, y0 = (x - 1) * TILE, (y - 1) * TILE
+   -- a is along the wall: the opening, between the faces of the blocks beside it; c across it: the thickness of the wall
+   local a0, a1 = (sideways and y0 or x0) - WALL_INSET, (sideways and y0 or x0) + TILE + WALL_INSET
+   local cm = (sideways and x0 or y0) + TILE / 2
+   local wall = TILE / 2 - WALL_INSET  -- half the thickness of the wall
+   local th = wall * LINTEL_THICK  -- (the lintel is thinner)
+   local e0, e1 = a0, a1  -- the whole opening of the wall
+   local gap = a1 - a0
+   local p0, p1 = a0 + (gap - DOOR_WIDTH) / 2, a1 - (gap - DOOR_WIDTH) / 2  -- the opening for the leaves
+   a0, a1 = p0, p1
+   local function Point(a, c, z)
+      if sideways then return Project(c, a, z) end
+      return Project(a, c, z)
+   end
+   -- the face towards the camera: south, or east or west
+   local near = (sideways and camera.x < cm) and cm - th or cm + th
+   local far = near == cm + th and cm - th or cm + th
+   -- a quad from four corners, each { a, c, z }, in order round it from the top left
+   local function Piece(kind, color, texture, uv, level, p1, p2, p3, p4)
+      local ax, ay = Point(p1[1], p1[2], p1[3])
+      local bx, by = Point(p2[1], p2[2], p2[3])
+      local cx, cy = Point(p3[1], p3[2], p3[3])
+      local dx, dy = Point(p4[1], p4[2], p4[3])
+      if ax and bx and cx and dx then
+         surface = kind
+         Quad(layers[WALL], color, ax, ay, bx, by, cx, cy, dx, dy, texture, uv, level)
+      end
+   end
+   local alpha = (SIN < STEEP and y > G.playery and math.abs(x - G.playerx) <= 1) and SEE_THROUGH or 1
+   local picture = V.DoorPicture(object, G.level, x, y, true)
+   local color = Shade(TINT_WHITE, ahead, sideways and 0.7 or 0.9, alpha)
+   -- the leaves, edge to edge (an open door: they are swung back against the sides, and between them it is clear)
+   Piece("door leaf", color, picture, nil, 2, { a0, cm, LEAF_HEIGHT }, { a1, cm, LEAF_HEIGHT }, { a1, cm, 0 }, { a0, cm, 0 })
+   -- the rest, back to front by sublevel (the order of quads within one sublevel is not fixed): the part of
+   -- the sides of the opening behind the lintel (2 leaves, 3 this), the lintel (4 its top, 5 its face), the part of
+   -- the sides in front of its face (6) and the stone beside it (7)
+   local wallTexture, wallUV = V.Texture(G.level, "wall", x, y)
+   local wallColor = wallTexture and TINT or V.WALL
+   Piece("lintel face", Shade(wallColor, ahead, sideways and 0.55 or 0.72, alpha), wallTexture, wallUV, 5,
+      { a0, near, WALL_HEIGHT }, { a1, near, WALL_HEIGHT }, { a1, near, LEAF_HEIGHT }, { a0, near, LEAF_HEIGHT })
+   Piece("lintel top", Shade(wallColor, ahead, 1, alpha), wallTexture, wallUV, 4,
+      { a0, far, WALL_HEIGHT }, { a1, far, WALL_HEIGHT }, { a1, near, WALL_HEIGHT }, { a0, near, WALL_HEIGHT })
+   -- the stone between the opening and the wall blocks: as thick as the wall and as high
+   local front = (near == cm + th) and cm + wall or cm - wall
+   local back = (front == cm + wall) and cm - wall or cm + wall
+   -- the sides of the narrowed opening, from the front of the stone to the leaves: the one the camera sees
+   local along = sideways and camera.y or camera.x  -- the camera along the wall, and across it
+   local across = sideways and camera.x or camera.y
+   local jambColor = Shade(wallColor, ahead, sideways and 0.72 or 0.55, alpha)
+   -- Which jamb the camera sees: the one at the far end.  Seen mostly from across the wall (a door in a
+   -- wall that runs east to west, seen from the south) it is at the side: the part in front of the face
+   -- of the lintel is in front of it, the part behind is behind it.  Seen mostly along the wall (the far end
+   -- of a door in a wall that runs north to south) the whole of it is behind the lintel and the leaves.
+   local fromAcross = math.abs(across - cm) > math.abs(along - (a0 + a1) / 2)
+   for _, edge in ipairs({ a0, a1 }) do
+      if (edge == a0 and along > a0) or (edge == a1 and along < a1) then
+         if fromAcross then
+            Piece("door jamb", jambColor, wallTexture, wallUV, 3,
+               { edge, near, LEAF_HEIGHT }, { edge, cm, LEAF_HEIGHT }, { edge, cm, 0 }, { edge, near, 0 })
+            Piece("door jamb", jambColor, wallTexture, wallUV, 6,
+               { edge, front, WALL_HEIGHT }, { edge, near, WALL_HEIGHT }, { edge, near, 0 }, { edge, front, 0 })
+         else
+            Piece("door jamb", jambColor, wallTexture, wallUV, 1,
+               { edge, front, WALL_HEIGHT }, { edge, cm, WALL_HEIGHT }, { edge, cm, 0 }, { edge, front, 0 })
+         end
+      end
+   end
+   for _, side in ipairs({ { e0, a0 }, { a1, e1 } }) do
+      local from, to = side[1], side[2]
+      Piece("pillar face", Shade(wallColor, ahead, sideways and 0.55 or 0.72, alpha), wallTexture, wallUV, 7,
+         { from, front, WALL_HEIGHT }, { to, front, WALL_HEIGHT }, { to, front, 0 }, { from, front, 0 })
+      Piece("pillar top", Shade(wallColor, ahead, 1, alpha), wallTexture, wallUV, 7,
+         { from, back, WALL_HEIGHT }, { to, back, WALL_HEIGHT }, { to, front, WALL_HEIGHT }, { from, front, WALL_HEIGHT })
+   end
 end
 
 -- The floor tile (x, y), and what stands on it.
@@ -554,8 +676,10 @@ local function DrawTile(layers, x, y, ground)
       if V.WallVariant(G.level, x, y) then  -- lava: flat, and bright whatever the distance
          local tex, uv = V.Texture(G.level, "lava", x, y)
          if tex then
+            surface = "lava"
             Quad(layers[FLOOR], Shade({ 1, 0.9, 0.8 }, ahead * 0.4, 1), ax, ay, bx, by, cx, cy, dx, dy, tex, uv)
          else
+            surface = "lava"
             Quad(layers[FLOOR], Shade(V.GROUND.lava, ahead * 0.4, 1.4), ax, ay, bx, by, cx, cy, dx, dy)
          end
          return
@@ -579,8 +703,10 @@ local function DrawTile(layers, x, y, ground)
       if west + east + north + south > 0 then  -- the ground around it
          local floorTexture, floorUV = V.Texture(G.level, "floor", x, y)
          if floorTexture then
+            surface = "floor"
             Quad(layers[FLOOR], Shade(TINT, ahead, 0.5), ax, ay, bx, by, cx, cy, dx, dy, floorTexture, floorUV)
          else
+            surface = "floor"
             Quad(layers[FLOOR], Shade(ground, ahead, 0.5), ax, ay, bx, by, cx, cy, dx, dy)
          end
       end
@@ -593,13 +719,17 @@ local function DrawTile(layers, x, y, ground)
       local tx2, ty2 = Project(wx1, wy1, wh)
       local tx3, ty3 = Project(wx0, wy1, wh)
       if tx0 and tx1 and tx2 and tx3 and fcx and fdx and fax and fbx then
+         surface = "wall top"
          Quad(layers[WALL], Shade(color, ahead, 1, alpha), tx0, ty0, tx1, ty1, tx2, ty2, tx3, ty3, wallTexture, wallUV)
          if not IsBlock(x, y + 1) then  -- the face towards the camera
+            surface = "wall front"
             Quad(layers[WALL], Shade(color, ahead, 0.72, alpha), tx3, ty3, tx2, ty2, fcx, fcy, fdx, fdy, wallTexture, wallUV)
          end
          if camera.x > wx1 and not IsBlock(x + 1, y) then  -- the east face
+            surface = "wall side"
             Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx1, ty1, tx2, ty2, fcx, fcy, fbx, fby, wallTexture, wallUV)
          elseif camera.x < wx0 and not IsBlock(x - 1, y) then  -- the west face
+            surface = "wall side"
             Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx0, ty0, tx3, ty3, fdx, fdy, fax, fay, wallTexture, wallUV)
          end
          -- Where a neighbouring block is set back from the tile (it has open floor on that side),
@@ -638,9 +768,17 @@ local function DrawTile(layers, x, y, ground)
    local checker = ((x + y) % 2 == 0) and 1 or 0.93
    local floorTexture, floorUV = V.Texture(G.level, "floor", x, y)
    if floorTexture then
+      surface = "floor"
       Quad(layers[FLOOR], Shade(TINT, ahead, checker), ax, ay, bx, by, cx, cy, dx, dy, floorTexture, floorUV)
    else
+      surface = "floor"
       Quad(layers[FLOOR], Shade(ground, ahead, checker), ax, ay, bx, by, cx, cy, dx, dy)
+   end
+
+   -- a door is part of the wall: it shows wherever the wall does
+   local door = G.item[x][y]
+   if V.IsDoor(door) and not ns.mod.db.profile.ascii and ns.Display.remembered(x, y) then
+      DrawDoor(layers, x, y, ahead, door)
    end
 
    if G.know[x][y] == 0 and not (x == G.playerx and y == G.playery) then return end  -- (not in sight)
@@ -651,6 +789,11 @@ local function DrawTile(layers, x, y, ground)
    local monster = ns.Display.visibleMonster(x, y)
    local object = G.item[x][y]
    local models = ns.mod.db.profile.models ~= false and not ns.mod.db.profile.ascii
+   if V.IsDoor(object) and not ns.mod.db.profile.ascii then object = 0 end  -- (drawn above)
+   if V.FLAT[object] and not ns.mod.db.profile.ascii and G.know[x][y] ~= 0 then
+      DrawFlat(layers, x, y, object)
+      object = 0
+   end
    local ghost = map3d.ghosts[x * 100 + y]
    if ghost and monster == 0 and ghost.expires > GetTime() and ghost.level == G.level and models then  -- (the corpse stays under the player)
       Shadow(layers[ACTOR], (x - 0.5) * TILE, (y - 0.5) * TILE, TILE * 0.42)

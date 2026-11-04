@@ -92,6 +92,26 @@ def rock_material(name, tint, scale=0.6, fade=None):
         Lk(ms.outputs[0], nt.nodes["Material Output"].inputs["Surface"])
     return m, tn
 
+def wood_material(name, base, axis="X", roughness=0.8):
+    """Wood: long noise streaks of grain along axis ("X", "Y" or "Z") in object space, darker and lighter than base,
+    with a matching bump; each object gets a random offset so neighbouring planks differ."""
+    m, b = mat(name, base, Roughness=roughness)
+    nt = m.node_tree; N = nt.nodes.new; Lk = nt.links.new
+    tc = N("ShaderNodeTexCoord"); oi = N("ShaderNodeObjectInfo")
+    jit = N("ShaderNodeVectorMath"); jit.operation = 'MULTIPLY_ADD'; jit.inputs[1].default_value = (3.1, 7.7, 5.3)
+    Lk(oi.outputs["Random"], jit.inputs[0]); Lk(tc.outputs["Object"], jit.inputs[2])
+    sq = N("ShaderNodeMapping"); sq.inputs["Scale"].default_value = {"X": (1, 14, 14), "Y": (14, 1, 14), "Z": (14, 14, 1)}[axis]
+    Lk(jit.outputs["Vector"], sq.inputs["Vector"])
+    grain = N("ShaderNodeTexNoise"); grain.inputs["Scale"].default_value = 3; grain.inputs["Detail"].default_value = 8
+    grain.inputs["Distortion"].default_value = 0.6; Lk(sq.outputs["Vector"], grain.inputs["Vector"])
+    wr = N("ShaderNodeValToRGB"); Lk(grain.outputs["Fac"], wr.inputs[0])
+    wr.color_ramp.elements[0].position = 0.3; wr.color_ramp.elements[1].position = 0.75
+    wr.color_ramp.elements[0].color = (*[c*0.45 for c in base], 1); wr.color_ramp.elements[1].color = (*[c*1.4 for c in base], 1)
+    Lk(wr.outputs["Color"], b.inputs["Base Color"])
+    bp = N("ShaderNodeBump"); bp.inputs["Strength"].default_value = 0.4; bp.inputs["Distance"].default_value = 0.01
+    Lk(grain.outputs["Fac"], bp.inputs["Height"]); Lk(bp.outputs["Normal"], b.inputs["Normal"])
+    return m
+
 def rig(sc, tgt=Vector((0, 0, 1.4)), elev=20):
     """Same camera (elev deg from above, default 20) and warm three-light setup as the other item renders."""
     cam = bpy.data.cameras.new("Cam"); cam.type = 'PERSP'; cam.lens = 85

@@ -6,7 +6,7 @@ post-processing only (halo, halo_color, shadow_cut, frame, align); everything el
 """
 import functools, json, os, subprocess, sys, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from PIL import Image, ImageChops, ImageFilter
+from PIL import Image, ImageChops, ImageEnhance, ImageFilter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
@@ -46,23 +46,34 @@ def cut_shadow(im, cut):
     im.putalpha(Image.composite(trimmed, a, dark))
     return im
 
-def icon(src, dst, bbox, pad=60, glow=None, frame=None, align=None, size=SIZE):
+def icon(src, dst, bbox, pad=60, glow=None, frame=None, align=None, fill=False, boost=None, size=SIZE):
     """Square crop around bbox (+pad px of the source), size px. glow=(colour, strength) adds a halo layer.
     frame=s: instead a fixed s x s crop around the render's centre (the camera target), so a set of views
     keeps the item at the same size and place.  align="bottom" then moves that crop up or down so the item
-    (with its shadow) sits on the icon's bottom edge instead of floating in the middle."""
+    (with its shadow) sits on the icon's bottom edge instead of floating in the middle.  fill: crop exactly to
+    bbox and leave the edges sharp, so the item fills the icon edge to edge (doors set into walls);
+    fill="box": the same, to the box the build script wrote to src + ".box" (a door's opening, round leaves
+    that do not fill it).  boost=(contrast, saturation, gamma): punch up a flat-looking render (gamma > 1
+    darkens the mid tones)."""
     im = Image.open(src); x0, y0, x1, y1 = bbox
     s = max(x1-x0, y1-y0) + pad; cx, cy = (x0+x1)//2, (y0+y1)//2
     if frame:
         s = frame; cx, cy = im.width//2, im.height//2
         if align == "bottom": cy = y1 + int(s*0.03) - s//2           # small margin under the item
-    box = (cx-s//2, cy-s//2, cx+s//2, cy+s//2)
+    box = bbox if fill else (cx-s//2, cy-s//2, cx+s//2, cy+s//2)
+    if fill == "box":
+        with open(src + ".box") as f: box = tuple(json.load(f))
     out = im.crop(box).resize((size, size), Image.LANCZOS)
     if glow:
         h = glow_layer(im, *glow).crop(box).resize((size, size), Image.LANCZOS)
         h.putalpha(ImageChops.multiply(h.getchannel("A"), glow_mask(size)))
         h.alpha_composite(out); out = h
-    out.putalpha(ImageChops.multiply(out.getchannel("A"), edge_mask(size)))
+    if not fill:
+        out.putalpha(ImageChops.multiply(out.getchannel("A"), edge_mask(size)))
+    if boost:
+        c, col, g = boost; a = out.getchannel("A")
+        rgb = out.convert("RGB").point(lambda v: int(255*(v/255)**g))
+        out = ImageEnhance.Color(ImageEnhance.Contrast(rgb).enhance(c)).enhance(col).convert("RGBA"); out.putalpha(a)
     out.save(dst)
 
 def render_one(script, outdir, prefix, i, slug, p, prepare=None, pad=60, size=SIZE):
@@ -71,7 +82,7 @@ def render_one(script, outdir, prefix, i, slug, p, prepare=None, pad=60, size=SI
     p = dict(p)
     if prepare:                                            # per-variant hook: may change script/params
         script, p = prepare(name, i, p, script)
-    bp = {k: v for k, v in p.items() if not k.startswith(("halo", "shadow_cut", "frame", "align"))}
+    bp = {k: v for k, v in p.items() if not k.startswith(("halo", "shadow_cut", "frame", "align", "fill", "boost"))}
     bp["save_blend"] = os.path.join(PREVIEW, name + ".blend")
     cmd = [BLENDER, "-b", "-P", os.path.join(HERE, script), "--", out, json.dumps(bp)]
     for attempt in range(4):                # parallel jobs can briefly run the GPU out of memory; wait + retry
@@ -86,8 +97,9 @@ def render_one(script, outdir, prefix, i, slug, p, prepare=None, pad=60, size=SI
     if os.environ.get("BBOX"):                          # BBOX=1: report how far the item reaches from the centre
         print(name, "reach", max(256 - bbox[0], bbox[2] - 256, 256 - bbox[1], bbox[3] - 256), flush=True)
     glow = (p.get("halo_color", p.get("glow") or p.get("color")), p["halo"]) if p.get("halo") else None
-    icon(out, os.path.join(outdir, name + "_icon.png"), bbox, pad=pad, glow=glow, frame=p.get("frame"), align=p.get("align"), size=size)
+    icon(out, os.path.join(outdir, name + "_icon.png"), bbox, pad=pad, glow=glow, frame=p.get("frame"), align=p.get("align"), fill=p.get("fill"), boost=p.get("boost"), size=size)
     os.remove(out)
+    if os.path.exists(out + ".box"): os.remove(out + ".box")
     blend1 = os.path.join(PREVIEW, name + ".blend1")
     if os.path.exists(blend1): os.remove(blend1)
     return name

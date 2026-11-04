@@ -160,6 +160,7 @@ function mod:PrintHelp()
 --@debug@
    self:info("Debug build:")
    self:info("/larn debug  - the debug panel")
+   self:info("/larn surfaces  - the 3D view with each kind of surface in its own colour")
    self:info("/larn wizard  - wizard mode on or off")
    self:info("/larn god  - god mode on or off")
    self:info("/larn new  - give this game up and start another")
@@ -203,6 +204,10 @@ function mod:ChatCommand(input)
       self:TryTexture(cmd)
    elseif cmd == "new" then
       ns.Debug.newGame()
+   elseif cmd == "surfaces" then  -- the 3D view with each kind of surface in a solid colour of its own
+      ns.map3d.surfaces = not ns.map3d.surfaces
+      self:Print("surface colours " .. (ns.map3d.surfaces and "on" or "off"))
+      ns.ui:RefreshNow("map")
    elseif cmd == "mapdebug" then
       ns.map:Debug()
    elseif cmd == "debug" then

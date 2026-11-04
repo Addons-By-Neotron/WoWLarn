@@ -181,6 +181,19 @@ end
 local MISC = "Interface\\AddOns\\WoWLarn\\Media\\Misc\\"
 local MISC_FILE = { [K.OBOOK] = "misc_00_spell_tome_icon.png" }  -- the spell book
 
+-- Doors (Media/Doors): three looks, wood, stone and iron, closed and open.  Each door keeps its own,
+-- picked by a hash of the level and the place of the door.
+local DOORS = "Interface\\AddOns\\WoWLarn\\Media\\Doors\\"
+local DOOR_KIND = { "wood", "stone", "iron" }
+function V.IsDoor(id) return id == K.OCLOSEDDOOR or id == K.OOPENDOOR end
+-- The head-on picture of a door: with the stone frame round it for the 2D map, or (leaves) only the
+-- leaves, edge to edge, for the 3D view, which builds the frame of the wall's own stone.
+function V.DoorPicture(id, level, x, y, leaves)
+   local hash = (((level or 0) * 131 + (x or 0)) * 257 + (y or 0)) * 2654435761 % 4294967296
+   local kind = DOOR_KIND[math.floor(hash / 65536) % #DOOR_KIND + 1]
+   return DOORS .. (id == K.OOPENDOOR and "door_19_" .. kind .. "_open" or "door_20_" .. kind) .. (leaves and "_leaves" or "") .. "_icon.png"
+end
+
 -- Objects rendered from several camera angles (30 to 80 degrees in steps of 5): in its folder,
 -- <name>_<angle>_icon.png for the 3D view, and <name>_icon.png for the 2D map (no angle).
 local MEDIA = "Interface\\AddOns\\WoWLarn\\Media\\"
@@ -193,6 +206,16 @@ local ANGLED = {
    -- piles of gold, by the size of the pile (small to huge: ids 18, 72, 70, 71)
    [K.OGOLDPILE] = "Gold\\gold_18_small", [K.ODGOLD] = "Gold\\gold_72_medium",
    [K.OMAXGOLD] = "Gold\\gold_70_large", [K.OKGOLD] = "Gold\\gold_71_huge",
+   -- fountains (the dead one is dry)
+   [K.OFOUNTAIN] = "Fountain\\fountain_07_fountain", [K.ODEADFOUNTAIN] = "Fountain\\fountain_17_dead_fountain",
+   -- elevators
+   [K.OELEVATORUP] = "Elevator\\elevator_06_elevator_up", [K.OELEVATORDOWN] = "Elevator\\elevator_14_elevator_down",
+   -- volcano shafts
+   [K.OVOLDOWN] = "Volcano\\volcano_55_volcano_down", [K.OVOLUP] = "Volcano\\volcano_56_volcano_up",
+   -- the magic mirror
+   [K.OMIRROR] = "Mirror\\mirror_11_mirror",
+   -- pits and trap doors (the invisible trap door looks the same once it shows)
+   [K.OPIT] = "Traps\\trap_04_pit", [K.OTRAPDOOR] = "Traps\\trap_75_trapdoor", [K.OIVTRAPDOOR] = "Traps\\trap_75_trapdoor",
 }
 -- The picture of an angled object without the folder path and the "_icon.png": the plain one
 -- for the 2D map (no angle), else the one that fits the camera angle.
@@ -208,7 +231,10 @@ end
 -- Flat objects that stand on the middle of their tile by the middle of what the picture shows,
 -- not by the bottom edge of the frame (the pictures are not centred in their frame, and the
 -- thrones are meant to rest on the bottom).  See Data/Anchors.lua, from tools/gen-anchors.py.
-local CENTERED = { [K.OSTAIRSDOWN] = true, [K.OSTAIRSUP] = true }  -- (the stairs up: by the middle of their round base)
+local CENTERED = { [K.OSTAIRSDOWN] = true, [K.OSTAIRSUP] = true, [K.OPIT] = true, [K.OTRAPDOOR] = true, [K.OIVTRAPDOOR] = true,
+   [K.OFOUNTAIN] = true, [K.ODEADFOUNTAIN] = true,
+   [K.OELEVATORUP] = true, [K.OELEVATORDOWN] = true,
+   [K.OVOLUP] = true, [K.OVOLDOWN] = true }  -- (the stairs up: by the middle of their round base)
 
 -- Where the middle of what the picture of this object shows is in its frame: its distance from
 -- the left as a part of the width, and from the bottom as a part of the height.  Nil for an
@@ -226,6 +252,20 @@ V.STANDING = {
    [K.OTHRONE] = 1.45, [K.OTHRONE2] = 1.45, [K.ODEADTHRONE] = 1.45,
    [K.OSTAIRSUP] = 1.4, [K.OSTAIRSDOWN] = 1.4,  -- (the picture is about 0.65 of its frame wide: about a tile)
    [K.OGOLDPILE] = 0.75, [K.ODGOLD] = 0.75, [K.OMAXGOLD] = 0.75, [K.OKGOLD] = 0.75,  -- (lie on the floor)
+   [K.OFOUNTAIN] = 1.2, [K.ODEADFOUNTAIN] = 1.2,  -- (about 0.83 of the frame wide)
+   [K.OELEVATORUP] = 1.8, [K.OELEVATORDOWN] = 1.9,  -- (about 0.5 of the frame wide)
+   [K.OVOLUP] = 1.2, [K.OVOLDOWN] = 1.5,  -- (0.83 and 0.65 of the frame wide)
+   [K.OMIRROR] = 1.45,  -- (a tall thing like the thrones)
+   [K.OPIT] = 1.4, [K.OTRAPDOOR] = 1.6, [K.OIVTRAPDOOR] = 1.6,  -- (holes in the floor: 0.7 and 0.55 of the frame wide)
+}
+
+-- Objects that lie flat in the floor: in the 3D view their top-down picture (the one without an angle)
+-- is laid on the floor like a tile, so it has the perspective of the floor and does not skew
+-- as the camera moves.  size: of a tile; box: the part of the picture that shows the object
+-- (left, right, top, bottom, as parts of the picture).
+V.FLAT = {
+   [K.OTRAPDOOR] = { size = 0.85, box = { 59 / 256, 197 / 256, 111 / 256, 249 / 256 } },
+   [K.OIVTRAPDOOR] = { size = 0.85, box = { 59 / 256, 197 / 256, 111 / 256, 249 / 256 } },
 }
 
 function V.PotionPicture(arg)
@@ -264,6 +304,7 @@ function V.SetIcon(texture, path)
 end
 
 function V.ObjectIcon(id, arg)
+   if V.IsDoor(id) then return V.DoorPicture(id) end
    if id == K.OPOTION then return V.PotionPicture(arg) end
    if id == K.OSCROLL then return V.ScrollPicture(arg) end
    if GEM_FILE[id] then return GEMS .. GEM_FILE[id] end
@@ -278,7 +319,8 @@ end
 
 -- What the map draws for an object: its own picture if it has one (true as the second value:
 -- it has its own transparency, and is not cut at the edges like an icon), else its icon.
-function V.ObjectPicture(id, arg, opened, angle)
+function V.ObjectPicture(id, arg, opened, angle, x, y)
+   if V.IsDoor(id) then return V.DoorPicture(id, ns.G.level, x, y), true end
    if ANGLED[id] then return AngledPicture(id, angle), true end
    if id == K.OPOTION then return V.PotionPicture(arg), true end
    if id == K.OSCROLL then return V.ScrollPicture(arg, opened), true end
