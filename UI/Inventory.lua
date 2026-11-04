@@ -156,7 +156,7 @@ function inventory:Update()
       else
          local icon = V.ObjectIcon(id, G.ivenarg[slot])
          if icon then
-            button.icon:SetTexture(icon)
+            V.SetIcon(button.icon, icon)
             button.icon:Show()
          else
             button.icon:Hide()

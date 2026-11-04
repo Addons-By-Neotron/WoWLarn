@@ -177,6 +177,10 @@ function V.RingPicture(id)
    return RINGS .. (RING_FILE[id] or "ring_00_generic") .. "_icon.png"
 end
 
+-- Other objects with a picture of their own (Media/Misc).
+local MISC = "Interface\\AddOns\\WoWLarn\\Media\\Misc\\"
+local MISC_FILE = { [K.OBOOK] = "misc_00_spell_tome_icon.png" }  -- the spell book
+
 function V.PotionPicture(arg)
    local known = arg and arg > 0 and ns.G.potionknown[arg] ~= 0 and POTION_FILE[arg]
    return POTIONS .. (known or POTION_FILE[0]) .. "_icon.png"
@@ -205,10 +209,18 @@ for spell, counter in pairs({ pro = K.PROTECTIONTIME, dex = K.DEXCOUNT, str = K.
    end
 end
 
+-- Sets the texture of an icon.  The pictures of the addon are large and shown small, so they
+-- get mipmaps (trilinear); the icons of the game are left as they are.
+function V.SetIcon(texture, path)
+   local ours = type(path) == "string" and path:find("WoWLarn", 1, true)
+   texture:SetTexture(path, nil, nil, ours and "TRILINEAR" or nil)
+end
+
 function V.ObjectIcon(id, arg)
    if id == K.OPOTION then return V.PotionPicture(arg) end
    if id == K.OSCROLL then return V.ScrollPicture(arg) end
    if GEM_FILE[id] then return GEMS .. GEM_FILE[id] end
+   if MISC_FILE[id] then return MISC .. MISC_FILE[id] end
    if RING_FILE[id] then return V.RingPicture(id) end
    local visual = V.object[id]
    local icon = visual and visual.icon
@@ -222,6 +234,7 @@ function V.ObjectPicture(id, arg, opened)
    if id == K.OPOTION then return V.PotionPicture(arg), true end
    if id == K.OSCROLL then return V.ScrollPicture(arg, opened), true end
    if GEM_FILE[id] then return GEMS .. GEM_FILE[id], true end
+   if MISC_FILE[id] then return MISC .. MISC_FILE[id], true end
    if RING_FILE[id] then return V.RingPicture(id), true end
    local visual = V.object[id]
    if visual and visual.image then return IMAGES .. visual.image .. ".png", true end

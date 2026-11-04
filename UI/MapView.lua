@@ -214,7 +214,7 @@ local function DrawTile(cell, x, y, ground)
       local under, picture = nil, false
       if object ~= 0 and not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object) end
       if under then
-         cell.icon:SetTexture(under)
+         V.SetIcon(cell.icon, under)
          cell.icon:SetBlendMode((picture or ns.mod.db.profile.opaqueIcons) and "BLEND" or "ADD")
          cell.icon:Show()
       else
@@ -233,7 +233,7 @@ local function DrawTile(cell, x, y, ground)
    local icon, picture = nil, false
    if object ~= 0 and not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object) end
    if icon then
-      cell.icon:SetTexture(icon)
+      V.SetIcon(cell.icon, icon)
       cell.icon:SetBlendMode((picture or ns.mod.db.profile.opaqueIcons) and "BLEND" or "ADD")  -- (add: the black of the icon is left out)
       cell.icon:Show()
       cell.glyph:Hide()

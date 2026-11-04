@@ -31,7 +31,7 @@ def _sigil(d, rnd, cx, cy, r, wd, ring_runes=0):
     for k in range(ring_runes):
         a = math.tau*k/ring_runes - math.pi/2; rr = r*0.91
         strokes, _ = _glyph(rnd)
-        _rune(d, strokes, cx + rr*math.cos(a), cy + rr*math.sin(a), r*0.045, max(2, wd//2), ink)
+        _rune(d, strokes, cx + rr*math.cos(a), cy + rr*math.sin(a), r*0.05, max(2, wd*2//3), ink)
 
 def sigil(path, seed=1, size=512):
     """Square emblem texture: sigil with a ring of small runes (black ink, alpha = coverage)."""
@@ -39,6 +39,40 @@ def sigil(path, seed=1, size=512):
     im = Image.new("RGBA", (size, size), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
     _sigil(d, rnd, size//2, size//2, int(size*0.46), int(size*0.035), ring_runes=10)
     im.filter(ImageFilter.GaussianBlur(1.0)).save(path)
+
+def border(path, size=(768, 1024), inset=(0.12, 0.07, 0.07, 0.07), periods=12, width=17):
+    """Ornamental cover frame: two strands winding around a rounded rectangle, crossing each other,
+    with a small diamond on every other crossing.  inset = (left, top, right, bottom) as fractions of the width."""
+    W, H = size
+    x0, y0, x1, y1 = W*inset[0], W*inset[1], W - W*inset[2], H - W*inset[3]
+    rc = W*0.09                                               # corner radius of the centre line
+    pts = []                                                  # centre line, densely sampled clockwise
+    for cx, cy, a0 in ((x1-rc, y0+rc, -90), (x1-rc, y1-rc, 0), (x0+rc, y1-rc, 90), (x0+rc, y0+rc, 180)):
+        for k in range(60):
+            a = math.radians(a0 + 90*k/59); pts.append((cx + rc*math.cos(a), cy + rc*math.sin(a)))
+    dense = []
+    for (ax, ay), (bx, by) in zip(pts, pts[1:] + pts[:1]):
+        n = max(1, int(math.dist((ax, ay), (bx, by))/2))
+        dense += [(ax + (bx-ax)*k/n, ay + (by-ay)*k/n) for k in range(n)]
+    L = len(dense); amp = W*0.04
+    def offset(i, sgn):
+        (ax, ay), (bx, by) = dense[i-1], dense[(i+1) % L]
+        tx, ty = bx-ax, by-ay; tl = math.hypot(tx, ty) or 1; nx, ny = -ty/tl, tx/tl
+        o = sgn*amp*math.sin(math.tau*periods*i/L)            # 'periods' full waves around the frame
+        return (dense[i][0] + nx*o, dense[i][1] + ny*o)
+    im = Image.new("RGBA", size, (0, 0, 0, 0)); d = ImageDraw.Draw(im); ink = (0, 0, 0, 255)
+    for sgn in (1, -1):
+        line = [offset(i, sgn) for i in range(L)]
+        d.line(line + line[:1], fill=ink, width=width, joint="curve")
+    step = L/(periods*2)                                      # crossings: where the strands meet
+    for k in range(0, periods*2, 2):
+        cx, cy = dense[int(k*step) % L]; r = amp*0.8
+        d.polygon([(cx, cy-r), (cx+r, cy), (cx, cy+r), (cx-r, cy)], outline=ink, width=max(2, width*2//3))
+    for x, y in ((x0, y0), (x1, y0), (x1, y1), (x0, y1)):     # inward corner flourishes: a diamond with a dot
+        cx, cy = x + (rc*0.9 if x == x0 else -rc*0.9), y + (rc*0.9 if y == y0 else -rc*0.9); r = amp*1.1
+        d.polygon([(cx, cy-r), (cx+r, cy), (cx, cy+r), (cx-r, cy)], outline=ink, width=width*2//3)
+        d.ellipse((cx-width*0.6, cy-width*0.6, cx+width*0.6, cy+width*0.6), fill=ink)
+    im.filter(ImageFilter.GaussianBlur(1.2)).save(path)
 
 def make(path, seed=1, size=(1024, 1280), lines=8, title=True):
     rnd = random.Random(seed)

@@ -122,7 +122,7 @@ function bar:Update()
             count = #Holding(slot.object, slot.arg)
             usable = count > 0
          end
-         button.icon:SetTexture(Icon(slot))
+         ns.Visuals.SetIcon(button.icon, Icon(slot))
          button.icon:SetDesaturated(not usable)
          button.icon:SetAlpha(usable and 1 or 0.5)
          button.count:SetText(count and count > 1 and count or "")

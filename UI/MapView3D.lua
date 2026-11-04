@@ -178,7 +178,7 @@ local function Icon(layer, texture, x, y, width, height, picture)
       icon = layer:CreateTexture(nil, "OVERLAY")
       layer.icons[layer.usedIcons] = icon
    end
-   icon:SetTexture(texture)
+   V.SetIcon(icon, texture)
    -- (a picture is transparent already and shown whole; an icon is cut at the edges, and added: its black is left out)
    if picture then icon:SetTexCoord(0, 1, 0, 1) else icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) end
    icon:SetBlendMode((picture or ns.mod.db.profile.opaqueIcons) and "BLEND" or "ADD")

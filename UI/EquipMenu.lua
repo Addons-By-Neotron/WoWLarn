@@ -149,7 +149,7 @@ function equip:Open(kind, anchor)
       row.kind, row.slot = kind, slot
       row.text:SetText(text)
       if icon then
-         row.icon:SetTexture(icon)
+         V.SetIcon(row.icon, icon)
          row.icon:Show()
       else
          row.icon:Hide()

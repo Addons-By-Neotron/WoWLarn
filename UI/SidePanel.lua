@@ -351,7 +351,7 @@ function side:UpdateSlots()
       local id = worn ~= 0 and G.iven[worn] or 0
       local icon = id ~= 0 and V.ObjectIcon(id)
       if icon then
-         button.icon:SetTexture(icon)
+         V.SetIcon(button.icon, icon)
          button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
          local arg = G.ivenarg[worn]
          button.count:SetText(arg ~= 0 and format("%+d", arg) or "")

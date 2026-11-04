@@ -259,7 +259,7 @@ function store:SetRows(rows)
          button.selected:SetShown(row.selected == true)
          local icon = row.icon and V.ObjectIcon(row.icon)
          if icon then
-            button.icon:SetTexture(icon)
+            V.SetIcon(button.icon, icon)
             button.icon:Show()
          else
             button.icon:Hide()
