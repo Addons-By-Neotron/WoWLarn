@@ -1,5 +1,5 @@
 """Shared bits for the item renders (run inside Blender): materials, camera/light rig, studio world, render."""
-import bpy, math
+import bpy, math, os
 from mathutils import Vector
 
 def link(sc, name, data):
@@ -55,6 +55,42 @@ def paper_material(pc, edge_axes="X", ink=None, ink_color=(0.12, 0.05, 0.02), in
     bp = N("ShaderNodeBump"); bp.inputs["Strength"].default_value = 0.25; bp.inputs["Distance"].default_value = 0.02
     Lk(fb.outputs["Fac"], bp.inputs["Height"]); Lk(bp.outputs["Normal"], b.inputs["Normal"])
     return m
+
+TEXTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "textures")
+
+def rock_material(name, tint, scale=0.6, fade=None):
+    """Weathered stone: Poly Haven rock_face_03 (CC0) colour/roughness/normal maps, box-projected in object space
+    (no UVs needed); each object gets a random offset into the texture so neighbouring blocks don't match up.
+    The brown photo is greyed down, then multiplied by tint.  fade=(z0, z1): object Z from z0 to z1 fades to black
+    (a shaft going down into the dark).  Returns the material and its tint node (copy the material and change the
+    node's "B" input for a darker/lighter variant)."""
+    m, b = mat(name, (1, 1, 1))
+    nt = m.node_tree; N = nt.nodes.new; Lk = nt.links.new
+    tc = N("ShaderNodeTexCoord"); oi = N("ShaderNodeObjectInfo")
+    jit = N("ShaderNodeVectorMath"); jit.operation = 'MULTIPLY_ADD'; jit.inputs[1].default_value = (7.3, 5.1, 3.7)
+    Lk(oi.outputs["Random"], jit.inputs[0]); Lk(tc.outputs["Object"], jit.inputs[2])
+    mp = N("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (scale,)*3; Lk(jit.outputs["Vector"], mp.inputs["Vector"])
+    def tex(kind, colour=True):
+        t = N("ShaderNodeTexImage"); t.image = bpy.data.images.load(os.path.join(TEXTURES, f"rock_face_03_{kind}_2k.jpg"))
+        if not colour: t.image.colorspace_settings.name = "Non-Color"
+        t.projection = 'BOX'; t.projection_blend = 0.25; Lk(mp.outputs["Vector"], t.inputs["Vector"])
+        return t
+    hs = N("ShaderNodeHueSaturation"); hs.inputs["Saturation"].default_value = 0.3
+    Lk(tex("diff").outputs["Color"], hs.inputs["Color"])
+    tn = N("ShaderNodeMix"); tn.data_type = 'RGBA'; tn.blend_type = 'MULTIPLY'; tn.inputs["Factor"].default_value = 1.0
+    tn.inputs["B"].default_value = (*tint, 1); Lk(hs.outputs["Color"], tn.inputs["A"]); Lk(tn.outputs["Result"], b.inputs["Base Color"])
+    rr = N("ShaderNodeMapRange"); rr.inputs["To Min"].default_value = 0.7; rr.inputs["To Max"].default_value = 1.0
+    Lk(tex("rough", False).outputs["Color"], rr.inputs["Value"]); Lk(rr.outputs["Result"], b.inputs["Roughness"])
+    nm = N("ShaderNodeNormalMap"); nm.inputs["Strength"].default_value = 1.0
+    Lk(tex("nor_gl", False).outputs["Color"], nm.inputs["Color"]); Lk(nm.outputs["Normal"], b.inputs["Normal"])
+    if fade:
+        sz = N("ShaderNodeSeparateXYZ"); Lk(tc.outputs["Object"], sz.inputs[0])
+        dk = N("ShaderNodeMapRange"); dk.inputs["From Min"].default_value, dk.inputs["From Max"].default_value = fade
+        Lk(sz.outputs["Z"], dk.inputs["Value"])
+        ms = N("ShaderNodeMixShader"); em = N("ShaderNodeEmission"); em.inputs["Color"].default_value = (0, 0, 0, 1)
+        Lk(dk.outputs["Result"], ms.inputs[0]); Lk(b.outputs[0], ms.inputs[1]); Lk(em.outputs[0], ms.inputs[2])
+        Lk(ms.outputs[0], nt.nodes["Material Output"].inputs["Surface"])
+    return m, tn
 
 def rig(sc, tgt=Vector((0, 0, 1.4)), elev=20):
     """Same camera (elev deg from above, default 20) and warm three-light setup as the other item renders."""
