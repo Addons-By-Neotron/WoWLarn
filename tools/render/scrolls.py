@@ -1,4 +1,4 @@
-"""Scroll variants -> Media/Scrolls as 256px icons.
+"""Scroll variants -> Media/Scrolls as 128px icons.
 Usage: [JOBS=4] python3 scrolls.py [slug ...]   (no args = all)
 kind: "rolled" (default, build_scroll.py: paper/ribbon/seal, length, turns, tilt, yaw, ribbon_y, pinch, seed)
       "open" (build_open_scroll.py: paper, ink_color, width, height, roll_r, turns, yaw, seed; glyph_seed)

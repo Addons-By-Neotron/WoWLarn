@@ -1,4 +1,4 @@
-"""Ring variants -> Media/Rings as 256px icons.
+"""Ring variants -> Media/Rings as 128px icons.
 Usage: [JOBS=4] python3 rings.py [slug ...]   (no args = all)
 Keys (see build_ring.py): style (plain|twisted|vine|shield|zigzag|stacked|studded|waves|spiked),
       metal (linear RGB), metal_rough, accent (enamel/inlay colour), accent_glow, tilt, roll,

@@ -1,4 +1,4 @@
-"""Gem variants (ids match the game's object ids) -> Media/Gems as 256px icons.
+"""Gem variants (ids match the game's object ids) -> Media/Gems as 128px icons.
 Usage: [JOBS=4] python3 gems.py [slug ...]   (no args = all)
 Keys (see build_gem.py): cut (brilliant|heart|emerald|trillion), color (linear RGB), ior, glow, glow_strength,
       fire (coloured sparkle lights), tilt, yaw, roll, halo (0..1 post glow, halo_color)

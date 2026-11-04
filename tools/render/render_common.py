@@ -93,10 +93,8 @@ def spot(sc, loc, energy, col, size=0.25, tgt=Vector((0, 0, 1.4))):
     o = link(sc, "S", l); o.location = loc
     o.rotation_euler = (tgt - o.location).to_track_quat('-Z', 'Y').to_euler()
 
-def render(sc, out, save_blend=None, samples=128):
-    sc.render.engine = 'CYCLES'; sc.cycles.samples = samples; sc.cycles.use_denoising = True
-    sc.render.film_transparent = True
-    sc.view_settings.view_transform = 'Standard'
+def use_device(sc):
+    """GPU (OptiX/CUDA/HIP) if available, else Cycles' CPU default."""
     cp = bpy.context.preferences.addons['cycles'].preferences
     for t in ('OPTIX', 'CUDA', 'HIP'):
         try:
@@ -106,6 +104,12 @@ def render(sc, out, save_blend=None, samples=128):
         if any(d.type == t for d in cp.devices):
             for d in cp.devices: d.use = d.type == t
             sc.cycles.device = 'GPU'; break
+
+def render(sc, out, save_blend=None, samples=128):
+    sc.render.engine = 'CYCLES'; sc.cycles.samples = samples; sc.cycles.use_denoising = True
+    sc.render.film_transparent = True
+    sc.view_settings.view_transform = 'Standard'
+    use_device(sc)
     sc.render.resolution_x = sc.render.resolution_y = 512
     sc.render.image_settings.file_format = 'PNG'; sc.render.image_settings.color_mode = 'RGBA'
     sc.render.filepath = out

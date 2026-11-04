@@ -13,4 +13,4 @@ T = [
 T += [(i, f"{slug}_{e}", dict(p, elev=e, frame=410)) for i, slug, p in T for e in range(30, 81, 5)]
 
 if __name__ == "__main__":
-    runner.main("build_throne.py", T, "Throne", "misc")
+    runner.main("build_throne.py", T, "Throne", "misc", size=256)   # world object: 256

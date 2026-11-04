@@ -1,4 +1,4 @@
-"""One-off items -> Media/Misc as 256px icons.
+"""One-off items -> Media/Misc as 128px icons.
 Usage: [JOBS=4] python3 misc.py [slug ...]   (no args = all)
 """
 import os

@@ -1,4 +1,4 @@
-"""Potion variants. Renders each via Blender, then makes 256px icons + a contact sheet.
+"""Potion variants. Renders each via Blender, then makes 128px icons + a contact sheet.
 Usage: [JOBS=4] python3 variants.py [slug ...]   (no args = all)
 Keys: halo (0..1 post glow, halo_color), color/glow (linear RGB), glow_strength, alpha, transmission (liquid), sparks, spark_color,
       shape (round|wide|square|pyramid), cap (cork|wax|gold|silver), cap_color, fill (degrees, round/wide),
@@ -58,7 +58,7 @@ V = [
                        transmission=0.8, sparks=40, spark_color=(1,1,1), shape="square", cap="silver")),
 ]
 
-OUTDIR = os.path.join(runner.REPO, "Media", "Potions")    # <name>_icon.png, 256px, cropped to the bottle
+OUTDIR = os.path.join(runner.REPO, "Media", "Potions")    # <name>_icon.png, 128px, cropped to the bottle
 
 def contact_sheets():
     """Light + dark checkerboard sheets so transparency and halos are visible."""

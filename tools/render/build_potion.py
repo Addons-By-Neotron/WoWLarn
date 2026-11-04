@@ -1,7 +1,7 @@
 """Build + render one potion.  Usage:
 blender -b -P build_potion.py -- out.png '{"color":[r,g,b], ...}'  (see variants.py for keys)
 """
-import bpy, bmesh, math, random, sys, json
+import bpy, bmesh, math, os, random, sys, json
 from mathutils import Vector
 
 args = sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else []
@@ -185,17 +185,9 @@ sc.render.film_transparent = True
 sc.cycles.film_transparent_glass = True          # refractive glass/liquid keeps real alpha
 sc.cycles.film_transparent_roughness = 0.1
 sc.view_settings.view_transform = 'Standard'
-# GPU (OptiX) if available
-cp = bpy.context.preferences.addons['cycles'].preferences
-for t in ('OPTIX', 'CUDA', 'HIP'):
-    try:
-        cp.compute_device_type = t; cp.get_devices()
-    except TypeError:
-        continue
-    gpus = [d for d in cp.devices if d.type == t]
-    if gpus:
-        for d in cp.devices: d.use = d.type == t
-        sc.cycles.device = 'GPU'; break
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from render_common import use_device
+use_device(sc)                                    # GPU if available
 sc.render.resolution_x = sc.render.resolution_y = 512
 sc.render.image_settings.file_format = 'PNG'; sc.render.image_settings.color_mode = 'RGBA'
 sc.render.filepath = OUT
