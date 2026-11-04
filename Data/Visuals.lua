@@ -181,17 +181,21 @@ end
 local MISC = "Interface\\AddOns\\WoWLarn\\Media\\Misc\\"
 local MISC_FILE = { [K.OBOOK] = "misc_00_spell_tome_icon.png" }  -- the spell book
 
--- Objects rendered from several camera angles (30 to 80 degrees in steps of 5), in Media/Throne:
+-- Objects rendered from several camera angles (30 to 80 degrees in steps of 5): in its folder,
 -- <name>_<angle>_icon.png for the 3D view, and <name>_icon.png for the 2D map (no angle).
-local THRONE = "Interface\\AddOns\\WoWLarn\\Media\\Throne\\"
+local MEDIA = "Interface\\AddOns\\WoWLarn\\Media\\"
 local ANGLED = {
-   [K.OTHRONE] = "misc_02_throne", [K.OTHRONE2] = "misc_02_throne",  -- (a gnome king was found: the same look)
-   [K.ODEADTHRONE] = "misc_79_massive_throne",  -- the jewels pried off
+   -- thrones (a gnome king was found: the same look; the jewels pried off: the massive one)
+   [K.OTHRONE] = "Throne\\misc_02_throne", [K.OTHRONE2] = "Throne\\misc_02_throne",
+   [K.ODEADTHRONE] = "Throne\\misc_79_massive_throne",
+   -- piles of gold, by the size of the pile (small to huge: ids 18, 72, 70, 71)
+   [K.OGOLDPILE] = "Gold\\gold_18_small", [K.ODGOLD] = "Gold\\gold_72_medium",
+   [K.OMAXGOLD] = "Gold\\gold_70_large", [K.OKGOLD] = "Gold\\gold_71_huge",
 }
 local function AngledPicture(id, angle)
-   if not angle then return THRONE .. ANGLED[id] .. "_icon.png" end
+   if not angle then return MEDIA .. ANGLED[id] .. "_icon.png" end
    angle = math.max(30, math.min(80, math.floor(angle / 5 + 0.5) * 5))
-   return THRONE .. ANGLED[id] .. "_" .. angle .. "_icon.png"
+   return MEDIA .. ANGLED[id] .. "_" .. angle .. "_icon.png"
 end
 
 -- Pictures of things that stand on the floor rather than float over it (they do not bob in the
@@ -199,6 +203,7 @@ end
 -- (it can be more than 1: the picture stands on the floor and reaches up over the tiles behind).
 V.STANDING = {
    [K.OTHRONE] = 1.45, [K.OTHRONE2] = 1.45, [K.ODEADTHRONE] = 1.45,
+   [K.OGOLDPILE] = 0.75, [K.ODGOLD] = 0.75, [K.OMAXGOLD] = 0.75, [K.OKGOLD] = 0.75,  -- (lie on the floor)
 }
 
 function V.PotionPicture(arg)

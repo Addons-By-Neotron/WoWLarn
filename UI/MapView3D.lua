@@ -376,10 +376,14 @@ local function PictureQuad(layer, texture, tileX, tileY, size, ahead, still)
       map3d.bobbing = true  -- (the view is drawn again and again while one is in sight)
       bob = BOB * math.sin(GetTime() * BOB_SPEED + tileX * 7 + tileY * 13)  -- (each at its own point of the swing)
    end
-   local sx, sy, scale = Project(wx, wy, ((still and 0 or PICTURE_LIFT) + size / 2) * TILE)
+   -- The bottom edge of the picture stands at the point of the floor (lifted, if it floats).  The
+   -- picture is flat to the screen, so its height is added on the screen: put up in the world
+   -- as a height, it would be foreshortened by the angle of the camera and the picture would
+   -- slide over the floor when the angle is changed.
+   local sx, sy, scale = Project(wx, wy, (still and 0 or PICTURE_LIFT) * TILE)
    if not sx then return end
-   sy = sy - bob * TILE * scale  -- (on the screen, not in the world: straight above, a height would hardly show)
    local half = size * TILE * scale / 2
+   sy = sy - half - bob * TILE * scale  -- (on the screen, not in the world: straight above, a height would hardly show)
    -- (no shadow: the soft one under a floating picture lay over its lower part; and the picture
    -- is on a sublevel above any shadow, whatever the order the quads were made in)
    Quad(layer, WHITE, sx - half, sy - half, sx + half, sy - half, sx + half, sy + half, sx - half, sy + half, texture, nil, 2)
