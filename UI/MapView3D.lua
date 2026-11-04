@@ -368,11 +368,15 @@ end
 local PICTURE_LIFT = 0.1  -- of a tile, how far above the floor it floats
 local BOB, BOB_SPEED = 0.035, 2.2  -- of a tile, how far it bobs up and down, and how fast (radians per second)
 local WHITE = { 1, 1, 1, 1 }  -- (pictures are not darkened by the distance fog)
-local function PictureQuad(layer, texture, tileX, tileY, size, ahead)
+-- still: stands on the floor and does not bob (furniture, see V.STANDING)
+local function PictureQuad(layer, texture, tileX, tileY, size, ahead, still)
    local wx, wy = (tileX - 0.5) * TILE, (tileY - 0.5) * TILE
-   map3d.bobbing = true  -- (the view is drawn again and again while one is in sight)
-   local bob = BOB * math.sin(GetTime() * BOB_SPEED + tileX * 7 + tileY * 13)  -- (each at its own point of the swing)
-   local sx, sy, scale = Project(wx, wy, (PICTURE_LIFT + size / 2) * TILE)
+   local bob = 0
+   if not still then
+      map3d.bobbing = true  -- (the view is drawn again and again while one is in sight)
+      bob = BOB * math.sin(GetTime() * BOB_SPEED + tileX * 7 + tileY * 13)  -- (each at its own point of the swing)
+   end
+   local sx, sy, scale = Project(wx, wy, ((still and 0 or PICTURE_LIFT) + size / 2) * TILE)
    if not sx then return end
    sy = sy - bob * TILE * scale  -- (on the screen, not in the world: straight above, a height would hardly show)
    local half = size * TILE * scale / 2
@@ -628,10 +632,10 @@ local function DrawTile(layers, x, y, ground)
          end
          if object ~= 0 then  -- (what lies under the monster stays, a little smaller)
             local under, picture
-            if not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object) end
+            if not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object, ns.mod.db.profile.cameraAngle or 55) end
             if under then
                if picture then
-                  PictureQuad(layers[ACTOR], under, x, y, 0.5, ahead)
+                  PictureQuad(layers[ACTOR], under, x, y, (V.STANDING[object] or 0.75) * 2 / 3, ahead, V.STANDING[object])
                else
                   local size = TILE * 0.5 * scale
                   Icon(layers[ACTOR], under, mx, my + size * 0.1, size, size)
@@ -647,10 +651,10 @@ local function DrawTile(layers, x, y, ground)
       -- (drawn above)
    elseif object ~= 0 then
       local icon, picture
-      if not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object) end
+      if not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object, ns.mod.db.profile.cameraAngle or 55) end
       local size = TILE * 0.6 * scale
       if icon and picture then
-         PictureQuad(layers[ACTOR], icon, x, y, 0.75, ahead)
+         PictureQuad(layers[ACTOR], icon, x, y, V.STANDING[object] or 0.75, ahead, V.STANDING[object])
       elseif icon then
          Icon(layers[ACTOR], icon, mx, my + size * 0.1, size, size)
       else

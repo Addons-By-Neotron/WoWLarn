@@ -181,6 +181,26 @@ end
 local MISC = "Interface\\AddOns\\WoWLarn\\Media\\Misc\\"
 local MISC_FILE = { [K.OBOOK] = "misc_00_spell_tome_icon.png" }  -- the spell book
 
+-- Objects rendered from several camera angles (30 to 80 degrees in steps of 5), in Media/Throne:
+-- <name>_<angle>_icon.png for the 3D view, and <name>_icon.png for the 2D map (no angle).
+local THRONE = "Interface\\AddOns\\WoWLarn\\Media\\Throne\\"
+local ANGLED = {
+   [K.OTHRONE] = "misc_02_throne", [K.OTHRONE2] = "misc_02_throne",  -- (a gnome king was found: the same look)
+   [K.ODEADTHRONE] = "misc_79_massive_throne",  -- the jewels pried off
+}
+local function AngledPicture(id, angle)
+   if not angle then return THRONE .. ANGLED[id] .. "_icon.png" end
+   angle = math.max(30, math.min(80, math.floor(angle / 5 + 0.5) * 5))
+   return THRONE .. ANGLED[id] .. "_" .. angle .. "_icon.png"
+end
+
+-- Pictures of things that stand on the floor rather than float over it (they do not bob in the
+-- 3D view): the size of each as a part of a tile
+-- (it can be more than 1: the picture stands on the floor and reaches up over the tiles behind).
+V.STANDING = {
+   [K.OTHRONE] = 1.45, [K.OTHRONE2] = 1.45, [K.ODEADTHRONE] = 1.45,
+}
+
 function V.PotionPicture(arg)
    local known = arg and arg > 0 and ns.G.potionknown[arg] ~= 0 and POTION_FILE[arg]
    return POTIONS .. (known or POTION_FILE[0]) .. "_icon.png"
@@ -221,6 +241,7 @@ function V.ObjectIcon(id, arg)
    if id == K.OSCROLL then return V.ScrollPicture(arg) end
    if GEM_FILE[id] then return GEMS .. GEM_FILE[id] end
    if MISC_FILE[id] then return MISC .. MISC_FILE[id] end
+   if ANGLED[id] then return AngledPicture(id) end
    if RING_FILE[id] then return V.RingPicture(id) end
    local visual = V.object[id]
    local icon = visual and visual.icon
@@ -230,7 +251,8 @@ end
 
 -- What the map draws for an object: its own picture if it has one (true as the second value:
 -- it has its own transparency, and is not cut at the edges like an icon), else its icon.
-function V.ObjectPicture(id, arg, opened)
+function V.ObjectPicture(id, arg, opened, angle)
+   if ANGLED[id] then return AngledPicture(id, angle), true end
    if id == K.OPOTION then return V.PotionPicture(arg), true end
    if id == K.OSCROLL then return V.ScrollPicture(arg, opened), true end
    if GEM_FILE[id] then return GEMS .. GEM_FILE[id], true end

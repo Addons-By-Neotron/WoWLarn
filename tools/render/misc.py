@@ -7,6 +7,7 @@ import glyphs, runner
 M = [
     (0, "spell_tome", dict(script="build_tome.py", sigil_seed=3, border=True)),
 ]
+# thrones: see thrones.py (Media/Throne)
 
 def prepare(name, i, p, script):
     script = p.pop("script", script)

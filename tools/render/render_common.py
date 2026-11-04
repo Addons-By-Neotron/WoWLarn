@@ -56,11 +56,11 @@ def paper_material(pc, edge_axes="X", ink=None, ink_color=(0.12, 0.05, 0.02), in
     Lk(fb.outputs["Fac"], bp.inputs["Height"]); Lk(bp.outputs["Normal"], b.inputs["Normal"])
     return m
 
-def rig(sc, tgt=Vector((0, 0, 1.4))):
-    """Same camera (20 deg from above) and warm three-light setup as the other item renders."""
+def rig(sc, tgt=Vector((0, 0, 1.4)), elev=20):
+    """Same camera (elev deg from above, default 20) and warm three-light setup as the other item renders."""
     cam = bpy.data.cameras.new("Cam"); cam.type = 'PERSP'; cam.lens = 85
     co = link(sc, "Cam", cam)
-    ang = math.radians(20); dist = 12
+    ang = math.radians(elev); dist = 12
     co.location = tgt + Vector((0, -dist*math.cos(ang), dist*math.sin(ang)))
     co.rotation_euler = (math.pi/2 - ang, 0, 0); sc.camera = co
     def area(loc, energy, size, col):
