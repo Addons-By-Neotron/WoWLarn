@@ -158,6 +158,25 @@ function V.ScrollPicture(arg, opened)
    return SCROLLS .. (known and "scroll_01_open_icon.png" or "scroll_00_generic_icon.png")
 end
 
+-- The pictures of the gems (Media/Gems).
+local GEMS = "Interface\\AddOns\\WoWLarn\\Media\\Gems\\"
+local GEM_FILE = {
+   [K.ODIAMOND] = "gem_50_diamond_icon.png", [K.ORUBY] = "gem_51_ruby_icon.png",
+   [K.OEMERALD] = "gem_52_emerald_icon.png", [K.OSAPPHIRE] = "gem_53_sapphire_icon.png",
+}
+
+-- The pictures of the rings (Media/Rings).  Rings are never unidentified in Larn, so each shows
+-- its own; the generic one is for a ring that has no picture.
+local RINGS = "Interface\\AddOns\\WoWLarn\\Media\\Rings\\"
+local RING_FILE = {
+   [K.ORINGOFEXTRA] = "ring_01_extra_regeneration", [K.OREGENRING] = "ring_02_regeneration",
+   [K.OPROTRING] = "ring_03_protection", [K.OSEQUIP] = "ring_04_energy", [K.ODEXRING] = "ring_05_dexterity",
+   [K.OSTRRING] = "ring_06_strength", [K.OCLEVERRING] = "ring_07_cleverness", [K.ODAMRING] = "ring_08_increase_damage",
+}
+function V.RingPicture(id)
+   return RINGS .. (RING_FILE[id] or "ring_00_generic") .. "_icon.png"
+end
+
 function V.PotionPicture(arg)
    local known = arg and arg > 0 and ns.G.potionknown[arg] ~= 0 and POTION_FILE[arg]
    return POTIONS .. (known or POTION_FILE[0]) .. "_icon.png"
@@ -189,6 +208,8 @@ end
 function V.ObjectIcon(id, arg)
    if id == K.OPOTION then return V.PotionPicture(arg) end
    if id == K.OSCROLL then return V.ScrollPicture(arg) end
+   if GEM_FILE[id] then return GEMS .. GEM_FILE[id] end
+   if RING_FILE[id] then return V.RingPicture(id) end
    local visual = V.object[id]
    local icon = visual and visual.icon
    if type(icon) == "number" then return icon end  -- (a file data id)
@@ -200,6 +221,8 @@ end
 function V.ObjectPicture(id, arg, opened)
    if id == K.OPOTION then return V.PotionPicture(arg), true end
    if id == K.OSCROLL then return V.ScrollPicture(arg, opened), true end
+   if GEM_FILE[id] then return GEMS .. GEM_FILE[id], true end
+   if RING_FILE[id] then return V.RingPicture(id), true end
    local visual = V.object[id]
    if visual and visual.image then return IMAGES .. visual.image .. ".png", true end
    return V.ObjectIcon(id, arg), false

@@ -99,6 +99,17 @@ local function BuildOptions()
                   ns.ui:RefreshNow("map")
                end,
             },
+            fog = {
+               type = "toggle",
+               name = L["Distance fog"],
+               desc = L["Darken things the further they are from the camera in the 2.5D view."],
+               order = 16.9,
+               get = function() return mod.db.profile.fog ~= false end,
+               set = function(_, value)
+                  mod.db.profile.fog = value
+                  ns.ui:RefreshNow("map")
+               end,
+            },
             textures = {
                type = "toggle",
                name = L["Textured ground"],

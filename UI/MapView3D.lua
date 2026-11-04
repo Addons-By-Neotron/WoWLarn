@@ -148,7 +148,8 @@ local function Quad(layer, color, ax, ay, bx, by, cx, cy, dx, dy, texture, uv, l
    if texture then
       if quad.texture ~= texture then
          quad.texture = texture
-         quad:SetTexture(texture)
+         -- (the pictures are 256 pixels and shown at a fraction of that: mipmaps keep them sharp)
+         quad:SetTexture(texture, nil, nil, level == 2 and "TRILINEAR" or nil)
       end
       local l, r, t, b = 0, 1, 0, 1
       if uv then l, r, t, b = uv[1], uv[2], uv[3], uv[4] end
@@ -336,9 +337,10 @@ local function Project(wx, wy, wz)
    return camera.centerX + (wx - camera.x) * scale, camera.centerY - (back * SIN + up * COS) * scale, scale, ahead
 end
 
--- Things far away are darker.
+-- Things far away are darker: the colour is multiplied by 1 at the camera, down to 0.45 at
+-- FOG_REACH and beyond (the "Distance fog" option turns this off; factor still applies).
 local function Shade(color, ahead, factor, alpha)
-   local fog = 1 - 0.55 * min(1, ahead / FOG_REACH)
+   local fog = ns.mod.db.profile.fog == false and 1 or 1 - 0.55 * min(1, ahead / FOG_REACH)
    fog = fog * (factor or 1)
    return { color[1] * fog, color[2] * fog, color[3] * fog, alpha }
 end
@@ -365,6 +367,7 @@ end
 -- screen (it keeps its shape whatever the camera angle), with a shadow below.
 local PICTURE_LIFT = 0.1  -- of a tile, how far above the floor it floats
 local BOB, BOB_SPEED = 0.035, 2.2  -- of a tile, how far it bobs up and down, and how fast (radians per second)
+local WHITE = { 1, 1, 1, 1 }  -- (pictures are not darkened by the distance fog)
 local function PictureQuad(layer, texture, tileX, tileY, size, ahead)
    local wx, wy = (tileX - 0.5) * TILE, (tileY - 0.5) * TILE
    map3d.bobbing = true  -- (the view is drawn again and again while one is in sight)
@@ -375,7 +378,7 @@ local function PictureQuad(layer, texture, tileX, tileY, size, ahead)
    local half = size * TILE * scale / 2
    -- (no shadow: the soft one under a floating picture lay over its lower part; and the picture
    -- is on a sublevel above any shadow, whatever the order the quads were made in)
-   Quad(layer, Shade({ 1, 1, 1 }, ahead, 1), sx - half, sy - half, sx + half, sy - half, sx + half, sy + half, sx - half, sy + half, texture, nil, 2)
+   Quad(layer, WHITE, sx - half, sy - half, sx + half, sy - half, sx + half, sy + half, sx - half, sy + half, texture, nil, 2)
 end
 
 -- A tile with a creature (a display, or "player") on it, as the map draws them, for the
