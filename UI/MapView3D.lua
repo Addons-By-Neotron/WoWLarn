@@ -369,7 +369,7 @@ local PICTURE_LIFT = 0.1  -- of a tile, how far above the floor it floats
 local BOB, BOB_SPEED = 0.035, 2.2  -- of a tile, how far it bobs up and down, and how fast (radians per second)
 local WHITE = { 1, 1, 1, 1 }  -- (pictures are not darkened by the distance fog)
 -- still: stands on the floor and does not bob (furniture, see V.STANDING)
-local function PictureQuad(layer, texture, tileX, tileY, size, ahead, still)
+local function PictureQuad(layer, texture, tileX, tileY, size, ahead, still, ax, ay)
    local wx, wy = (tileX - 0.5) * TILE, (tileY - 0.5) * TILE
    local bob = 0
    if not still then
@@ -386,6 +386,10 @@ local function PictureQuad(layer, texture, tileX, tileY, size, ahead, still)
    sy = sy - half - bob * TILE * scale  -- (on the screen, not in the world: straight above, a height would hardly show)
    -- (no shadow: the soft one under a floating picture lay over its lower part; and the picture
    -- is on a sublevel above any shadow, whatever the order the quads were made in)
+   -- (ax, ay: the point of the picture, as a part of its width from the left and of its height
+   -- from the bottom, that goes on the floor point; by default the middle of the bottom edge)
+   sx = sx + (0.5 - (ax or 0.5)) * 2 * half
+   sy = sy + (ay or 0) * 2 * half
    Quad(layer, WHITE, sx - half, sy - half, sx + half, sy - half, sx + half, sy + half, sx - half, sy + half, texture, nil, 2)
 end
 
@@ -515,6 +519,27 @@ end
 
 local TINT = { 1, 1, 1 }  -- what the textures of this level are tinted by, set when drawing
 
+-- The part of the tile of a wall block that the block fills: a block is thinner than its tile on
+-- the sides that face open floor, see DrawTile.  West, east, north and south edges, in world units.
+local function Extent(x, y)
+   return (x - 1) * TILE + (IsBlock(x - 1, y) and 0 or WALL_INSET), x * TILE - (IsBlock(x + 1, y) and 0 or WALL_INSET),
+      (y - 1) * TILE + (IsBlock(x, y - 1) and 0 or WALL_INSET), y * TILE - (IsBlock(x, y + 1) and 0 or WALL_INSET)
+end
+
+-- An upright strip of a wall from the ground point (ax, ay) to (bx, by), height h, the part
+-- from..to of the tile along it (0 to 1) of the texture.  For the faces of a block that a
+-- neighbouring block is set back from: they are not drawn whole, as the neighbour hides them
+-- where it is as wide as the tile.
+local function FaceStrip(layer, color, ahead, factor, alpha, texture, uv, ax, ay, bx, by, h, from, to)
+   local gax, gay = Project(ax, ay, 0)
+   local gbx, gby = Project(bx, by, 0)
+   local tax, tay = Project(ax, ay, h)
+   local tbx, tby = Project(bx, by, h)
+   if not (gax and gbx and tax and tbx) then return end
+   if uv then uv = { uv[1] + (uv[2] - uv[1]) * from, uv[1] + (uv[2] - uv[1]) * to, uv[3], uv[4] } end
+   Quad(layer, Shade(color, ahead, factor, alpha), tax, tay, tbx, tby, gbx, gby, gax, gay, texture, uv)
+end
+
 -- The floor tile (x, y), and what stands on it.
 local function DrawTile(layers, x, y, ground)
    local x0, x1, y0, y1 = (x - 1) * TILE, x * TILE, (y - 1) * TILE, y * TILE
@@ -576,6 +601,35 @@ local function DrawTile(layers, x, y, ground)
             Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx1, ty1, tx2, ty2, fcx, fcy, fbx, fby, wallTexture, wallUV)
          elseif camera.x < wx0 and not IsBlock(x - 1, y) then  -- the west face
             Quad(layers[WALL], Shade(color, ahead, 0.55, alpha), tx0, ty0, tx3, ty3, fdx, fdy, fax, fay, wallTexture, wallUV)
+         end
+         -- Where a neighbouring block is set back from the tile (it has open floor on that side),
+         -- the face of this block that it would hide is bare for the width of the set-back:
+         -- at the corners of the walls.
+         local layer = layers[WALL]
+         if IsBlock(x, y + 1) then
+            local sx0, sx1 = Extent(x, y + 1)
+            if sx0 > wx0 then
+               local to = min(sx0, wx1)
+               FaceStrip(layer, color, ahead, 0.72, alpha, wallTexture, wallUV, wx0, wy1, to, wy1, wh, (wx0 - x0) / TILE, (to - x0) / TILE)
+            end
+            if sx1 < wx1 then
+               local from = max(sx1, wx0)
+               FaceStrip(layer, color, ahead, 0.72, alpha, wallTexture, wallUV, from, wy1, wx1, wy1, wh, (from - x0) / TILE, (wx1 - x0) / TILE)
+            end
+         end
+         local side, edge
+         if camera.x > wx1 and IsBlock(x + 1, y) then side, edge = x + 1, wx1
+         elseif camera.x < wx0 and IsBlock(x - 1, y) then side, edge = x - 1, wx0 end
+         if side then
+            local _, _, ny0, ny1 = Extent(side, y)
+            if ny0 > wy0 then
+               local to = min(ny0, wy1)
+               FaceStrip(layer, color, ahead, 0.55, alpha, wallTexture, wallUV, edge, wy0, edge, to, wh, (wy0 - y0) / TILE, (to - y0) / TILE)
+            end
+            if ny1 < wy1 then
+               local from = max(ny1, wy0)
+               FaceStrip(layer, color, ahead, 0.55, alpha, wallTexture, wallUV, edge, from, edge, wy1, wh, (from - y0) / TILE, (wy1 - y0) / TILE)
+            end
          end
       end
       return
@@ -639,7 +693,7 @@ local function DrawTile(layers, x, y, ground)
             if not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object, ns.mod.db.profile.cameraAngle or 55) end
             if under then
                if picture then
-                  PictureQuad(layers[ACTOR], under, x, y, (V.STANDING[object] or 0.75) * 2 / 3, ahead, V.STANDING[object])
+                  PictureQuad(layers[ACTOR], under, x, y, (V.STANDING[object] or 0.75) * 2 / 3, ahead, V.STANDING[object], V.Anchor(object, ns.mod.db.profile.cameraAngle or 55))
                else
                   local size = TILE * 0.5 * scale
                   Icon(layers[ACTOR], under, mx, my + size * 0.1, size, size)
@@ -658,7 +712,7 @@ local function DrawTile(layers, x, y, ground)
       if not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object, ns.mod.db.profile.cameraAngle or 55) end
       local size = TILE * 0.6 * scale
       if icon and picture then
-         PictureQuad(layers[ACTOR], icon, x, y, V.STANDING[object] or 0.75, ahead, V.STANDING[object])
+         PictureQuad(layers[ACTOR], icon, x, y, V.STANDING[object] or 0.75, ahead, V.STANDING[object], V.Anchor(object, ns.mod.db.profile.cameraAngle or 55))
       elseif icon then
          Icon(layers[ACTOR], icon, mx, my + size * 0.1, size, size)
       else

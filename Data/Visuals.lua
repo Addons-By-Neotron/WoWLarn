@@ -188,14 +188,35 @@ local ANGLED = {
    -- thrones (a gnome king was found: the same look; the jewels pried off: the massive one)
    [K.OTHRONE] = "Throne\\misc_02_throne", [K.OTHRONE2] = "Throne\\misc_02_throne",
    [K.ODEADTHRONE] = "Throne\\misc_79_massive_throne",
+   -- stairs
+   [K.OSTAIRSUP] = "Stairs\\stairs_05_stairs_up", [K.OSTAIRSDOWN] = "Stairs\\stairs_13_stairs_down",
    -- piles of gold, by the size of the pile (small to huge: ids 18, 72, 70, 71)
    [K.OGOLDPILE] = "Gold\\gold_18_small", [K.ODGOLD] = "Gold\\gold_72_medium",
    [K.OMAXGOLD] = "Gold\\gold_70_large", [K.OKGOLD] = "Gold\\gold_71_huge",
 }
-local function AngledPicture(id, angle)
-   if not angle then return MEDIA .. ANGLED[id] .. "_icon.png" end
+-- The picture of an angled object without the folder path and the "_icon.png": the plain one
+-- for the 2D map (no angle), else the one that fits the camera angle.
+local function AngledName(id, angle)
+   if not angle then return ANGLED[id] end
    angle = math.max(30, math.min(80, math.floor(angle / 5 + 0.5) * 5))
-   return MEDIA .. ANGLED[id] .. "_" .. angle .. "_icon.png"
+   return ANGLED[id] .. "_" .. angle
+end
+local function AngledPicture(id, angle)
+   return MEDIA .. AngledName(id, angle) .. "_icon.png"
+end
+
+-- Flat objects that stand on the middle of their tile by the middle of what the picture shows,
+-- not by the bottom edge of the frame (the pictures are not centred in their frame, and the
+-- thrones are meant to rest on the bottom).  See Data/Anchors.lua, from tools/gen-anchors.py.
+local CENTERED = { [K.OSTAIRSDOWN] = true, [K.OSTAIRSUP] = true }  -- (the stairs up: by the middle of their round base)
+
+-- Where the middle of what the picture of this object shows is in its frame: its distance from
+-- the left as a part of the width, and from the bottom as a part of the height.  Nil for an
+-- object that is placed by the bottom edge.
+function V.Anchor(id, angle)
+   if not CENTERED[id] then return nil end
+   local anchor = ns.Anchors and ns.Anchors[AngledName(id, angle)]
+   if anchor then return anchor[1], anchor[2] end
 end
 
 -- Pictures of things that stand on the floor rather than float over it (they do not bob in the
@@ -203,6 +224,7 @@ end
 -- (it can be more than 1: the picture stands on the floor and reaches up over the tiles behind).
 V.STANDING = {
    [K.OTHRONE] = 1.45, [K.OTHRONE2] = 1.45, [K.ODEADTHRONE] = 1.45,
+   [K.OSTAIRSUP] = 1.4, [K.OSTAIRSDOWN] = 1.4,  -- (the picture is about 0.65 of its frame wide: about a tile)
    [K.OGOLDPILE] = 0.75, [K.ODGOLD] = 0.75, [K.OMAXGOLD] = 0.75, [K.OKGOLD] = 0.75,  -- (lie on the floor)
 }
 

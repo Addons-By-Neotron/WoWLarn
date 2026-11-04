@@ -70,6 +70,21 @@ local function NewCell(frame)
    return cell
 end
 
+-- Puts the picture of a cell on it: the whole frame of the cell, less a margin, or moved so that the
+-- middle of what a flat picture shows (V.Anchor: ax from the left, ay from the bottom) is on the
+-- middle of the cell.  A picture is shown whole; an icon is cut at the edges.
+local function PlaceIcon(cell, picture, ax, ay)
+   local dx, dy = 0, 0
+   if ax then
+      local size = TILE - 6
+      dx, dy = (0.5 - ax) * size, (0.5 - ay) * size
+   end
+   cell.icon:ClearAllPoints()
+   cell.icon:SetPoint("TOPLEFT", cell.bg, "TOPLEFT", 3 + dx, -3 + dy)
+   cell.icon:SetPoint("BOTTOMRIGHT", cell.bg, "BOTTOMRIGHT", -3 + dx, 3 + dy)
+   if picture then cell.icon:SetTexCoord(0, 1, 0, 1) else cell.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) end
+end
+
 local function HideCell(cell)
    cell.icon:Hide()
    cell.glyph:Hide()
@@ -215,6 +230,7 @@ local function DrawTile(cell, x, y, ground)
       if object ~= 0 and not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object) end
       if under then
          V.SetIcon(cell.icon, under)
+         PlaceIcon(cell, picture, V.Anchor(object))
          cell.icon:SetBlendMode((picture or ns.mod.db.profile.opaqueIcons) and "BLEND" or "ADD")
          cell.icon:Show()
       else
@@ -234,6 +250,7 @@ local function DrawTile(cell, x, y, ground)
    if object ~= 0 and not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object) end
    if icon then
       V.SetIcon(cell.icon, icon)
+      PlaceIcon(cell, picture, V.Anchor(object))
       cell.icon:SetBlendMode((picture or ns.mod.db.profile.opaqueIcons) and "BLEND" or "ADD")  -- (add: the black of the icon is left out)
       cell.icon:Show()
       cell.glyph:Hide()
