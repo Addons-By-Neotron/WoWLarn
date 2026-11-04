@@ -1,5 +1,5 @@
 """Procedural rune 'handwriting' as an RGBA ink texture (black ink, alpha = coverage)."""
-import random
+import math, random
 from PIL import Image, ImageDraw, ImageFilter
 
 GRID = [(x, y) for y in range(4) for x in range(3)]          # 3x4 stroke anchor points per glyph cell
@@ -17,6 +17,29 @@ def _glyph(rnd):
     extra = rnd.random()
     return strokes, ("dot" if extra < 0.15 else "ring" if extra < 0.25 else None)
 
+def _rune(d, strokes, cx, cy, s, wd, fill):
+    for a, b in strokes:
+        d.line((cx + (a[0]-1)*s, cy + (a[1]-1.5)*s*0.9, cx + (b[0]-1)*s, cy + (b[1]-1.5)*s*0.9), fill=fill, width=wd)
+
+def _sigil(d, rnd, cx, cy, r, wd, ring_runes=0):
+    """Double ring with a large rune in the middle; optionally small runes around the band between the rings."""
+    ink = (0, 0, 0, 235)
+    for rr, w in ((r, wd), (int(r*0.82), max(2, wd*4//7))):
+        d.ellipse((cx-rr, cy-rr, cx+rr, cy+rr), outline=ink, width=w)
+    strokes, _ = _glyph(rnd)
+    _rune(d, strokes + [((0, 1), (2, 1))], cx, cy, r*0.45, wd, ink)
+    for k in range(ring_runes):
+        a = math.tau*k/ring_runes - math.pi/2; rr = r*0.91
+        strokes, _ = _glyph(rnd)
+        _rune(d, strokes, cx + rr*math.cos(a), cy + rr*math.sin(a), r*0.045, max(2, wd//2), ink)
+
+def sigil(path, seed=1, size=512):
+    """Square emblem texture: sigil with a ring of small runes (black ink, alpha = coverage)."""
+    rnd = random.Random(seed)
+    im = Image.new("RGBA", (size, size), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    _sigil(d, rnd, size//2, size//2, int(size*0.46), int(size*0.035), ring_runes=10)
+    im.filter(ImageFilter.GaussianBlur(1.0)).save(path)
+
 def make(path, seed=1, size=(1024, 1280), lines=8, title=True):
     rnd = random.Random(seed)
     W, H = size
@@ -25,12 +48,7 @@ def make(path, seed=1, size=(1024, 1280), lines=8, title=True):
     y = my
     if title:                                                 # sigil: double ring with a large rune inside
         r = int(W*0.11); cx = W//2; cy = y + r
-        for rr, wd in ((r, 7), (int(r*0.82), 4)):
-            d.ellipse((cx-rr, cy-rr, cx+rr, cy+rr), outline=(0, 0, 0, 235), width=wd)
-        strokes, _ = _glyph(rnd)
-        s = r*0.45
-        for a, b in strokes + [((0, 1), (2, 1))]:
-            d.line((cx + (a[0]-1)*s, cy + (a[1]-1.5)*s*0.9, cx + (b[0]-1)*s, cy + (b[1]-1.5)*s*0.9), fill=(0, 0, 0, 235), width=7)
+        _sigil(d, rnd, cx, cy, r, 7)
         y = cy + r + int(H*0.05)
     gh = (H - my - y) / lines                                 # line pitch
     ch = gh*0.55; cw = ch*0.55; gap = cw*0.55

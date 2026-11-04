@@ -4,9 +4,9 @@ Keys: halo (0..1 post glow, halo_color), color/glow (linear RGB), glow_strength,
       shape (round|wide|square|pyramid), cap (cork|wax|gold|silver), cap_color, fill (degrees, round/wide),
       fill_frac (square/pyramid), rot (deg, square/pyramid), lean (deg sideways tilt)
 """
-import json, os, subprocess, sys, time
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from PIL import Image, ImageDraw, ImageFilter
+import os
+from PIL import Image, ImageDraw
+import runner
 
 V = [
     (0,  "generic", {}),
@@ -58,24 +58,7 @@ V = [
                        transmission=0.8, sparks=40, spark_color=(1,1,1), shape="square", cap="silver")),
 ]
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
-OUTDIR = os.path.join(REPO, "Media", "Potions")           # <name>_icon.png, 256px, cropped to the bottle
-PREVIEW = os.path.join(HERE, "preview")                    # contact sheets + .blend, not shipped
-
-BLENDER = "/home/neotron/Downloads/blender-5.2.3-linux-x64/blender"
-
-def halo(path, col, strength, radius=24):
-    """Soft glow behind the bottle (works for dark 'glow' too, since it's alpha-blended)."""
-    im = Image.open(path)
-    a = im.getchannel("A").filter(ImageFilter.GaussianBlur(radius)).point(lambda v: min(255, int(v*strength*1.6)))
-    rgb = tuple(int(255*min(1, c)**(1/2.2)) for c in col)
-    h = Image.new("RGBA", im.size, (*rgb, 0)); h.putalpha(a); h.alpha_composite(im); h.save(path)
-
-def icon(src, dst, bbox):
-    im = Image.open(src); x0, y0, x1, y1 = bbox
-    s = max(x1-x0, y1-y0) + 60; cx, cy = (x0+x1)//2, (y0+y1)//2
-    im.crop((cx-s//2, cy-s//2, cx+s//2, cy+s//2)).resize((256, 256), Image.LANCZOS).save(dst)
+OUTDIR = os.path.join(runner.REPO, "Media", "Potions")    # <name>_icon.png, 256px, cropped to the bottle
 
 def contact_sheets():
     """Light + dark checkerboard sheets so transparency and halos are visible."""
@@ -91,33 +74,8 @@ def contact_sheets():
                     d.rectangle([x+5+xx, y+2+yy, x+14+xx, y+11+yy], fill=c2 if (xx//10 + yy//10) % 2 else c1)
             sheet.alpha_composite(Image.open(f).resize((150, 150)), (x+5, y+2))
             d.text((x+6, y+156), f"{i} {slug}", fill=(230, 230, 235, 255))
-        sheet.save(os.path.join(PREVIEW, fname))
-
-def render(i, slug, p):
-    name = f"potion_{i:02d}_{slug}"
-    out = os.path.join(PREVIEW, f"_render_{i:02d}.png")
-    if i == 0: p = dict(p, save_blend=os.path.join(PREVIEW, "potion_00_generic.blend"))
-    cmd = [BLENDER, "-b", "-P", os.path.join(HERE, "build_potion.py"), "--", out,
-           json.dumps({k: v for k, v in p.items() if not k.startswith("halo")})]
-    for attempt in range(4):                # parallel jobs can briefly run the GPU out of memory; wait + retry
-        r = subprocess.run(cmd, capture_output=True, text=True)
-        if r.returncode == 0 and os.path.exists(out): break
-        time.sleep(2 + 3*attempt)
-    else:
-        raise RuntimeError(f"{name} failed:\n" + "\n".join((r.stdout + r.stderr).splitlines()[-15:]))
-    bbox = Image.open(out).getchannel("A").getbbox()
-    if p.get("halo"):
-        halo(out, p.get("halo_color", p.get("glow")), p["halo"])
-    icon(out, os.path.join(OUTDIR, name + "_icon.png"), bbox)
-    os.remove(out)
-    return name
+        sheet.save(os.path.join(runner.PREVIEW, fname))
 
 if __name__ == "__main__":
-    for d in (OUTDIR, PREVIEW): os.makedirs(d, exist_ok=True)
-    want = set(sys.argv[1:])
-    jobs = [v for v in V if not want or v[1] in want]
-    # Blender startup + scene build dominate each render, so overlap several processes on the GPU
-    with ThreadPoolExecutor(max_workers=int(os.environ.get("JOBS", 4))) as ex:
-        for f in as_completed([ex.submit(render, *v) for v in jobs]):
-            print("done", f.result(), flush=True)
+    runner.main("build_potion.py", V, "Potions", "potion")
     contact_sheets()

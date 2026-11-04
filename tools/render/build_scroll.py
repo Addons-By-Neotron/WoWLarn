@@ -4,7 +4,7 @@ blender -b -P build_scroll.py -- out.png '{"ribbon":[r,g,b], ...}'
 import bpy, bmesh, math, os, random, sys, json
 from mathutils import Vector
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from scroll_common import mat, paper_material, rig, render
+from render_common import mat, paper_material, rig, render
 
 args = sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else []
 OUT = args[0] if args else "scroll.png"

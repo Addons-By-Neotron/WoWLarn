@@ -4,7 +4,7 @@ Usage: blender -b -P build_open_scroll.py -- out.png '{"ink":"/path/glyphs.png",
 import bpy, bmesh, math, os, random, sys, json
 from mathutils import Vector
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from scroll_common import paper_material, rig, render
+from render_common import paper_material, rig, render
 
 args = sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else []
 OUT = args[0] if args else "open_scroll.png"

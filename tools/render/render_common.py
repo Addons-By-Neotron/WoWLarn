@@ -1,4 +1,4 @@
-"""Shared bits for the scroll renders (run inside Blender): materials, camera/light rig, render."""
+"""Shared bits for the item renders (run inside Blender): materials, camera/light rig, studio world, render."""
 import bpy, math
 from mathutils import Vector
 
@@ -73,6 +73,25 @@ def rig(sc, tgt=Vector((0, 0, 1.4))):
     w = bpy.data.worlds.new("W"); sc.world = w
     w.node_tree.nodes["Background"].inputs[0].default_value = (0.08, 0.07, 0.12, 1)
     w.node_tree.nodes["Background"].inputs[1].default_value = 0.6
+
+def studio_world(sc, strength=1.2, scale=1.6, distortion=2.0):
+    """Bright/dark horizontal bands in the environment, so facets and polished metal reflect something."""
+    nt = sc.world.node_tree
+    bg = nt.nodes["Background"]; bg.inputs["Strength"].default_value = strength
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    wave = nt.nodes.new("ShaderNodeTexWave"); wave.wave_type = 'BANDS'; wave.bands_direction = 'Z'
+    wave.inputs["Scale"].default_value = scale; wave.inputs["Distortion"].default_value = distortion
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].position = 0.45; ramp.color_ramp.elements[0].color = (0.02, 0.02, 0.03, 1)
+    ramp.color_ramp.elements[1].position = 0.6; ramp.color_ramp.elements[1].color = (0.9, 0.9, 0.95, 1)
+    nt.links.new(tc.outputs["Generated"], wave.inputs["Vector"]); nt.links.new(wave.outputs["Fac"], ramp.inputs[0])
+    nt.links.new(ramp.outputs["Color"], bg.inputs["Color"])
+
+def spot(sc, loc, energy, col, size=0.25, tgt=Vector((0, 0, 1.4))):
+    """Small hard area light aimed at the item: sharp sparkles/highlights."""
+    l = bpy.data.lights.new("S", 'AREA'); l.energy = energy; l.size = size; l.color = col
+    o = link(sc, "S", l); o.location = loc
+    o.rotation_euler = (tgt - o.location).to_track_quat('-Z', 'Y').to_euler()
 
 def render(sc, out, save_blend=None, samples=128):
     sc.render.engine = 'CYCLES'; sc.cycles.samples = samples; sc.cycles.use_denoising = True
