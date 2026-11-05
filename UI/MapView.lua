@@ -152,7 +152,7 @@ end
 function map:EnableTooltips(frame)
    frame:EnableMouse(true)
    local since, shown = 0, nil
-   local turn = 0
+   local turn, glide = 0, 0
    frame:SetScript("OnUpdate", function(_, elapsed)
       turn = turn + elapsed
       if turn >= 0.05 and self.cells then  -- (the flipbooks: the Eye of Larn)
@@ -163,6 +163,12 @@ function map:EnableTooltips(frame)
                if uv then cell.icon:SetTexCoord(uv[1], uv[2], uv[3], uv[4]) end
             end
          end
+      end
+      -- a spell flying from tile to tile: the view is drawn again and again
+      local ends = self.overlays and self.overlays.ends
+      if ends and GetTime() < ends then
+         glide = glide + elapsed
+         if glide >= 0.02 then glide = 0 self:Draw() end
       end
       since = since + elapsed
       if since < 0.05 then return end
@@ -290,8 +296,22 @@ local function DrawTile(cell, x, y, ground)
 end
 
 -- C: the missile shown by godirect(). Call without arguments to remove it.
-function map:SetOverlay(x, y, glyph, color)
-   self.overlays = x and { { x = x, y = y, glyph = glyph, color = color } } or nil
+-- seconds: how long it takes to fly there from the tile before (dx, dy is the step), so that it glides.
+function map:SetOverlay(x, y, glyph, color, sprite, dx, dy, seconds)
+   if not x then self.overlays = nil return end
+   local glide = seconds and seconds > 0 and dx
+   local now = GetTime()
+   self.overlays = { { x = x, y = y, glyph = glyph, color = color, sprite = sprite, dx = dx, dy = dy,
+      fromX = glide and x - dx, fromY = glide and y - dy, t0 = now, seconds = glide and seconds },
+      ends = glide and now + seconds }
+end
+
+-- Where an overlay is now (it may be between two tiles).
+function map.EffectPosition(effect)
+   local seconds = effect.seconds
+   if not seconds then return effect.x, effect.y end
+   local p = min(1, (GetTime() - effect.t0) / seconds)
+   return effect.fromX + (effect.x - effect.fromX) * p, effect.fromY + (effect.y - effect.fromY) * p
 end
 
 -- Several at once: a list of { x, y, glyph, color } (the area spells).  Call without arguments to
@@ -407,10 +427,27 @@ function map:Draw()
    -- What spells do on the way, above the models (the effects of the 2.5D view).
    ns.map3d:BeginEffects(self.modelLayer:GetFrameLevel() + 30)
    for _, effect in ipairs(self.overlays or {}) do
-      local col, row = effect.x - camX + 1, effect.y - camY + 1
-      if self.cells[row] and self.cells[row][col] then
-         ns.map3d:Effect(self.offsetX + (col - 0.5) * TILE, self.offsetY + (row - 0.5) * TILE, TILE * 0.9,
-            effect.glyph, effect.color or V.MISSILE_COLOR)
+      local fx, fy = map.EffectPosition(effect)
+      local col, row = fx - camX + 1, fy - camY + 1
+      local cell = self.cells[floor(row + 0.5)]
+      if cell and cell[floor(col + 0.5)] then
+         local mx, my = self.offsetX + (col - 0.5) * TILE, self.offsetY + (row - 0.5) * TILE
+         if effect.beam then  -- (a tile of lightning, longer on the diagonals)
+            local progress = V.BeamProgress(effect, GetTime())
+            if progress then  -- (the half tile from the caster: the forward half, between the caster and the tile edge)
+               local k = effect.half and 0.25 or 0.5
+               local shift = effect.half and 0.25 or 0
+               ns.map3d:Sprite(effect.sprite, effect.dx, effect.dy, mx + effect.dx * TILE * shift, my + effect.dy * TILE * shift,
+                  TILE * 0.5, progress, TILE * k * math.sqrt(effect.dx ^ 2 + effect.dy ^ 2), effect.half and 0.5)
+            end
+         elseif effect.span then
+            local progress = (GetTime() - effect.t0) / effect.span
+            if progress >= 0 then ns.map3d:Sprite(effect.sprite, nil, nil, mx, my, TILE * 0.6, progress) end
+         elseif effect.sprite then
+            ns.map3d:Sprite(effect.sprite, effect.dx, effect.dy, mx, my, TILE * 0.6)
+         else
+            ns.map3d:Effect(mx, my, TILE * 0.9, effect.glyph, effect.color or V.MISSILE_COLOR)
+         end
       end
    end
    ns.map3d:EndEffects()

@@ -557,18 +557,61 @@ function ui:PickSpell(message, all)
 end
 
 -- C: the missile of godirect(): shows glyph on a tile for delay milliseconds.
-function ui:Missile(x, y, glyph, delay, color)
-   ns.map:SetOverlay(x, y, glyph, color)
+-- sprite: a picture of the spell instead of the glyph, flying in the direction dx, dy.
+function ui:Missile(x, y, glyph, delay, color, sprite, dx, dy)
+   ns.map:SetOverlay(x, y, glyph, color, sprite, dx, dy, delay / 1000)
    self:Refresh("map")
    self:Nap(delay)
    ns.map:SetOverlay()
    self:Refresh("map")
 end
 
+-- A step of a bolt of lightning: a tile more of it, in the direction dx, dy.  It stays until ui:BeamEnd.
+-- (The first step starts it from the caster: half a tile from the middle of the caster's.)
+function ui:BeamStep(x, y, dx, dy, sprite)
+   local beam, now = self.beam, GetTime()
+   if not beam then
+      beam = { ends = math.huge,
+         { x = x - dx, y = y - dy, dx = dx, dy = dy, sprite = sprite, beam = true, half = true, covered = true, t0 = now, index = 0 } }
+      self.beam = beam
+   end
+   beam[#beam].covered = true  -- (it is all there now: no half-shot tile behind the new one)
+   beam[#beam + 1] = { x = x, y = y, dx = dx, dy = dy, sprite = sprite, beam = true, t0 = now, index = #beam }
+   ns.map:SetOverlays(beam)
+   self:Refresh("map")
+   self:Nap(ns.Visuals.BEAM_STEP * 1000)
+end
+
+-- The bolt dies away from the caster's end.
+function ui:BeamEnd()
+   local beam = self.beam
+   if not beam then return end
+   self.beam = nil
+   local V, now = ns.Visuals, GetTime()
+   -- (a tile at a time, each starting when the one before is gone, so no piece is left on its own; slower than it
+   -- shot, but the sweep along it is 0.8 s at most)
+   local step = math.min(V.BEAM_DIE, 0.8 / #beam)
+   for i, tile in ipairs(beam) do tile.dieAt, tile.dieSpan = now + (i - 1) * step, step end
+   local seconds = #beam * step
+   beam.ends = now + seconds
+   self:Nap(seconds * 1000)
+   ns.map:SetOverlays()
+   self:Refresh("map")
+end
+
 -- The effect of an area spell: the glyph on all the tiles (a list of { x, y }) at once.
-function ui:Burst(tiles, glyph, delay, color)
-   local list = {}
-   for _, tile in ipairs(tiles) do list[#list + 1] = { x = tile[1], y = tile[2], glyph = glyph, color = color } end
+-- sprite: a picture that plays once over the delay instead of the glyph.
+-- stagger: seconds between one distance (tile[3], 1 and up) and the next, for a cone: the picture starts when its ring gets there.
+function ui:Burst(tiles, glyph, delay, color, sprite, stagger)
+   local list, now, far = {}, GetTime(), 1
+   for _, tile in ipairs(tiles) do
+      local distance = tile[3] or 1
+      far = math.max(far, distance)
+      list[#list + 1] = { x = tile[1], y = tile[2], glyph = glyph, color = color, sprite = sprite,
+         t0 = now + (distance - 1) * (stagger or 0), span = sprite and delay / 1000 }
+   end
+   if stagger then delay = delay + (far - 1) * stagger * 1000 end
+   list.ends = now + delay / 1000
    ns.map:SetOverlays(list)
    self:Refresh("map")
    self:Nap(delay)

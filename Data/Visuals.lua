@@ -171,16 +171,69 @@ local GEM_FILE = {
 local EYE_ANIM = GEMS .. "gem_22_eye_of_larn_anim.png"
 -- The Sphere of Annihilation (it is not an item you can pick up: no still picture, only the flipbook).
 local SPHERE_ANIM = "Interface\\AddOns\\WoWLarn\\Media\\Misc\\misc_80_sphere_of_annihilation_anim.png"
+-- The flying spells (Media/Spells): one loop of 32 frames, drawn flat on the floor.  They are made for a caster
+-- on the right, so they fly to the left (see map3d:Effect, which turns them to the way they go).
+local SPELLS = "Interface\\AddOns\\WoWLarn\\Media\\Spells\\"
+V.SPELL_SPRITE = {
+   [K.SP_MAGIC_MISSILE] = SPELLS .. "spell_02_magic_missile_anim.png",
+   [K.SP_FIREBALL] = SPELLS .. "spell_15_fireball_anim.png",
+   [K.SP_SONIC_SPEAR] = SPELLS .. "spell_06_sonic_spear_anim.png",
+}
+-- The area spells that fill a tile (flood, wall of fire): 32 frames that play once, from rising to fading out, over the
+-- time the spell takes (see V.FlipbookAt); drawn like a potion, facing the screen.
+V.SPELL_BURST = {
+   [K.SP_FLOOD] = SPELLS .. "spell_26_flood_anim.png",
+   [K.SP_MAGIC_FIRE] = SPELLS .. "spell_32_wall_of_fire_anim.png",
+   [K.SP_COLD] = SPELLS .. "spell_16_cone_of_cold_anim.png",  -- (each tile when the ring of the cone gets there)
+}
+-- The lightning: a tile of bolt for every square it goes through, turned to where it goes (see ui:BeamStep).
+-- Frames 0-7 the bolt shoots across the tile, 8-23 it crackles, 24-31 it dies away from the caster's end.
+V.SPELL_BEAM = { [K.SP_LIGHTNING] = SPELLS .. "spell_23_lightning_anim.png" }
+-- A tile shoots in the time to the next one (V.BEAM_STEP), and dies in the time before the next one starts to (at most
+-- V.BEAM_DIE): one tile at a time each way, so the bolt never has a gap.  (Shooting, a tile is there on the caster's
+-- side; dying, on the far side; the crackle frames all run edge to edge, so any two of them join.)
+V.BEAM_STEP, V.BEAM_DIE = 0.025, 0.08  -- seconds
+-- Which part of a lightning tile (as progress 0..1 for V.FlipbookAt) to show now, nil once it is gone.
+-- tile.half: the half tile from the caster to the first tile, the forward half of the picture: it only dies, in the
+-- frames where that half goes.  tile.covered: the bolt has gone on to the next tile, so this one is all there.
+function V.BeamProgress(tile, now)
+   local frame
+   if tile.dieAt and now >= tile.dieAt then
+      local k = (now - tile.dieAt) / tile.dieSpan
+      if k >= 1 then return nil end
+      frame = tile.half and 28 + math.floor(k * 4) or 24 + math.floor(k * 8)
+   else
+      local t = now - tile.t0
+      if t < V.BEAM_STEP and not tile.covered then
+         frame = math.floor(t / V.BEAM_STEP * 8)
+      else  -- (every tile at another point of the crackle, for variety)
+         frame = 8 + (math.floor(t * 20) + tile.index * 5) % 16
+      end
+   end
+   return (frame + 0.5) / 32
+end
 local FLIPBOOK = {  -- (15 frames a second)
    [EYE_ANIM] = { cols = 8, rows = 8, frames = 64, period = 64 / 15 },
    [SPHERE_ANIM] = { cols = 8, rows = 8, frames = 64, period = 64 / 15 },
 }
+FLIPBOOK[V.SPELL_BEAM[K.SP_LIGHTNING]] = { cols = 8, rows = 4, frames = 32, period = 1 }
+for _, path in pairs(V.SPELL_BURST) do FLIPBOOK[path] = { cols = 8, rows = 4, frames = 32, period = 1 } end
+for _, path in pairs(V.SPELL_SPRITE) do FLIPBOOK[path] = { cols = 8, rows = 4, frames = 32, period = 32 / 20 } end
 local flipUV = {}
 -- The part of the picture to show now (left, right, top, bottom), or nil if it is no flipbook.
 function V.Flipbook(path)
    local book = FLIPBOOK[path]
    if not book then return nil end
    local frame = math.floor(GetTime() % book.period / book.period * book.frames)
+   local col, row = frame % book.cols, math.floor(frame / book.cols)
+   local uv = flipUV
+   uv[1], uv[2], uv[3], uv[4] = col / book.cols, (col + 1) / book.cols, row / book.rows, (row + 1) / book.rows
+   return uv
+end
+-- The part of a flipbook that plays once to show at progress (0 to 1, the last frame stays after that).
+function V.FlipbookAt(path, progress)
+   local book = FLIPBOOK[path]
+   local frame = math.min(book.frames - 1, math.max(0, math.floor(progress * book.frames)))
    local col, row = frame % book.cols, math.floor(frame / book.cols)
    local uv = flipUV
    uv[1], uv[2], uv[3], uv[4] = col / book.cols, (col + 1) / book.cols, row / book.rows, (row + 1) / book.rows

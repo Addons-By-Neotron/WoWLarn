@@ -1,6 +1,6 @@
 """Flying spell effects animated -> Media/Spells: FRAMES renders each through one seamless loop (see build_spell.py),
 stitched into a flipbook spell_<id>_<slug>_anim.png (COLS x ROWS frames of 128px, left to right, top to bottom).
-Ids are the game's spell ids (SP_MAGIC_MISSILE, SP_FIREBALL).
+Ids are the game's spell ids (SP_MAGIC_MISSILE, SP_FIREBALL, SP_SONIC_SPEAR).
 Usage: [JOBS=4] python3 spells_anim.py [slug ...]   (no args = all)
 """
 import os, sys
@@ -13,6 +13,7 @@ FRAME = 150
 S = [
     (2, "magic_missile", dict(kind="missile", halo=0.5, halo_color=(0.3, 0.6, 1.0))),
     (15, "fireball", dict(kind="fireball", halo=0.45, halo_color=(1.0, 0.4, 0.05))),
+    (6, "sonic_spear", dict(kind="spear", halo=0.35, halo_color=(1.0, 0.7, 0.3))),
 ]
 want = set(sys.argv[1:])
 S = [v for v in S if not want or v[1] in want]

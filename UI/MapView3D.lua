@@ -520,6 +520,14 @@ function map3d:Create(view)
    -- the effects of spells go above everything, models too (a model is a frame of its own, and
    -- what is drawn in a layer is under it)
    self.effects = NewLayer(view, view:GetFrameLevel() + 1000)
+   -- the flipbook of a flying spell turns without the view being drawn again (in the flat view nothing draws it)
+   self.effects:SetScript("OnUpdate", function(layer)
+      local quad, uv = layer.spriteQuad, layer.spritePath and V.Flipbook(layer.spritePath)
+      if quad and uv and quad:IsShown() and quad.texture == layer.spritePath then
+         quad.l, quad.r, quad.t, quad.b = uv[1], uv[2], uv[3], uv[4]
+         quad:SetTexCoord(uv[1], uv[2], uv[3], uv[4])
+      end
+   end)
    self:Hide()
 end
 
@@ -561,6 +569,55 @@ function map3d:Effect(sx, sy, size, glyph, color)
    Quad(layer, { color[1], color[2], color[3], 0.5 }, sx - half, sy - half, sx + half, sy - half, sx + half, sy + half, sx - half, sy + half,
       "Interface\\AddOns\\WoWLarn\\Media\\Shadow")
    Glyph(layer, glyph, color, sx, sy + size * 0.4, size)
+end
+
+-- The axes of a flying spell picture, as a part of its size: the pictures are made for a caster on the right, so
+-- they fly to the left; the picture's right (ux, uy) points back where it came from, and its down (vx, vy) is that turned a
+-- quarter (x to the right, y down, like the map).
+local function SpriteAxes(dx, dy)
+   dx, dy = dx or 0, dy or 0  -- (none: not turned)
+   local n = math.sqrt(dx * dx + dy * dy)
+   if n == 0 then dx, dy, n = -1, 0, 1 end
+   local ux, uy = -dx / n, -dy / n
+   return ux, uy, -uy, ux
+end
+
+-- Puts the picture of a flying spell in the corners a, b, c, d (upper left, upper right, lower right, lower left).
+-- The flipbook runs by itself (see the OnUpdate of the effects layer).
+-- part: only that much of the picture, from its front (left) edge.
+local function SpriteQuad(layer, path, progress, ax, ay, bx, by, cx, cy, dx, dy, part)
+   -- (progress: a picture that plays once, set by the drawing again and again; else it loops by itself)
+   layer.spritePath = not progress and path or nil
+   local uv = progress and V.FlipbookAt(path, progress) or V.Flipbook(path)
+   if part then uv[2] = uv[1] + (uv[2] - uv[1]) * part end
+   Quad(layer, WHITE, ax, ay, bx, by, cx, cy, dx, dy, path, uv, 2)
+   layer.spriteQuad = layer.quads[layer.usedQuads]
+end
+
+-- A spell picture flat on the screen (the flat view), centered at sx, sy, half a side `half`, flying in the grid direction dx, dy.
+-- long: half its length along the way it goes, if it is not the same (the lightning); part: only that much of the
+-- picture, from its front edge (the half tile of lightning leaving the caster)
+function map3d:Sprite(path, dx, dy, sx, sy, half, progress, long, part)
+   long = long or half
+   local ux, uy, vx, vy = SpriteAxes(dx, dy)
+   local function P(a, b) return sx + ux * a * long + vx * b * half, sy + uy * a * long + vy * b * half end
+   local ax, ay = P(-1, -1)
+   local bx, by = P(1, -1)
+   local cx, cy = P(1, 1)
+   local dx2, dy2 = P(-1, 1)
+   SpriteQuad(self.effects, path, progress, ax, ay, bx, by, cx, cy, dx2, dy2, part)
+end
+
+-- The same in the 2.5D view: floating over tile tileX, tileY like the potions, flat to the screen, turned to
+-- where the tile it flies to is on the screen.
+function map3d:SpriteOnFloor(path, dx, dy, tileX, tileY)
+   local wx, wy, lift = (tileX - 0.5) * TILE, (tileY - 0.5) * TILE, PICTURE_LIFT * TILE
+   local sx, sy, scale = Project(wx, wy, lift)
+   local nx, ny = Project(wx + (dx or -1) * TILE, wy + (dy or 0) * TILE, lift)
+   if not sx or not nx then return end
+   map3d.bobbing = true  -- (it flips through its frames: the view is drawn again and again)
+   local half = TILE * 0.6 * scale
+   self:Sprite(path, nx - sx, ny - sy, sx, sy - half * 0.8, half)
 end
 
 function map3d:EndEffects()
@@ -1163,9 +1220,36 @@ function map3d:Draw()
    -- what spells do on the way: a glow and a glyph, above the models
    self:BeginEffects(view:GetFrameLevel() + 1 + ROWS * 4 + 8)  -- (above the floors, then the walls and models of every row)
    for _, effect in ipairs(ns.map.overlays or {}) do
-      local mx, my, scale = Project((effect.x - 0.5) * TILE, (effect.y - 0.5) * TILE, TILE * 0.35)
+      local fx, fy = ns.map.EffectPosition(effect)
+      local mx, my, scale = Project((fx - 0.5) * TILE, (fy - 0.5) * TILE, TILE * 0.35)
       if mx and effect.x >= 1 and effect.x <= MAXX and effect.y >= 1 and effect.y <= MAXY then
-         self:Effect(mx, my, TILE * 1.1 * scale, effect.glyph, effect.color or V.MISSILE_COLOR)
+         if effect.beam then  -- (a tile of lightning: from where it comes into the tile to where it goes out, on the
+            -- screen, so each ends where the next begins, whatever the perspective does to them)
+            local progress = V.BeamProgress(effect, GetTime())
+            local wx, wy, lift = (fx - 0.5) * TILE, (fy - 0.5) * TILE, PICTURE_LIFT * 1.5 * TILE
+            local hx, hy = effect.dx * TILE / 2, effect.dy * TILE / 2
+            local _, _, scale = Project(wx, wy, lift)
+            local ax, ay = Project(effect.half and wx or wx - hx, effect.half and wy or wy - hy, lift)  -- (the half tile: from the caster)
+            local bx, by = Project(wx + hx, wy + hy, lift)
+            if progress and ax and bx then
+               map3d.bobbing = true
+               local length = math.sqrt((bx - ax) ^ 2 + (by - ay) ^ 2)
+               self:Sprite(effect.sprite, bx - ax, by - ay, (ax + bx) / 2, (ay + by) / 2, TILE * 0.5 * scale, progress,
+                  length / 2, effect.half and 0.5)
+            end
+         elseif effect.span then  -- (plays once, standing over the tile)
+            local sx, sy, scale = Project((fx - 0.5) * TILE, (fy - 0.5) * TILE, PICTURE_LIFT * TILE)
+            local progress = (GetTime() - effect.t0) / effect.span
+            if sx and progress >= 0 then
+               map3d.bobbing = true
+               local half = TILE * 0.6 * scale
+               self:Sprite(effect.sprite, nil, nil, sx, sy - half * 0.6, half, progress)
+            end
+         elseif effect.sprite then
+            self:SpriteOnFloor(effect.sprite, effect.dx, effect.dy, fx, fy)
+         else
+            self:Effect(mx, my, TILE * 1.1 * scale, effect.glyph, effect.color or V.MISSILE_COLOR)
+         end
       end
    end
    self:EndEffects()

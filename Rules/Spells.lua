@@ -123,7 +123,7 @@ Spells.direct = Direct
 
 -- C: godirect(). A missile that keeps on going in the direction until its power is spent.
 -- cshow is the glyph drawn on the way, delay the milliseconds spent on each tile.
-local function GoDirect(spell, dam, str, delay, cshow)
+local function GoDirectRun(spell, dam, str, delay, cshow)
    local monster = G.monster
    local ui = ns.ui
    if spell < 1 or spell > SPNUM then return end
@@ -146,7 +146,12 @@ local function GoDirect(spell, dam, str, delay, cshow)
       end
       -- if not blind show the effect
       if c[K.BLINDCOUNT] == 0 then
-         ui:Missile(x, y, cshow, delay)
+         local beam = ns.Visuals.SPELL_BEAM[spell]
+         if beam then
+            ui:BeamStep(x, y, dx, dy, beam)
+         else
+            ui:Missile(x, y, cshow, delay, nil, ns.Visuals.SPELL_SPRITE[spell], dx, dy)
+         end
       end
       local m = mon[x][y]
       if m ~= 0 then  -- is there a monster there?
@@ -217,6 +222,11 @@ local function GoDirect(spell, dam, str, delay, cshow)
       dam = dam - (3 + idiv(c[K.HARDGAME], 2))
    end
 end
+
+local function GoDirect(...)
+   GoDirectRun(...)
+   ns.ui:BeamEnd()  -- (the bolt of lightning, if there was one, dies away)
+end
 Spells.godirect = GoDirect
 
 -- Not in the C, where the cone of cold is a missile: a cone that widens by half a tile for every
@@ -270,7 +280,10 @@ local function ConeDirect(spell, dam, str, delay, cshow)
    if not tx then return end
    local tiles = Spells.coneTiles(tx - G.playerx, ty - G.playery, CONE_LENGTH)
    local fade = 3 + idiv(c[K.HARDGAME], 2)
-   if c[K.BLINDCOUNT] == 0 then  -- (a ring of the cone at a time)
+   local sprite = ns.Visuals.SPELL_BURST[spell]
+   if sprite and c[K.BLINDCOUNT] == 0 then  -- (each tile plays its picture when the cone gets there)
+      ui:Burst(tiles, cshow, 900, nil, sprite, 0.08)
+   elseif c[K.BLINDCOUNT] == 0 then  -- (a ring of the cone at a time)
       local ring, distance = {}, 1
       for _, tile in ipairs(tiles) do
          if tile[3] ~= distance then
@@ -314,7 +327,8 @@ local function OmniDirect(spell, dam, str, glyph, color)
             end
          end
       end
-      ns.ui:Burst(tiles, glyph, 350, color)
+      local sprite = ns.Visuals.SPELL_BURST[spell]
+      ns.ui:Burst(tiles, glyph, sprite and 900 or 350, color, sprite)
    end
    for x = G.playerx - 1, G.playerx + 1 do
       for y = G.playery - 1, G.playery + 1 do
@@ -535,7 +549,7 @@ end
 
 CAST[K.SP_MAGIC_MISSILE] = function(clev)
    local damage = rnd((clev + 1) * 2) + clev + 3
-   GoDirect(K.SP_MAGIC_MISSILE, damage, clev >= 2 and L["Your missiles hit the %s."] or L["Your missile hit the %s."], 100, "+")
+   GoDirect(K.SP_MAGIC_MISSILE, damage, clev >= 2 and L["Your missiles hit the %s."] or L["Your missile hit the %s."], 40, "+")
 end
 
 CAST[K.SP_DEXTERITY] = function()

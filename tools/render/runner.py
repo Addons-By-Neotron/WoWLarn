@@ -55,7 +55,7 @@ def icon(src, dst, bbox, pad=60, glow=None, frame=None, align=None, fill=False, 
     fill="box": the same, to the box the build script wrote to src + ".box" (a door's opening, round leaves
     that do not fill it).  boost=(contrast, saturation, gamma): punch up a flat-looking render (gamma > 1
     darkens the mid tones)."""
-    im = Image.open(src); x0, y0, x1, y1 = bbox
+    im = Image.open(src); x0, y0, x1, y1 = bbox or (0, 0, im.width, im.height)   # None: an empty frame
     s = max(x1-x0, y1-y0) + pad; cx, cy = (x0+x1)//2, (y0+y1)//2
     if frame:
         s = frame; cx, cy = im.width//2, im.height//2
