@@ -267,7 +267,9 @@ function Game.Run()
    G.sex = UnitSex("player") == 3 and 0 or 1  -- C: 1 is a man, 0 a woman
    G.taxes = ns.Scores.taxes()  -- what the LRS wants from an earlier win
 
+   local resumed = false
    if ns.Save.load() then
+      resumed = true
       ui:Refresh("all")
       ui:Log("system", L["Welcome back.  Your game goes on where you left it."])
    else
@@ -297,10 +299,12 @@ function Game.Run()
          -- (a door that stays shut sends the player back, and the tile it came from counts)
          G.lookedHere = G.playerx .. "," .. G.playery .. "," .. G.level
       end
-      if not G.hitflag then
+      -- (a game that was just loaded waits for the player: the monsters had their turn before it was saved)
+      if not G.hitflag and not resumed then
          if c[K.HASTEMONST] ~= 0 then Monster.movemonst() end
          Monster.movemonst()
       end
+      resumed = false
       if G.dead then break end
       if not G.viewflag then
          Display.showcell(G.playerx, G.playery)

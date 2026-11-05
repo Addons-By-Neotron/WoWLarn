@@ -69,6 +69,7 @@ local function Sign(value) return value > 0 and 1 or value < 0 and -1 or 0 end
 local MODEL_ASPECT = 1.7  -- how much taller than wide a model is drawn
 local SETTLE = 3  -- seconds a model gets its camera scale set again after loading
 local PLAYER_ROOM = 2  -- how much larger a frame the player model gets, to the sides and up: a shapeshifted druid is wider than a tile
+local FEET_DOWN = 0.13  -- of the width of a model: how far its feet are brought down the screen (towards the viewer), off the point they stood on
 local MODEL_ROOM = 1  -- (see Model; above 1 the models are scaled down in larger frames, which proved unreliable)
 local ANIM = { stand = 0, death = 1, walk = 4, wound = 14, attack = 16 }  -- model animations
 local TWEEN = 0.16  -- seconds a step takes
@@ -222,6 +223,56 @@ end
 -- a display, width pixels wide and about twice as tall.
 -- owner: a table that keeps its own frame (a dying monster), so the shifting of the pool of
 -- frames never sets another look on it, which would restart its animation.
+-- Raises the camera of a model so that it looks down on it as far as the camera of the view looks down on
+-- the floor (by map3d.tilt: 1 as far, 0 not at all).  It is the camera that moves, not the model: a model
+-- turned about its own axis would lean a different way for each way it faces.  The camera set up by the
+-- client (fitted to the model, and as far back as the scale says) is made a custom one, which can be moved,
+-- and kept (model.cam: where it was, the target, and the scale it was for); it is turned about the target at
+-- the same distance.  A model that is loaded again starts over (OnModelLoaded).
+local function SetTilt(model, scale)
+   model.tiltDone, model.tiltAngle = map3d.tilt, ns.mod.db.profile.cameraAngle
+   if not (model.GetCameraPosition and model.GetCameraTarget and model.SetCameraPosition and model.MakeCurrentCameraCustom) then return end
+   local cam = model.cam
+   if not cam then
+      if map3d.tilt == 0 then return end  -- (nothing to change, and nothing kept)
+      model:MakeCurrentCameraCustom()
+      local cx, cy, cz = model:GetCameraPosition()
+      local tx, ty, tz = model:GetCameraTarget()
+      if not (cx and tx) then return end
+      cam = { cx, cy, cz, tx, ty, tz, scale }
+      model.cam = cam
+   end
+   local ratio = scale / cam[7]  -- (another scale since: the camera is further or nearer to the target)
+   local tx, ty, tz = cam[4], cam[5], cam[6]
+   local vx, vy, vz = (cam[1] - tx) * ratio, (cam[2] - ty) * ratio, (cam[3] - tz) * ratio
+   local flat = math.sqrt(vx * vx + vy * vy)
+   local r = math.sqrt(flat * flat + vz * vz)
+   if flat < 1e-6 or r < 1e-6 then return end
+   local hx, hy = vx / flat, vy / flat  -- (the way from the target to the camera, level)
+   local before = math.atan2(vz, flat)
+   local elevation = before + math.rad(ns.mod.db.profile.cameraAngle or 55) * map3d.tilt
+   elevation = math.min(elevation, math.rad(89))
+   local sin0, cos0, sinE, cosE = math.sin(before), math.cos(before), math.sin(elevation), math.cos(elevation)
+   -- The target is the middle of the model, and a model is as tall as it is: seen from above its feet come up
+   -- towards the middle, further for a tall one.  So the target is moved along the up of the camera until
+   -- the feet (the origin of the model) are where they were on the screen, and each creature stands on its tile.
+   local shift = -((sin0 - sinE) * (tx * hx + ty * hy) + (cosE - cos0) * tz)
+   tx, ty, tz = tx - shift * sinE * hx, ty - shift * sinE * hy, tz + shift * cosE
+   model:SetCameraTarget(tx, ty, tz)
+   model:SetCameraPosition(tx + r * cosE * hx, ty + r * cosE * hy, tz + r * sinE)
+end
+
+-- The camera of a model: as far back as scale says (while it settles), then raised (see SetTilt).
+local function ApplyCamera(model, scale, settling)
+   if settling or not model.cam and not model.settled then
+      CameraScale(model, scale)
+   end
+   if not settling then
+      model.settled = true
+      SetTilt(model, scale)
+   end
+end
+
 local function Model(layer, look, x, y, width, facing, anim, owner)
    local frame = owner and owner.frame
    if not frame and not owner then
@@ -244,11 +295,17 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
          self:SetFacing(frame.facing or FACING)
          if frame.anim and self.SetAnimation then self:SetAnimation(frame.anim) end  -- (loading resets it)
          if MODEL_ROOM ~= 1 and self.SetModelScale then self:SetModelScale(1 / MODEL_ROOM) end  -- (and this)
-         CameraScale(self, frame.scale or 1)  -- (and this)
+         self.cam, self.settled = nil, false  -- (the camera starts over)
+         ApplyCamera(self, frame.scale or 1, true)  -- (and this)
          self.settleUntil = GetTime() + SETTLE  -- (the client sets up the camera of a model after it has loaded)
       end)
       frame.model:SetScript("OnUpdate", function(self)
-         if self.settleUntil and self.settleUntil > GetTime() then CameraScale(self, frame.scale or 1) end
+         if self.settleUntil and self.settleUntil > GetTime() then
+            ApplyCamera(self, frame.scale or 1, true)
+         elseif self.tiltDone ~= map3d.tilt or self.tiltAngle ~= ns.mod.db.profile.cameraAngle then
+            self.tiltAngle = ns.mod.db.profile.cameraAngle
+            ApplyCamera(self, frame.scale or 1)  -- (the setting or the angle of the view changed)
+         end
       end)
       if owner then
          owner.frame = frame
@@ -301,7 +358,7 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    local k = MODEL_ROOM
    local room = not Own(look) and V.Room(look) or PLAYER_ROOM
    local own = look == "player" and V.PlayerScale() or 1  -- (a short race: the model is smaller, so the feet are brought down again)
-   y = y + (not Own(look) and V.Lower(look) or (1 - 1 / own) / 2 * MODEL_ASPECT * 0.9) * width
+   y = y + (not Own(look) and V.Lower(look) or (1 - 1 / own) / 2 * MODEL_ASPECT * 0.9) * width + FEET_DOWN * width
    frame:ClearAllPoints()
    frame:SetPoint("CENTER", layer, "TOPLEFT", x, -(y - width * MODEL_ASPECT / 2))
    frame:SetSize(width * k * room, width * k * room * MODEL_ASPECT)
@@ -311,12 +368,17 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
    local scale = not Own(look) and V.Scale(look) * V.Room(look) or own * PLAYER_ROOM  -- (a larger frame, the camera further back)
    if frame.scale ~= scale then
       frame.scale = scale
-      CameraScale(frame.model, scale)
+      if frame.model.cam then
+         ApplyCamera(frame.model, scale)
+      else
+         CameraScale(frame.model, scale)
+      end
       frame.model.settleUntil = GetTime() + SETTLE
    end
    frame:Show()
 end
 
+map3d.tilt = 0  -- how much of the camera angle the models lean by (1: as much as the camera looks down; debug: /larn tilt)
 map3d.Model = Model  -- (the monster zoo draws with it)
 map3d.MODEL_ASPECT = MODEL_ASPECT
 map3d.Begin, map3d.Finish = Begin, Finish
@@ -398,6 +460,8 @@ local function PictureQuad(layer, texture, tileX, tileY, size, ahead, still, ax,
    -- slide over the floor when the angle is changed.
    local sx, sy, scale = Project(wx, wy, (still and 0 or PICTURE_LIFT) * TILE)
    if not sx then return end
+   local uv = V.Flipbook(texture)
+   if uv then map3d.bobbing = true end  -- (a flipbook turns: the view is drawn again and again)
    local half = size * TILE * scale / 2
    sy = sy - half - bob * TILE * scale  -- (on the screen, not in the world: straight above, a height would hardly show)
    -- (no shadow: the soft one under a floating picture lay over its lower part; and the picture
@@ -407,7 +471,7 @@ local function PictureQuad(layer, texture, tileX, tileY, size, ahead, still, ax,
    sx = sx + (0.5 - (ax or 0.5)) * 2 * half
    sy = sy + (ay or 0) * 2 * half
    surface = "picture"
-   Quad(layer, WHITE, sx - half, sy - half, sx + half, sy - half, sx + half, sy + half, sx - half, sy + half, texture, nil, 2)
+   Quad(layer, WHITE, sx - half, sy - half, sx + half, sy - half, sx + half, sy + half, sx - half, sy + half, texture, uv, 2)
 end
 
 -- A tile with a creature (a display, or "player") on it, as the map draws them, for the
@@ -471,7 +535,7 @@ function map3d:EnsureLayers(rows)
       }
       local actor = self.layers[row][ACTOR]
       actor.models, actor.shared = self.sharedLayer.models, true
-   end
+      end
 end
 
 -- Zoomed out, more tiles fit in the view.
@@ -1024,10 +1088,35 @@ function map3d:StackRows(roundY)
          if kind == FLOOR then
             level = base + (rank - 1)
          else
-            level = base + ROWS + (rank - 1) * 3 + (kind == ACTOR and 1 or 0)  -- (the models of a row are a level above it)
+            -- (the models of a row are a level above its walls; and they go by the row, not the rank: a
+            -- creature that stands further down the view is nearer to the viewer and hides one behind it,
+            -- also past the spot under the camera, where the walls are stacked the other way round)
+            level = base + ROWS + ((kind == ACTOR and row or rank) - 1) * 3 + (kind == ACTOR and 1 or 0)
          end
          if layer:GetFrameLevel() ~= level then layer:SetFrameLevel(level) end
       end
+   end
+end
+
+-- /larn mapdebug: the model frames that are shown, and the levels they are drawn at (higher is in front).
+function map3d:DebugModels()
+   print(format("models: player at %d,%d, %d rows (%d far), player row %d", G.playerx, G.playery, ROWS, FAR_ROWS, FAR_ROWS + 1))
+   for _, frame in ipairs(self.sharedLayer.models) do
+      if frame:IsShown() then
+         print(format("  look %s level %s (frame %d, model %d) centre y %s", tostring(frame.look), tostring(frame.level),
+            frame:GetFrameLevel(), frame.model:GetFrameLevel(), tostring(frame:GetCenter() and select(2, frame:GetCenter()))))
+         local m = frame.model
+         local cx, cy, cz = m:GetCameraPosition()
+         local tx, ty, tz = m:GetCameraTarget()
+         local cam = m.cam
+         print(format("     frame %.0fx%.0f scale %s  camera now %.2f %.2f %.2f target %.2f %.2f %.2f  kept %s", frame:GetWidth(), frame:GetHeight(),
+            tostring(frame.scale), cx or 0, cy or 0, cz or 0, tx or 0, ty or 0, tz or 0,
+            cam and format("%.2f %.2f %.2f target %.2f %.2f %.2f scale %s", cam[1], cam[2], cam[3], cam[4], cam[5], cam[6], tostring(cam[7])) or "no"))
+      end
+   end
+   for row = FAR_ROWS, FAR_ROWS + 3 do
+      local layers = self.layers[row]
+      if layers then print(format("  row %d: walls %d actors %d", row, layers[WALL]:GetFrameLevel(), layers[ACTOR]:GetFrameLevel())) end
    end
 end
 

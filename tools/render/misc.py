@@ -7,7 +7,21 @@ import glyphs, runner
 M = [
     (0, "spell_tome", dict(script="build_tome.py", sigil_seed=3, border=True)),
 ]
-# thrones: see thrones.py (Media/Throne)
+# carried trinkets (build_item.py); ids are the game's object ids
+I = [
+    (3, "orb_of_enlightenment", dict(kind="enlightenment", halo=0.4, halo_color=(1.0, 0.9, 0.6))),
+    (45, "amulet", dict(kind="amulet", halo=0.25, halo_color=(0.2, 0.4, 1.0))),
+    (46, "orb_of_dragon_slaying", dict(kind="dragon_orb", halo=0.4, halo_color=(1.0, 0.35, 0.05))),
+    (47, "spirit_scarab", dict(kind="scarab", halo=0.25, halo_color=(0.2, 0.9, 1.0))),
+    (48, "cube_of_undead_control", dict(kind="cube", halo=0.35, halo_color=(0.2, 1.0, 0.4))),
+    (49, "device_of_theft_prevention", dict(kind="lock", halo=0.25, halo_color=(0.2, 0.5, 1.0))),
+    (83, "fortune_cookie", dict(kind="cookie")),
+    (86, "hand_of_fear", dict(kind="hand", halo=0.3, halo_color=(0.5, 0.1, 0.8))),
+    (87, "sphere_talisman", dict(kind="talisman", halo=0.35, halo_color=(0.55, 0.2, 1.0))),
+    (88, "wand_of_wonder", dict(kind="wand", halo=0.35, halo_color=(1.0, 0.85, 1.0))),
+]
+M += [(i, slug, dict(p, script="build_item.py")) for i, slug, p in I]
+# thrones: see thrones.py (Media/Throne); the chest and the brass lamp: objects.py (Media/Objects)
 
 def prepare(name, i, p, script):
     script = p.pop("script", script)

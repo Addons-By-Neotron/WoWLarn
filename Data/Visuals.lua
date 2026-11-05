@@ -163,7 +163,30 @@ local GEMS = "Interface\\AddOns\\WoWLarn\\Media\\Gems\\"
 local GEM_FILE = {
    [K.ODIAMOND] = "gem_50_diamond_icon.png", [K.ORUBY] = "gem_51_ruby_icon.png",
    [K.OEMERALD] = "gem_52_emerald_icon.png", [K.OSAPPHIRE] = "gem_53_sapphire_icon.png",
+   [K.OLARNEYE] = "gem_22_eye_of_larn_icon.png",
 }
+
+-- Pictures that are a flipbook: frames in a grid (columns left to right, rows top to bottom) in one file,
+-- shown one after the other, a turn in `period` seconds.  The Eye of Larn turns its core.
+local EYE_ANIM = GEMS .. "gem_22_eye_of_larn_anim.png"
+-- The Sphere of Annihilation (it is not an item you can pick up: no still picture, only the flipbook).
+local SPHERE_ANIM = "Interface\\AddOns\\WoWLarn\\Media\\Misc\\misc_80_sphere_of_annihilation_anim.png"
+local FLIPBOOK = {  -- (15 frames a second)
+   [EYE_ANIM] = { cols = 8, rows = 8, frames = 64, period = 64 / 15 },
+   [SPHERE_ANIM] = { cols = 8, rows = 8, frames = 64, period = 64 / 15 },
+}
+local flipUV = {}
+-- The part of the picture to show now (left, right, top, bottom), or nil if it is no flipbook.
+function V.Flipbook(path)
+   local book = FLIPBOOK[path]
+   if not book then return nil end
+   local frame = math.floor(GetTime() % book.period / book.period * book.frames)
+   local col, row = frame % book.cols, math.floor(frame / book.cols)
+   local uv = flipUV
+   uv[1], uv[2], uv[3], uv[4] = col / book.cols, (col + 1) / book.cols, row / book.rows, (row + 1) / book.rows
+   return uv
+end
+function V.IsFlipbook(path) return FLIPBOOK[path] ~= nil end
 
 -- The pictures of the rings (Media/Rings).  Rings are never unidentified in Larn, so each shows
 -- its own; the generic one is for a ring that has no picture.
@@ -179,7 +202,23 @@ end
 
 -- Other objects with a picture of their own (Media/Misc).
 local MISC = "Interface\\AddOns\\WoWLarn\\Media\\Misc\\"
-local MISC_FILE = { [K.OBOOK] = "misc_00_spell_tome_icon.png" }  -- the spell book
+local MISC_FILE = {
+   [K.OBOOK] = "misc_00_spell_tome_icon.png",  -- the spell book
+   [K.OORB] = "misc_03_orb_of_enlightenment_icon.png", [K.OAMULET] = "misc_45_amulet_icon.png", [K.OORBOFDRAGON] = "misc_46_orb_of_dragon_slaying_icon.png",
+   [K.OSPIRITSCARAB] = "misc_47_spirit_scarab_icon.png", [K.OCUBEofUNDEAD] = "misc_48_cube_of_undead_control_icon.png",
+   [K.OCOOKIE] = "misc_83_fortune_cookie_icon.png", [K.OHANDofFEAR] = "misc_86_hand_of_fear_icon.png",
+   [K.ONOTHEFT] = "misc_49_device_of_theft_prevention_icon.png",
+   [K.OSPHTALISMAN] = "misc_87_sphere_talisman_icon.png", [K.OWWAND] = "misc_88_wand_of_wonder_icon.png",
+}
+
+-- The buildings of the town and the dungeon's bank branch (Media/Buildings).  The town has no 3D view, so the
+-- ones there have a single picture; the bank branch (OBANK2, see ANGLED) has one for each camera angle.
+local BUILDINGS = "Interface\\AddOns\\WoWLarn\\Media\\Buildings\\"
+local BUILDING_FILE = {
+   [K.OENTRANCE] = "building_54_entrance", [K.OHOME] = "building_69_home", [K.OBANK] = "building_16_bank",
+   [K.ODNDSTORE] = "building_12_thrift_shoppe", [K.OSCHOOL] = "building_10_school",
+   [K.OTRADEPOST] = "building_77_trading_post", [K.OLRS] = "building_82_lrs",
+}
 
 -- Doors (Media/Doors): three looks, wood, stone and iron, closed and open.  Each door keeps its own,
 -- picked by a hash of the level and the place of the door.
@@ -212,6 +251,10 @@ local ANGLED = {
    [K.OELEVATORUP] = "Elevator\\elevator_06_elevator_up", [K.OELEVATORDOWN] = "Elevator\\elevator_14_elevator_down",
    -- volcano shafts
    [K.OVOLDOWN] = "Volcano\\volcano_55_volcano_down", [K.OVOLUP] = "Volcano\\volcano_56_volcano_up",
+   -- the chest and the brass lamp
+   [K.OCHEST] = "Objects\\object_44_chest", [K.OBRASSLAMP] = "Objects\\object_85_brass_lamp",
+   -- the bank branch in the dungeon
+   [K.OBANK2] = "Buildings\\building_15_bank2",
    -- the magic mirror
    [K.OMIRROR] = "Mirror\\mirror_11_mirror",
    -- pits and trap doors (the invisible trap door looks the same once it shows)
@@ -236,12 +279,28 @@ local CENTERED = { [K.OSTAIRSDOWN] = true, [K.OSTAIRSUP] = true, [K.OPIT] = true
    [K.OELEVATORUP] = true, [K.OELEVATORDOWN] = true,
    [K.OVOLUP] = true, [K.OVOLDOWN] = true }  -- (the stairs up: by the middle of their round base)
 
+local function AnchorKey(id, angle)
+   if BUILDING_FILE[id] then return "Buildings\\" .. BUILDING_FILE[id] end
+   return ANGLED[id] and AngledName(id, angle)
+end
+
+-- Objects that fill their whole tile in the 2D map: the picture is enlarged until what it shows
+-- (the visible part, see Data/Anchors.lua) is as big as the tile, see V.Fill.
+V.FILL = { [K.OVOLUP] = true, [K.OVOLDOWN] = true, [K.OBANK2] = true }
+for id in pairs(BUILDING_FILE) do V.FILL[id] = true end
+-- The factor to enlarge the picture of an object by to fill a tile, or nil.
+function V.Fill(id)
+   if not V.FILL[id] then return nil end
+   local anchor = ns.Anchors and ns.Anchors[AnchorKey(id)]
+   if anchor and anchor[3] then return 1 / math.max(anchor[3], anchor[4]) end
+end
+
 -- Where the middle of what the picture of this object shows is in its frame: its distance from
 -- the left as a part of the width, and from the bottom as a part of the height.  Nil for an
 -- object that is placed by the bottom edge.
 function V.Anchor(id, angle)
-   if not CENTERED[id] then return nil end
-   local anchor = ns.Anchors and ns.Anchors[AngledName(id, angle)]
+   if not CENTERED[id] and not (not angle and V.FILL[id]) then return nil end  -- (V.FILL: in the 2D map only)
+   local anchor = ns.Anchors and ns.Anchors[AnchorKey(id, angle)]
    if anchor then return anchor[1], anchor[2] end
 end
 
@@ -254,7 +313,10 @@ V.STANDING = {
    [K.OGOLDPILE] = 0.75, [K.ODGOLD] = 0.75, [K.OMAXGOLD] = 0.75, [K.OKGOLD] = 0.75,  -- (lie on the floor)
    [K.OFOUNTAIN] = 1.2, [K.ODEADFOUNTAIN] = 1.2,  -- (about 0.83 of the frame wide)
    [K.OELEVATORUP] = 1.8, [K.OELEVATORDOWN] = 1.9,  -- (about 0.5 of the frame wide)
-   [K.OVOLUP] = 1.2, [K.OVOLDOWN] = 1.5,  -- (0.83 and 0.65 of the frame wide)
+   [K.OVOLUP] = 1.35, [K.OVOLDOWN] = 1.15,  -- (0.73 and 0.84 of the frame wide)
+   [K.OANNIHILATION] = 1.1,  -- (fills about 0.6 of its frame; it turns in place, so it does not bob)
+   [K.OBANK2] = 1.3,  -- (about 0.77 of the frame wide)
+   [K.OCHEST] = 1.0, [K.OBRASSLAMP] = 0.9,  -- (about 0.85 of the frame wide)
    [K.OMIRROR] = 1.45,  -- (a tall thing like the thrones)
    [K.OPIT] = 1.4, [K.OTRAPDOOR] = 1.6, [K.OIVTRAPDOOR] = 1.6,  -- (holes in the floor: 0.7 and 0.55 of the frame wide)
 }
@@ -309,6 +371,7 @@ function V.ObjectIcon(id, arg)
    if id == K.OSCROLL then return V.ScrollPicture(arg) end
    if GEM_FILE[id] then return GEMS .. GEM_FILE[id] end
    if MISC_FILE[id] then return MISC .. MISC_FILE[id] end
+   if BUILDING_FILE[id] then return BUILDINGS .. BUILDING_FILE[id] .. "_icon.png" end
    if ANGLED[id] then return AngledPicture(id) end
    if RING_FILE[id] then return V.RingPicture(id) end
    local visual = V.object[id]
@@ -324,8 +387,11 @@ function V.ObjectPicture(id, arg, opened, angle, x, y)
    if ANGLED[id] then return AngledPicture(id, angle), true end
    if id == K.OPOTION then return V.PotionPicture(arg), true end
    if id == K.OSCROLL then return V.ScrollPicture(arg, opened), true end
+   if id == K.OLARNEYE then return EYE_ANIM, true end
+   if id == K.OANNIHILATION then return SPHERE_ANIM, true end
    if GEM_FILE[id] then return GEMS .. GEM_FILE[id], true end
    if MISC_FILE[id] then return MISC .. MISC_FILE[id], true end
+   if BUILDING_FILE[id] then return BUILDINGS .. BUILDING_FILE[id] .. "_icon.png", true end
    if RING_FILE[id] then return V.RingPicture(id), true end
    local visual = V.object[id]
    if visual and visual.image then return IMAGES .. visual.image .. ".png", true end

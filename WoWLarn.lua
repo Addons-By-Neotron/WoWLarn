@@ -167,6 +167,7 @@ function mod:PrintHelp()
    self:info("/larn models  - the model viewer (choose the look of the monsters)")
    self:info("/larn zoo  - all the monsters in one place")
    self:info("/larn mapdebug  - what the map is drawing")
+   self:info("/larn tilt <factor>  - look down on the creatures by a part of the camera angle (0 none, 1 full)")
    self:info("/larn tex floor|wall|lava <id|+|->  - try textures for this level")
 --@end-debug@
 end
@@ -207,6 +208,11 @@ function mod:ChatCommand(input)
    elseif cmd == "surfaces" then  -- the 3D view with each kind of surface in a solid colour of its own
       ns.map3d.surfaces = not ns.map3d.surfaces
       self:Print("surface colours " .. (ns.map3d.surfaces and "on" or "off"))
+      ns.ui:RefreshNow("map")
+   elseif cmd:match("^tilt") then  -- how far the creatures are seen from above: a part of the camera angle (negative: from below)
+      local factor = tonumber(cmd:match("^tilt%s*(%S*)"))
+      if factor then ns.map3d.tilt = factor end
+      self:Print("model tilt: " .. ns.map3d.tilt .. " of the camera angle")
       ns.ui:RefreshNow("map")
    elseif cmd == "mapdebug" then
       ns.map:Debug()

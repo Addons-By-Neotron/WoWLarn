@@ -2,10 +2,10 @@
 blender -b -P build_volcano.py -- out.png '{"down":false, "elev":45, ...}'
 Natural black basalt (glowing lava cracks optional); a rough rock walkway instead of steps: a ledge along the wall of
 the shaft or cave.
-down: a ragged crater in the floor; the walkway winds down round a shaft that leans away from the viewer and
-      fades to black (the ground is a shadow catcher with the same hole in it).
-up:   a lumpy rock floor; the walkway climbs round the inside of a rough rock wall round the back half,
-      both fading into the dark above.
+down: the volcano as seen in the open world (the way in): a ragged basalt cone with a lava pool in its crater and
+      lava running down its sides.
+up:   the way out, inside: a lumpy rock floor; the walkway climbs straight from the near left to the far right
+      against a rough rock wall, both fading into the dark above.
 """
 import bpy, bmesh, math, os, random, sys, json
 from mathutils import Matrix, Vector
@@ -14,7 +14,7 @@ from render_common import link, rig, render, rock_material, studio_world, spot
 
 args = sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else []
 OUT = args[0] if args else "volcano.png"
-P = dict(down=False, basalt=(0.035, 0.032, 0.032), rock_scale=0.7, lava=(1.0, 0.3, 0.04), cracks=0, elev=90, seed=5,
+P = dict(down=False, basalt=(0.012, 0.010, 0.010), rock_scale=0.7, lava=(0.9, 0.08, 0.01), cracks=0, elev=90, seed=5,
          save_blend=False)
 if len(args) > 1:
     P.update(json.loads(args[1]))
@@ -40,8 +40,9 @@ def rock(name, loc, size, material):
 
 # ---- basalt, with glowing cracks if cracks > 0 (the edges of a voronoi pattern glow where a noise mask lets them);
 # it fades to black away from the floor (down the shaft / up into the dark)
-basalt, btint = rock_material("Basalt", P["basalt"], P["rock_scale"], fade=(0.0, -1.2) if P["down"] else (0.5, 2.2))
+basalt, btint = rock_material("Basalt", P["basalt"], P["rock_scale"], fade=None if P["down"] else (0.9, 2.6))
 nt = basalt.node_tree; N = nt.nodes.new; Lk = nt.links.new; bs = nt.nodes["Principled BSDF"]
+bs.inputs["Specular IOR Level"].default_value = 0.2   # little grey sheen: lava rock is dark
 tc = N("ShaderNodeTexCoord")
 vo = N("ShaderNodeTexVoronoi"); vo.feature = 'DISTANCE_TO_EDGE'; vo.inputs["Scale"].default_value = 4
 Lk(tc.outputs["Object"], vo.inputs["Vector"])
@@ -80,10 +81,33 @@ def walkway(path, width, floor=None, thick=0.35):
         secs.append([bm.verts.new(q) for q in [outer] + top + face])
     for s0, s1 in zip(secs, secs[1:]):
         for k in range(8):
-            bm.faces.new((s0[k], s1[k], s1[k+1], s0[k+1]))
+            bm.faces.new((s0[k], s1[k], s1[k+1], s0[k+1])).material_index = 1 if k >= 5 else 0   # 1: the rock face
         bm.faces.new((s0[8], s1[8], s1[0], s0[0]))   # underside
     for s in (secs[0], secs[-1]):
         bm.faces.new(s)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return bm
+
+def spline_pts(pts, n=4):
+    """Catmull-Rom through the points, n steps per span."""
+    ext = [2*pts[0] - pts[1]] + pts + [2*pts[-1] - pts[-2]]; out = []
+    for i in range(1, len(ext) - 2):
+        p0, p1, p2, p3 = ext[i-1:i+3]
+        for k in range(n):
+            t = k/n
+            out.append(0.5*((2*p1) + (-p0 + p2)*t + (2*p0 - 5*p1 + 4*p2 - p3)*t*t + (-p0 + 3*p1 - 3*p2 + p3)*t**3))
+    out.append(pts[-1]); return out
+
+def ribbon(path, widths):
+    """A flat strip along path (lying on a slope), widths per point; a slight crown so it catches the light."""
+    bm = bmesh.new(); rows = []
+    for i, p in enumerate(path):
+        t = path[min(i+1, len(path)-1)] - path[max(i-1, 0)]; up = Vector((p.x, p.y, 0)).normalized()
+        side = t.cross(up).normalized(); w = widths[i]/2
+        rows.append([bm.verts.new(p + side*w*s_ + up*(0.01*(1 - abs(s_)))) for s_ in (-1, -0.5, 0, 0.5, 1)])
+    for r0, r1 in zip(rows, rows[1:]):
+        for k in range(4):
+            bm.faces.new((r0[k], r0[k+1], r1[k+1], r1[k]))
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     return bm
 
@@ -97,48 +121,71 @@ def smooth(vals):
 
 ground = bmesh.new()
 if P["down"]:
-    # ---- crater: a raised, broken lip running down into rough walls that lean away as they go down
-    bm = bmesh.new()
-    def ring(rs, zs, off=Vector()):
-        return [bm.verts.new((off.x + r*math.cos(a), off.y + r*math.sin(a), z)) for a, r, z in zip(ang, rs, zs)]
-    rh = [ragged(a, 0.85) + rnd.uniform(-0.05, 0.05) for a in ang]
-    width = smooth([rnd.uniform(0.25, 0.5) for _ in ang])
-    lip = []
-    for t, hi in ((1.0, 0.0), (0.7, 0.04), (0.4, 0.1), (0.15, 0.14), (0.0, 0.09)):   # outside in
-        lip.append(ring([r + t*w + (rnd.uniform(-0.05, 0.05) if t else 0) for r, w in zip(rh, width)],
-                        [rnd.uniform(-0.01, 0.005) if not hi else rnd.uniform(0.3, 1.0)*hi for _ in ang]))
-    walls = [lip[-1]]
-    for d in range(1, 14):
-        walls.append(ring([r*(1 - 0.012*d) + rnd.uniform(-0.04, 0.04) for r in rh], [-0.16*d + rnd.uniform(-0.03, 0.03) for _ in ang],
-                          Vector((0, 0.3*0.16*d, 0))))
-    for out, inn in zip(lip, lip[1:]):             # facing up
+    # ---- the volcano as seen in the open world: a ragged basalt cone (gullies down its sides, its foot spreading
+    # out), a crater at the top holding a pool of lava, a few lava runs spilling down the slopes
+    H, R0, RC = 1.35, 1.45, 0.32
+    gul = [(k, rnd.uniform(0.02, 0.05), rnd.uniform(0, math.tau)) for k in (7, 11, 17)]
+    def cone_r(a, t):                              # t: 0 at the foot, 1 at the rim
+        r = RC + (R0 - RC)*(1 - t)**1.8
+        return ragged(a, r)*(1 + sum(amp*math.sin(k*a + ph + 2*t) for k, amp, ph in gul))
+    bm = bmesh.new(); M = 20; rows = []
+    for i in range(M + 1):
+        t = i/M
+        rows.append([bm.verts.new((cone_r(a, t)*math.cos(a), cone_r(a, t)*math.sin(a),
+                                   H*t + (rnd.uniform(-0.02, 0.02) if 0 < i < M else 0) - (0.01 if i == 0 else 0))) for a in ang])
+    rimz = [H + rnd.uniform(-0.05, 0.04) for _ in ang]
+    for k, v in enumerate(rows[-1]): v.co.z = rimz[k]
+    for t, dz in ((0.8, -0.1), (0.62, -0.2)):      # the crater: down the inside of the rim to the pool
+        rows.append([bm.verts.new((RC*t*math.cos(a)*(1 + rnd.uniform(-0.05, 0.05)), RC*t*math.sin(a)*(1 + rnd.uniform(-0.05, 0.05)),
+                                   H + dz + rnd.uniform(-0.02, 0.02))) for a in ang])
+    for lo, hi in zip(rows, rows[1:]):
         for k in range(NS):
-            bm.faces.new((inn[k], out[k], out[(k+1) % NS], inn[(k+1) % NS]))
-    for top, low in zip(walls, walls[1:]):         # facing in
-        for k in range(NS):
-            bm.faces.new((top[k], top[(k+1) % NS], low[(k+1) % NS], low[k]))
-    bm.faces.new(walls[-1])
-    obj("Crater", bm, basalt)
-    # the walkway: a ledge along the shaft's wall (its outer edge sunk into it) from the near edge, round and down
-    # into the dark, following the ragged, leaning wall: its centre drifts away 0.3 per unit of depth, its radius
-    # narrows 1.2% per 0.16
-    def ledge(t, w=0.6):
-        a = -math.pi/2 + 3.6*t; z = 0.06 - 1.5*t**1.1
-        r = ragged(a, 0.85)*(1 - 0.012*(-z/0.16)) - w/2 + 0.04
-        return Vector((r*math.cos(a), 0.3*-z + r*math.sin(a), z))
-    obj("Walkway", walkway([ledge(i/28) for i in range(29)], 0.6), path_mat, smooth=True)
-    for k in range(10):
-        j = rnd.randrange(NS); d = rh[j] + rnd.uniform(0.1, 0.7)
-        rock("Rubble", Vector((d*math.cos(ang[j]), d*math.sin(ang[j]), 0.03)), rnd.uniform(0.04, 0.11), basalt)
-    inner = [ground.verts.new((r*math.cos(a), r*math.sin(a), 0)) for a, r in zip(ang, rh)]
-    outer = [ground.verts.new((10*math.cos(a), 10*math.sin(a), 0)) for a in ang]
+            bm.faces.new((lo[k], lo[(k+1) % NS], hi[(k+1) % NS], hi[k]))
+    bm.faces.new(rows[-1])
+    obj("Cone", bm, basalt, smooth=True)
+    # molten lava: distorted noise through black crust, deep red, orange and yellow-hot; dark veins of crust
+    # (voronoi edges) over it, and a bump so the crust has relief.  Kept fairly dim so the reds stay red.
+    lava = bpy.data.materials.new("Lava"); lava.use_nodes = True; ln = lava.node_tree; L = ln.nodes.new; LK = ln.links.new
+    lb = ln.nodes["Principled BSDF"]; lb.inputs["Roughness"].default_value = 0.45
+    ltc = L("ShaderNodeTexCoord"); lnz = L("ShaderNodeTexNoise"); lnz.inputs["Scale"].default_value = 6
+    lnz.inputs["Distortion"].default_value = 4.0; lnz.inputs["Detail"].default_value = 8; LK(ltc.outputs["Object"], lnz.inputs["Vector"])
+    lr = L("ShaderNodeValToRGB"); LK(lnz.outputs["Fac"], lr.inputs[0]); el = lr.color_ramp.elements
+    while len(el) < 5: el.new(0.5)
+    for e, (pos, col) in zip(el, ((0.3, (0.0, 0.0, 0.0)), (0.42, (0.35, 0.01, 0.0)), (0.55, (0.9, 0.06, 0.005)),
+                                  (0.68, (1.0, 0.25, 0.02)), (0.8, (1.0, 0.6, 0.1)))):
+        e.position, e.color = pos, (*col, 1)
+    lv = L("ShaderNodeTexVoronoi"); lv.feature = 'DISTANCE_TO_EDGE'; lv.inputs["Scale"].default_value = 14
+    LK(ltc.outputs["Object"], lv.inputs["Vector"])
+    lvr = L("ShaderNodeMapRange"); lvr.inputs["From Max"].default_value = 0.06; lvr.inputs["To Min"].default_value = 0.15
+    LK(lv.outputs["Distance"], lvr.inputs["Value"])
+    lm = L("ShaderNodeMix"); lm.data_type = 'RGBA'; lm.blend_type = 'MULTIPLY'; lm.inputs["Factor"].default_value = 1.0
+    LK(lr.outputs["Color"], lm.inputs["A"]); LK(lvr.outputs["Result"], lm.inputs["B"])
+    LK(lm.outputs["Result"], lb.inputs["Emission Color"]); lb.inputs["Emission Strength"].default_value = 3.0
+    lb.inputs["Base Color"].default_value = (0.03, 0.005, 0.0, 1)
+    lbp = L("ShaderNodeBump"); lbp.inputs["Strength"].default_value = 0.5; LK(lnz.outputs["Fac"], lbp.inputs["Height"])
+    LK(lbp.outputs["Normal"], lb.inputs["Normal"])
+    pool = bmesh.new(); pc = pool.verts.new((0, 0, H - 0.17))
+    pr = [pool.verts.new((RC*0.66*math.cos(a), RC*0.66*math.sin(a), H - 0.17)) for a in ang]
     for k in range(NS):
-        ground.faces.new((inner[k], outer[k], outer[(k+1) % NS], inner[(k+1) % NS]))
-    tgt = Vector((0, 0, -0.3))
+        pool.faces.new((pc, pr[k], pr[(k+1) % NS]))
+    obj("Pool", pool, lava)
+    for a0 in (-1.9, -1.2, 0.4):                    # lava runs from the rim down the slopes, thinning out
+        a0 += rnd.uniform(-0.15, 0.15); pts = []
+        for i in range(14):
+            t = 1 - 0.8*i/13; a = a0 + 0.1*math.sin(9*t + a0) + rnd.uniform(-0.02, 0.02)
+            pts.append(Vector((cone_r(a, t)*math.cos(a), cone_r(a, t)*math.sin(a), H*t + 0.012)))
+        pts[0].z = H - 0.03
+        sp = spline_pts(pts)
+        obj("Run", ribbon(sp, [0.13*(1 - 0.7*j/(len(sp) - 1))*(0.8 + 0.4*rnd.random()) for j in range(len(sp))]), lava, smooth=True)
+    for k in range(12):
+        a = rnd.uniform(0, math.tau); d = R0*rnd.uniform(1.0, 1.35)
+        rock("Rubble", Vector((d*math.cos(a), d*math.sin(a), 0.03)), rnd.uniform(0.04, 0.11), basalt)
+    bmesh.ops.create_grid(ground, x_segments=1, y_segments=1, size=10)
+    tgt = Vector((0, 0, 0.45))
 else:
     # ---- a lumpy patch of rock floor with a ragged edge
     bm = bmesh.new()
-    edge = smooth([ragged(a, 1.35) + 0.35*max(0.0, math.sin(a) + 0.3)/1.3 + rnd.uniform(-0.08, 0.08) for a in ang])   # out under the wall
+    edge = smooth([ragged(a, 1.35) + rnd.uniform(-0.08, 0.08) for a in ang])
     rows = [[bm.verts.new((r*t*math.cos(a), r*t*math.sin(a), -0.01 if t == 1 else rnd.uniform(0.0, 0.06)*(1.2 - t)))
              for a, r in zip(ang, edge)] for t in (1.0, 0.8, 0.55, 0.3)]
     c = bm.verts.new((0, 0, 0.03))
@@ -148,17 +195,19 @@ else:
     for k in range(NS):
         bm.faces.new((rows[-1][k], rows[-1][(k+1) % NS], c))
     obj("Floor", bm, basalt, smooth=True)
-    # a rough rock wall round the back half, dying down at both ends
-    A0, A1, M, WH, RW, TW = -0.2, math.pi + 0.2, 40, 2.1, 1.35, 0.3
+    # the way out: a solid rock ramp climbing straight from the near left up to the far right, built against a
+    # rough rock wall along its far side that rises with it and fades into the dark above
+    A, B = Vector((-1.0, -0.8, 0)), Vector((0.85, 0.75, 0)); RWID = 0.7
+    d = (B - A).normalized(); nw = Vector((-d.y, d.x, 0))
+    M, WH, TW = 36, 1.7, 0.3
     bm = bmesh.new(); cols = []
-    hs = [max(0.15, WH*max(0.0, min(1.0, (a - A0)/0.7, (A1 - a)/0.7))**0.7*rnd.uniform(0.85, 1.05))
-          for a in (A0 + (A1 - A0)*i/M for i in range(M + 1))]
-    hs = [hs[0]] + [(hs[i-1] + 2*hs[i] + hs[i+1])/4 for i in range(1, M)] + [hs[-1]]   # a rolling top, not teeth
+    hs = [WH*min(1.0, (i/M)/0.3)**0.8*(0.45 + 0.55*i/M)*rnd.uniform(0.9, 1.05) for i in range(M + 1)]
+    hs = [hs[0]] + [(hs[i-1] + 2*hs[i] + hs[i+1])/4 for i in range(1, M)] + [hs[-1]]
     for i in range(M + 1):
-        a = A0 + (A1 - A0)*i/M; h = hs[i]
-        rin = [RW + 0.08*math.sin(3*a + 1.3*j) + rnd.uniform(-0.06, 0.06) for j in range(9)]
-        inner = [bm.verts.new((r*math.cos(a), r*math.sin(a), h*j/8)) for j, r in enumerate(rin)]
-        outer = [bm.verts.new(((r + TW)*math.cos(a), (r + TW)*math.sin(a), h*j/8)) for j, r in enumerate(rin)]
+        s_ = -0.1 + 1.2*i/M; base = A + (B - A)*s_ + nw*(RWID/2 - 0.05); h = max(0.15, hs[i])
+        rin = [0.08*math.sin(5*s_ + 1.3*j) + rnd.uniform(-0.05, 0.05) for j in range(9)]
+        inner = [bm.verts.new(base + nw*r + Vector((0, 0, h*j/8))) for j, r in enumerate(rin)]
+        outer = [bm.verts.new(base + nw*(r + TW) + Vector((0, 0, h*j/8))) for j, r in enumerate(rin)]
         cols.append((inner, outer))
     for (i0, o0), (i1, o1) in zip(cols, cols[1:]):
         for j in range(8):
@@ -169,15 +218,17 @@ else:
             bm.faces.new((inner[j], inner[j+1], outer[j+1], outer[j]))
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     obj("Cave", bm, basalt).visible_shadow = False   # its shadow would only spill out of the icon
-    # the walkway: a solid ledge built up against the inside of the wall (its outer edge sunk into it), from the
-    # wall's near right end round the back
-    def ledge(t, w=0.7):
-        a = -0.15 + 2.9*t; r = RW - w/2 + 0.1
-        return Vector((r*math.cos(a), r*math.sin(a), 0.04 + 1.6*t**1.2))
-    obj("Walkway", walkway([ledge(i/28) for i in range(29)], 0.7, floor=0.0), path_mat, smooth=True)
+    # walked from the top down, so the wall is on the right and the open rock face looks toward the camera
+    pts = []
+    for i in range(29):
+        s_ = i/28; p = B + (A - B)*s_ + nw*0.04*math.sin(5*s_)
+        pts.append(Vector((p.x, p.y, 0.04 + 1.35*(1 - s_)**1.15)))
+    ww = obj("Walkway", walkway(pts, RWID, floor=0.0), path_mat, smooth=True)
+    cliff = basalt.copy(); cliff.node_tree.nodes[btint.name].inputs["B"].default_value = (*[c*0.55 for c in P["basalt"]], 1)
+    ww.data.materials.append(cliff)                # the ramp's rock face darker, so the worn path on top stands out
     for k in range(8):
-        a = rnd.uniform(-math.pi, 0); d = rnd.uniform(0.6, 1.3)   # rubble on the near half
-        rock("Rubble", Vector((d*math.cos(a), d*math.sin(a), 0.04)), rnd.uniform(0.04, 0.1), basalt)
+        a = rnd.uniform(-math.pi, 0); dd = rnd.uniform(0.5, 1.3)
+        rock("Rubble", Vector((dd*math.cos(a) + 0.3, dd*math.sin(a), 0.04)), rnd.uniform(0.04, 0.1), basalt)
     bmesh.ops.create_grid(ground, x_segments=1, y_segments=1, size=10)
     tgt = Vector((0, 0, 0.6))
 

@@ -1,6 +1,6 @@
 """Express elevators -> Media/Elevator as 256px icons (world objects).  Ids are the game's OELEVATORUP / OELEVATORDOWN.
 Usage: [JOBS=4] python3 elevators.py [slug ...]   (no args = all)
-<slug> is the top-down view; <slug>_<angle> the views for the game camera's 30-80 degrees, every 5.
+<slug> is the 35 degree view (the 2D map, a little isometric); <slug>_<angle> the views for the game camera's 30-80 degrees, every 5.
 """
 import runner
 
@@ -13,7 +13,7 @@ E = [
 # centre); the up lift's chain runs off the top, faded out by then
 FRAME = 360
 VIEW = dict(shadow_cut=24, frame=FRAME, align="bottom")
-E = [(i, slug, dict(p, elev=90, **VIEW)) for i, slug, p in E] + \
+E = [(i, slug, dict(p, elev=35, **VIEW)) for i, slug, p in E] + \
     [(i, f"{slug}_{e}", dict(p, elev=e, **VIEW)) for i, slug, p in E for e in range(30, 81, 5)]
 
 if __name__ == "__main__":

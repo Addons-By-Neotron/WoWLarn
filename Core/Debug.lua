@@ -108,6 +108,48 @@ function Debug.makeItem(id, arg)
    ns.ui:RefreshNow("all")
 end
 
+-- Empties the level the player is on (monsters, objects, the walls inside) and shows all of it,
+-- to look at things without anything in the way.  The wall round the edge stays.
+function Debug.clearLevel()
+   G.ClearLevel()
+   for x = 1, K.MAXX do
+      for y = 1, K.MAXY do
+         if x == 1 or x == K.MAXX or y == 1 or y == K.MAXY then G.item[x][y] = K.OWALL end
+         G.know[x][y], G.seen[x][y] = 1, 1
+      end
+   end
+   G.playerx, G.playery = 2, 2
+   Log("level %d cleared", G.level)
+end
+
+-- Clears the level and lays out every kind of object on it in rows, a tile apart (potions and
+-- scrolls once for each kind).  level: goes there first (1 is a dungeon, 16 the volcano).
+function Debug.showcase(level)
+   if level and level ~= G.level then
+      ns.Create.newCaveLevel(level)
+   end
+   Debug.clearLevel()
+   local x, y, count = 3, 3, 0
+   local function put(id, arg)
+      G.item[x][y], G.iarg[x][y] = id, arg or 0
+      count = count + 1
+      x = x + 2
+      if x > K.MAXX - 2 then x, y = 3, y + 2 end
+   end
+   for id = 1, K.MAXOBJ - 1 do
+      if id == K.OPOTION then
+         for kind = 1, K.MAXPOTION do put(id, kind) end
+      elseif id == K.OSCROLL then
+         for kind = 1, K.MAXSCROLL do put(id, kind) end
+      elseif id ~= K.OWALL and ns.Tables.objectname[id] and y <= K.MAXY - 2 then
+         put(id, GOLD_SCALE[id] and 100 or 0)
+      end
+   end
+   ns.Player.positionPlayer()
+   Log("%d objects laid out on level %d", count, G.level)
+   ns.ui:Refresh("all")
+end
+
 -- Throws the game away, with no score and no saved game left, and starts a new one (a game in
 -- god mode can neither be lost nor, until now, be given up).
 function Debug.newGame()

@@ -73,20 +73,29 @@ end
 -- Puts the picture of a cell on it: the whole frame of the cell, less a margin, or moved so that the
 -- middle of what a flat picture shows (V.Anchor: ax from the left, ay from the bottom) is on the
 -- middle of the cell.  A picture is shown whole; an icon is cut at the edges.
-local function PlaceIcon(cell, picture, ax, ay, full)
-   local dx, dy = 0, 0
+local function PlaceIcon(cell, picture, ax, ay, full, fill)
    local margin = full and 0 or 3  -- (a door and its frame fill the whole tile)
-   if ax then
-      local size = TILE - 2 * margin
-      dx, dy = (0.5 - ax) * size, (0.5 - ay) * size
-   end
    cell.icon:ClearAllPoints()
-   cell.icon:SetPoint("TOPLEFT", cell.bg, "TOPLEFT", margin + dx, -margin + dy)
-   cell.icon:SetPoint("BOTTOMRIGHT", cell.bg, "BOTTOMRIGHT", -margin + dx, margin + dy)
-   if picture then cell.icon:SetTexCoord(0, 1, 0, 1) else cell.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) end
+   if fill then  -- (enlarged until what it shows fills the tile)
+      local size = TILE * fill
+      cell.icon:SetPoint("CENTER", cell.bg, "CENTER", (0.5 - ax) * size, (0.5 - ay) * size)
+      cell.icon:SetSize(size, size)
+   else
+      local dx, dy = 0, 0
+      if ax then
+         local size = TILE - 2 * margin
+         dx, dy = (0.5 - ax) * size, (0.5 - ay) * size
+      end
+      cell.icon:SetPoint("TOPLEFT", cell.bg, "TOPLEFT", margin + dx, -margin + dy)
+      cell.icon:SetPoint("BOTTOMRIGHT", cell.bg, "BOTTOMRIGHT", -margin + dx, margin + dy)
+   end
+   local uv = cell.anim and V.Flipbook(cell.anim)
+   if uv then cell.icon:SetTexCoord(uv[1], uv[2], uv[3], uv[4])
+   elseif picture then cell.icon:SetTexCoord(0, 1, 0, 1) else cell.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) end
 end
 
 local function HideCell(cell)
+   cell.anim = nil
    cell.icon:Hide()
    cell.glyph:Hide()
    cell.actor:Hide()
@@ -143,7 +152,18 @@ end
 function map:EnableTooltips(frame)
    frame:EnableMouse(true)
    local since, shown = 0, nil
+   local turn = 0
    frame:SetScript("OnUpdate", function(_, elapsed)
+      turn = turn + elapsed
+      if turn >= 0.05 and self.cells then  -- (the flipbooks: the Eye of Larn)
+         turn = 0
+         for _, row in pairs(self.cells) do
+            for _, cell in pairs(row) do
+               local uv = cell.anim and cell.icon:IsShown() and V.Flipbook(cell.anim)
+               if uv then cell.icon:SetTexCoord(uv[1], uv[2], uv[3], uv[4]) end
+            end
+         end
+      end
       since = since + elapsed
       if since < 0.05 then return end
       since = 0
@@ -231,8 +251,9 @@ local function DrawTile(cell, x, y, ground)
       if object ~= 0 and not ns.mod.db.profile.ascii then under, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object, nil, x, y) end
       if under then
          V.SetIcon(cell.icon, under)
+         cell.anim = under
          local ax, ay = V.Anchor(object)
-         PlaceIcon(cell, picture, ax, ay, V.IsDoor(object))
+         PlaceIcon(cell, picture, ax, ay, V.IsDoor(object), ax and V.Fill(object))
          cell.icon:SetBlendMode((picture or ns.mod.db.profile.opaqueIcons) and "BLEND" or "ADD")
          cell.icon:Show()
       else
@@ -252,8 +273,9 @@ local function DrawTile(cell, x, y, ground)
    if object ~= 0 and not ns.mod.db.profile.ascii then icon, picture = V.ObjectPicture(object, G.iarg[x][y], G.named[x][y] == object, nil, x, y) end
    if icon then
       V.SetIcon(cell.icon, icon)
+      cell.anim = icon
       local ax, ay = V.Anchor(object)
-      PlaceIcon(cell, picture, ax, ay, V.IsDoor(object))
+      PlaceIcon(cell, picture, ax, ay, V.IsDoor(object), ax and V.Fill(object))
       cell.icon:SetBlendMode((picture or ns.mod.db.profile.opaqueIcons) and "BLEND" or "ADD")  -- (add: the black of the icon is left out)
       cell.icon:Show()
       cell.glyph:Hide()
@@ -281,6 +303,7 @@ end
 --@debug@
 -- Prints what the map would draw, to find out why tiles are missing.
 function map:Debug()
+   if self:Is3D() then ns.map3d:DebugModels() end
    local known, walls, shown = 0, 0, 0
    for x = 1, MAXX do
       for y = 1, MAXY do

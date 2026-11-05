@@ -1,7 +1,7 @@
 """Gem variants (ids match the game's object ids) -> Media/Gems as 128px icons.
 Usage: [JOBS=4] python3 gems.py [slug ...]   (no args = all)
 Keys (see build_gem.py): cut (brilliant|heart|emerald|trillion), color (linear RGB), ior, glow, glow_strength,
-      fire (coloured sparkle lights), tilt, yaw, roll, halo (0..1 post glow, halo_color)
+      fire (coloured sparkle lights), inner (a glowing gem inside), tilt, yaw, roll, halo (0..1 post glow, halo_color)
 """
 import runner
 
@@ -13,6 +13,11 @@ G = [
                           yaw=30, halo=0.3, halo_color=(0.1, 0.85, 0.3))),
     (53, "sapphire", dict(cut="trillion", color=(0.03, 0.12, 0.85), ior=1.77, glow=(0.02, 0.08, 0.6), glow_strength=0.15,
                           yaw=0, halo=0.3, halo_color=(0.15, 0.3, 1.0))),
+    # the Eye of Larn: a clear faceted ball with a black globe of glowing purple smoky swirls at its heart
+    (22, "eye_of_larn", dict(cut="ball2", color=(0.88, 0.85, 1.0), ior=1.5, tilt=20, yaw=10,
+                             inner=dict(cut="globe", scale=0.52, color=(0.3, 0.03, 1.0), strength=3.0, loc=(0, 0, 0),
+                                        coat=0.3, swirl=1.0, swirl_dist=2.0),
+                             halo=0.3, halo_color=(0.45, 0.1, 0.9))),
 ]
 
 if __name__ == "__main__":
