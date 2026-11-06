@@ -78,8 +78,16 @@ function Magic.adjustTime(tim)
    ns.Regen.regen()
 end
 
+-- What a teleport looks like: the shaft of light of the teleport away spell on the player, before they go.
+function Magic.teleportShow()
+   local sprite = ns.Visuals.SPELL_BURST[K.SP_TELEPORT_AWAY]
+   if sprite and G.c[K.BLINDCOUNT] == 0 then ns.ui:Burst({ { G.playerx, G.playery } }, "", 900, nil, sprite) end
+end
+
 -- C: oteleport(). err is true for an uncontrolled teleport, which can end in a rock.
-function Magic.teleport(err)
+-- shown: Magic.teleportShow() has been played already.
+function Magic.teleport(err, shown)
+   if not shown then Magic.teleportShow() end
    if err and rnd(151) < 3 then
       ns.Player.died(264)  -- stuck in a rock
       return

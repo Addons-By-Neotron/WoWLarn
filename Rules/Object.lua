@@ -491,8 +491,9 @@ function Object.lookForObject()
          G.know[x][y] = 1
       end
       Msg(L["Zaaaappp!  You've been teleported!"])
-      ui:Nap(3000)
-      ns.Magic.teleport(false)
+      ns.Magic.teleportShow()  -- (0.9 s of the 3 s pause)
+      ui:Nap(2100)
+      ns.Magic.teleport(false, true)
 
    elseif id == K.OOPENDOOR then
       Msg(L["There is an open door here."])

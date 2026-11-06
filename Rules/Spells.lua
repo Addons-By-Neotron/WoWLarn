@@ -80,10 +80,16 @@ local function IfBlind(x, y)
    ns.Monster.ifBlind(x, y)
 end
 
+-- What a spell that hits one tile looks like there (a picture that plays once), if it has one.
+local function Strike(x, y, sprite)
+   if sprite and c[K.BLINDCOUNT] == 0 then ns.ui:Burst({ { x, y } }, "", 900, nil, sprite) end
+end
+
 -- C: direct(). Asks for a direction and hits the monster there. str takes the monster name
--- and then arg.
-local function Direct(spell, dam, str, arg)
+-- and then arg.  burst: the picture played where it hits (by default the spell's own).
+local function Direct(spell, dam, str, arg, burst)
    if spell < 1 or spell > SPNUM then return end
+   burst = burst or ns.Visuals.SPELL_BURST[spell]
    if IsConfused() then return end
    local x, y = DirSub()
    if not x then return end
@@ -103,6 +109,7 @@ local function Direct(spell, dam, str, arg)
          return
       end
       G.lastnum = 278
+      Strike(G.playerx, G.playery, burst)
       if str ~= "" then Msg(str, L["spell caster (that's you)"], arg) end
       ns.Player.losehp(dam)
       return
@@ -112,6 +119,7 @@ local function Direct(spell, dam, str, arg)
       return
    end
    IfBlind(x, y)
+   Strike(x, y, burst)
    if NoSpell(spell, m) then
       G.lasthx, G.lasthy = x, y
       return
@@ -362,6 +370,7 @@ local function TDirect(spell)
       return
    end
    IfBlind(x, y)
+   Strike(x, y, ns.Visuals.SPELL_BURST[spell])
    if NoSpell(spell, m) then
       G.lasthx, G.lasthy = x, y
       return
@@ -402,6 +411,7 @@ local function DirPoly(spell)
       return
    end
    IfBlind(x, y)
+   Strike(x, y, ns.Visuals.SPELL_BURST[spell])
    if NoSpell(spell, mon[x][y]) then
       G.lasthx, G.lasthy = x, y
       return
@@ -739,14 +749,16 @@ end
 
 -- The C asks for the direction of the genocide spell here (a quirk), so does this.
 CAST[K.SP_SUMMON_DEMON] = function()
+   local claws = ns.Visuals.SPELL_BURST[K.SP_SUMMON_DEMON]
    if rnd(100) > 30 then
-      Direct(K.SP_GENOCIDE, 150, L["The demon strikes at the %s."], 0)
+      Direct(K.SP_GENOCIDE, 150, L["The demon strikes at the %s."], 0, claws)
       return
    end
    if rnd(100) > 15 then
       Msg(L["Nothing seems to have happened."])
       return
    end
+   Strike(G.playerx, G.playery, claws)
    Msg(L["The demon turned on you and then vanished!"])
    G.lastnum = 277
    ns.Player.losehp(rnd(40) + 30)  -- must say killed by a demon
@@ -811,6 +823,8 @@ function Spells.speldamage(spell)
       return
    end
    cast(clev)
+   -- (what the spells on the caster look like: after it, so a cure for blindness is seen)
+   Strike(G.playerx, G.playery, ns.Visuals.SPELL_SELF[spell])
 end
 
 -- C: cast(). Asks for the three letter code of a spell and casts it.

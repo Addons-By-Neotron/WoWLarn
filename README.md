@@ -79,4 +79,4 @@ rounder, and the Glass Cannon (the WoW warlock) starts with 1 hit point and the 
 
 ## License
 
-GPL v2, see `LICENSE`.
+GPL v2, see `LICENSE`.  The outside models and textures used for the pictures are listed in `CREDITS.md`.

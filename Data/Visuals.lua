@@ -179,12 +179,38 @@ V.SPELL_SPRITE = {
    [K.SP_FIREBALL] = SPELLS .. "spell_15_fireball_anim.png",
    [K.SP_SONIC_SPEAR] = SPELLS .. "spell_06_sonic_spear_anim.png",
 }
--- The area spells that fill a tile (flood, wall of fire): 32 frames that play once, from rising to fading out, over the
--- time the spell takes (see V.FlipbookAt); drawn like a potion, facing the screen.
+-- The spells that fill a tile (flood, wall of fire) or act on one (see Direct): 32 frames that play once, from rising
+-- to fading out, over the time the spell takes (see V.FlipbookAt); drawn like a potion, facing the screen.
 V.SPELL_BURST = {
    [K.SP_FLOOD] = SPELLS .. "spell_26_flood_anim.png",
    [K.SP_MAGIC_FIRE] = SPELLS .. "spell_32_wall_of_fire_anim.png",
    [K.SP_COLD] = SPELLS .. "spell_16_cone_of_cold_anim.png",  -- (each tile when the ring of the cone gets there)
+   [K.SP_CLOUD_KILL] = SPELLS .. "spell_20_cloud_kill_anim.png",
+   [K.SP_SUMMON_DEMON] = SPELLS .. "spell_36_summon_demon_anim.png",  -- (the demon's claws, on whoever it strikes)
+   [K.SP_PHANTASMAL_FORCES] = SPELLS .. "spell_13_phantasmal_forces_anim.png",
+   [K.SP_DEHYDRATION] = SPELLS .. "spell_22_dehydration_anim.png",
+   [K.SP_DRAIN_LIFE] = SPELLS .. "spell_24_drain_life_anim.png",
+   [K.SP_FINGER_OF_DEATH] = SPELLS .. "spell_27_finger_of_death_anim.png",
+   [K.SP_SLEEP] = SPELLS .. "spell_04_sleep_anim.png",
+   [K.SP_WEB] = SPELLS .. "spell_07_web_anim.png",
+   [K.SP_POLYMORPH] = SPELLS .. "spell_17_polymorph_anim.png",
+   [K.SP_TELEPORT_AWAY] = SPELLS .. "spell_31_teleport_away_anim.png",
+}
+-- The spells the caster casts on themself: the same, on the caster's tile (see Spells.speldamage).
+V.SPELL_SELF = {
+   [K.SP_PROTECTION] = SPELLS .. "spell_01_protection_anim.png",
+   [K.SP_DEXTERITY] = SPELLS .. "spell_03_dexterity_anim.png",
+   [K.SP_CHARM_MONSTER] = SPELLS .. "spell_05_charm_monster_anim.png",
+   [K.SP_STRENGTH] = SPELLS .. "spell_08_strength_anim.png",
+   [K.SP_HEALING] = SPELLS .. "spell_10_healing_anim.png",
+   [K.SP_CURE_BLINDNESS] = SPELLS .. "spell_11_cure_blindness_anim.png",
+   [K.SP_INVISIBILITY] = SPELLS .. "spell_14_invisibility_anim.png",
+   [K.SP_HASTE_SELF] = SPELLS .. "spell_19_haste_self_anim.png",
+   [K.SP_INVULNERABILITY] = SPELLS .. "spell_25_invulnerability_anim.png",
+   [K.SP_SCARE_MONSTER] = SPELLS .. "spell_28_scare_monster_anim.png",
+   [K.SP_HOLD_MONSTER] = SPELLS .. "spell_29_hold_monster_anim.png",
+   [K.SP_TIME_STOP] = SPELLS .. "spell_30_time_stop_anim.png",
+   [K.SP_WALK_THROUGH_WALLS] = SPELLS .. "spell_37_walk_through_walls_anim.png",
 }
 -- The lightning: a tile of bolt for every square it goes through, turned to where it goes (see ui:BeamStep).
 -- Frames 0-7 the bolt shoots across the tile, 8-23 it crackles, 24-31 it dies away from the caster's end.
@@ -218,6 +244,7 @@ local FLIPBOOK = {  -- (15 frames a second)
 }
 FLIPBOOK[V.SPELL_BEAM[K.SP_LIGHTNING]] = { cols = 8, rows = 4, frames = 32, period = 1 }
 for _, path in pairs(V.SPELL_BURST) do FLIPBOOK[path] = { cols = 8, rows = 4, frames = 32, period = 1 } end
+for _, path in pairs(V.SPELL_SELF) do FLIPBOOK[path] = { cols = 8, rows = 4, frames = 32, period = 1 } end
 for _, path in pairs(V.SPELL_SPRITE) do FLIPBOOK[path] = { cols = 8, rows = 4, frames = 32, period = 32 / 20 } end
 local flipUV = {}
 -- The part of the picture to show now (left, right, top, bottom), or nil if it is no flipbook.
@@ -306,6 +333,8 @@ local ANGLED = {
    [K.OVOLDOWN] = "Volcano\\volcano_55_volcano_down", [K.OVOLUP] = "Volcano\\volcano_56_volcano_up",
    -- the chest and the brass lamp
    [K.OCHEST] = "Objects\\object_44_chest", [K.OBRASSLAMP] = "Objects\\object_85_brass_lamp",
+   -- the great marble statue and the holy altar
+   [K.OSTATUE] = "Objects\\object_08_statue", [K.OALTAR] = "Objects\\object_01_altar",
    -- the bank branch in the dungeon
    [K.OBANK2] = "Buildings\\building_15_bank2",
    -- the magic mirror
@@ -370,7 +399,8 @@ V.STANDING = {
    [K.OANNIHILATION] = 1.1,  -- (fills about 0.6 of its frame; it turns in place, so it does not bob)
    [K.OBANK2] = 1.3,  -- (about 0.77 of the frame wide)
    [K.OCHEST] = 1.0, [K.OBRASSLAMP] = 0.9,  -- (about 0.85 of the frame wide)
-   [K.OMIRROR] = 1.45,  -- (a tall thing like the thrones)
+   [K.OMIRROR] = 1.45, [K.OSTATUE] = 1.45,  -- (tall things like the thrones)
+   [K.OALTAR] = 1.4,  -- (about 0.67 of the frame wide: about a tile)
    [K.OPIT] = 1.4, [K.OTRAPDOOR] = 1.6, [K.OIVTRAPDOOR] = 1.6,  -- (holes in the floor: 0.7 and 0.55 of the frame wide)
 }
 

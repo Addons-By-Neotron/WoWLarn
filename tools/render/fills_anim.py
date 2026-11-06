@@ -1,9 +1,11 @@
-"""Spells that fill a tile (wall of fire, flood, and the cone of cold on each tile it reaches) animated -> Media/Spells:
+"""Spells that fill a tile (wall of fire, flood, cloud kill, the cone of cold on each tile it reaches), that hit or
+act on one monster (the summoned demon's claws, phantasmal forces, dehydration, drain life, finger of death, sleep,
+web, polymorph, teleport away), and that the caster casts on themself (the rest) animated -> Media/Spells:
 FRAMES renders through the whole effect (see build_spell.py: rising from the bottom, then dying down and fading out;
 it plays once, it does not loop),
 stitched into a flipbook spell_<id>_<slug>_anim.png (COLS x ROWS frames of 128px, left to right, top to bottom).
 Drawn facing the camera, a billboard like the potions, but each in 3D on the tile, seen from 15 degrees.  Ids are
-the game's spell ids (SP_MAGIC_FIRE, SP_FLOOD, SP_COLD).
+the game's spell ids (K.SP_*).
 Usage: [JOBS=4] python3 fills_anim.py [slug ...]   (no args = all)
 """
 import os, sys
@@ -16,6 +18,32 @@ S = [
     (32, "wall_of_fire", dict(kind="firewall", solid=True, elev=15, halo=0.3, halo_color=(1.0, 0.4, 0.05))),
     (26, "flood", dict(kind="flood", solid=True, elev=15)),
     (16, "cone_of_cold", dict(kind="frost", elev=15, halo=0.3, halo_color=(0.4, 0.7, 1.0))),   # on each tile it reaches
+    (20, "cloud_kill", dict(kind="gas", elev=15)),                  # on each tile round the caster
+    (36, "summon_demon", dict(kind="claw", elev=15, halo=0.5, halo_color=(1.0, 0.1, 0.02))),   # the demon's strike
+    # the spells that hit one monster: each on its tile
+    (13, "phantasmal_forces", dict(kind="phantasm", elev=15, halo=0.3, halo_color=(0.6, 0.4, 1.0))),
+    (22, "dehydration", dict(kind="dehydrate", elev=15)),
+    (24, "drain_life", dict(kind="drain", elev=15, halo=0.4, halo_color=(1.0, 0.1, 0.1))),
+    (27, "finger_of_death", dict(kind="death", elev=15, halo=0.35, halo_color=(0.4, 1.0, 0.2))),
+    # the ones that act on a monster without hurting it, on its tile
+    (4, "sleep", dict(kind="sleep", elev=15)),
+    (7, "web", dict(kind="web", elev=15)),
+    (17, "polymorph", dict(kind="polymorph", elev=15)),
+    (31, "teleport_away", dict(kind="teleport", elev=15, halo=0.3, halo_color=(0.4, 0.5, 1.0))),
+    # and the ones the caster casts on themself, on the caster's tile
+    (1, "protection", dict(kind="protection", elev=15)),
+    (3, "dexterity", dict(kind="dexterity", elev=15)),
+    (5, "charm_monster", dict(kind="charm", elev=15)),
+    (8, "strength", dict(kind="strength", elev=15, halo=0.3, halo_color=(1.0, 0.4, 0.1))),
+    (10, "healing", dict(kind="heal", elev=15, halo=0.3, halo_color=(1.0, 0.85, 0.4))),
+    (11, "cure_blindness", dict(kind="sight", elev=15, halo=0.35, halo_color=(1.0, 0.95, 0.8))),
+    (14, "invisibility", dict(kind="invisible", elev=15)),
+    (19, "haste_self", dict(kind="haste", elev=15)),
+    (25, "invulnerability", dict(kind="globe", elev=15, halo=0.3, halo_color=(1.0, 0.8, 0.4))),
+    (28, "scare_monster", dict(kind="scare", elev=15)),
+    (29, "hold_monster", dict(kind="hold", elev=15, halo=0.3, halo_color=(0.7, 0.4, 1.0))),
+    (30, "time_stop", dict(kind="timestop", elev=15, halo=0.3, halo_color=(0.3, 0.9, 1.0))),
+    (37, "walk_through_walls", dict(kind="wtw", elev=15)),
 ]
 want = set(sys.argv[1:])
 S = [v for v in S if not want or v[1] in want]

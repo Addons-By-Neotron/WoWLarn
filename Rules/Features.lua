@@ -138,8 +138,9 @@ end
 
 local function Teleported()
    Msg(L["Zaaaappp!  You've been teleported!"])
-   ns.ui:Nap(3000)
-   ns.Magic.teleport(0)
+   ns.Magic.teleportShow()  -- (0.9 s of the 3 s pause)
+   ns.ui:Nap(2100)
+   ns.Magic.teleport(false, true)  -- (C: oteleport(0); 0 is true in Lua, which could end it in a rock)
 end
 
 -- C: othrone(). arg is 1 for a throne whose gnome king has been found.

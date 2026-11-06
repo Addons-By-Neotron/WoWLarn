@@ -1,7 +1,9 @@
-"""Build + render a carved marble throne standing on the ground (with a shadow).  Usage:
-blender -b -P build_throne.py -- out.png '{"jewels":true, "tint":[r,g,b], ...}'
-Massive marble blocks on a stepped plinth: seat, slab armrests, tall back with a pointed crest and a raised
-carved panel; jewels set in gold bezels.  jewels=false gives the pried-off version: dark empty holes.
+"""Build + render the throne standing on the ground (with a shadow).  Usage:
+blender -b -P build_throne.py -- out.png '{"jewels":true, ...}'
+The model is "Demon King Throne - Dark Fantasy Gothic Chair" by UNREAL JOELAB (CC-BY 4.0,
+models/demon_king_throne, see CREDITS.md): horned, skull-carved dark stone, kept with its own textures.
+Jewels in gold bezels are added on it (the back's medallion, the crest, the arm and seat skulls);
+jewels=false gives the pried-off version: dark empty sockets.
 """
 import bpy, bmesh, math, os, sys, json
 from mathutils import Matrix, Vector
@@ -10,146 +12,176 @@ from render_common import link, mat, rig, render, studio_world, spot
 
 args = sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else []
 OUT = args[0] if args else "throne.png"
-P = dict(jewels=True, tint=(0.78, 0.78, 0.8), marble_scale=0.45, gold=(0.95, 0.68, 0.25),
+P = dict(jewels=True, height=3.0, glow=None, veins=3.0, bright=None, rough=None, metal=None,
+         gem_glow=2.5, glints=True, rim=(0.7, 0.4, 1.0), gold=(0.95, 0.68, 0.25),
          gems=[(0.75, 0.0, 0.03), (0.03, 0.12, 0.85), (0.02, 0.6, 0.15)], yaw=0, elev=20, save_blend=False)
 if len(args) > 1:
     P.update(json.loads(args[1]))
+if P["rough"] is None: P["rough"] = (0.12, 0.45) if P["jewels"] else (0.2, 0.55)   # jewelled: polished; pried: dulled
+if P["metal"] is None: P["metal"] = 0.25 if P["jewels"] else 0.15
+if P["bright"] is None: P["bright"] = 2.0 if P["jewels"] else 1.6
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene
+MODEL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "demon_king_throne")
 
+# ---- the model (a glTF: only meshes, materials and images)
+bpy.ops.import_scene.gltf(filepath=os.path.join(MODEL, "scene.gltf"))
+throne = next(o for o in sc.objects if o.type == 'MESH')
+bpy.context.view_layer.update()
+mw = throne.matrix_world.copy()
+throne.parent = None; throne.matrix_world = mw                  # off the importer's empties, which then go
+for o in [o for o in sc.objects if o.type == 'EMPTY']: bpy.data.objects.remove(o)
+bb = [throne.matrix_world @ Vector(c) for c in throne.bound_box]
+lo = Vector((min(v.x for v in bb), min(v.y for v in bb), min(v.z for v in bb)))
+hi = Vector((max(v.x for v in bb), max(v.y for v in bb), max(v.z for v in bb)))
+k = P["height"]/(hi.z - lo.z)                      # its base on the ground at the middle, P["height"] tall
+mid = Vector(((lo.x + hi.x)/2, (lo.y + hi.y)/2, lo.z))
+throne.matrix_world = Matrix.Scale(k, 4) @ Matrix.Translation(-mid) @ throne.matrix_world
+for m in throne.data.materials:                    # lighter, polished stone; the veins glow while the jewels are on
+    nt = m.node_tree; b = nt.nodes["Principled BSDF"]
+    b.inputs["Emission Strength"].default_value = P["glow"] if P["glow"] is not None else (P["veins"] if P["jewels"] else 0.0)
+    def between(socket, node, out="Result"):       # put node between whatever feeds socket and socket
+        src = socket.links[0].from_socket
+        nt.links.new(src, node.inputs[0 if node.bl_idname != 'ShaderNodeHueSaturation' else "Color"])
+        nt.links.new(node.outputs[out], socket)
+    hs = nt.nodes.new("ShaderNodeHueSaturation"); hs.inputs["Value"].default_value = P["bright"]
+    hs.inputs["Saturation"].default_value = 1.1; between(b.inputs["Base Color"], hs, "Color")
+    rr = nt.nodes.new("ShaderNodeMapRange"); rr.inputs["To Min"].default_value, rr.inputs["To Max"].default_value = P["rough"]
+    between(b.inputs["Roughness"], rr)
+    mm = nt.nodes.new("ShaderNodeMapRange"); mm.inputs["To Min"].default_value = P["metal"]
+    between(b.inputs["Metallic"], mm)
+    m.cycles.emission_sampling = 'NONE'           # (the veins are not lights: they would haze the shadow catcher)
 root = bpy.data.objects.new("Throne", None); sc.collection.objects.link(root)
+throne.parent = root
+bpy.context.view_layer.update()
 
-def obj(name, bm, material, bevel=0.0, segs=3, smooth=True):
+# ---- jewels in gold bezels (or empty sockets), set on the carving where a ray from the front meets it
+gold, _ = mat("Gold", P["gold"], Metallic=1.0, Roughness=0.3)
+gem_mats = [mat(f"Gem{i}", c, Roughness=0.02, IOR=1.75, **{"Transmission Weight": 0.5, "Coat Weight": 0.6,
+                "Emission Color": (*c, 1), "Emission Strength": P["gem_glow"]})[0]   # (a glow: they read on the dark stone)
+            for i, c in enumerate(P["gems"])]
+for m in gem_mats: m.cycles.emission_sampling = 'NONE'   # (not lights: they would brighten the shadow catcher into a haze)
+hole, _ = mat("Socket", (0.012, 0.01, 0.009), Roughness=0.8)
+
+def part(name, bm, material, smooth=True):
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
     for f in me.polygons: f.use_smooth = smooth
     o = link(sc, name, me); o.parent = root; o.data.materials.append(material)
-    if bevel:
-        m = o.modifiers.new("Bevel", 'BEVEL'); m.width = bevel; m.segments = segs; m.limit_method = 'ANGLE'
     return o
 
-def box(sx, sy, sz, loc):
-    """Box of size (sx, sy, sz); loc is the centre of its bottom face."""
-    bm = bmesh.new(); bmesh.ops.create_cube(bm, size=1.0)
-    for v in bm.verts: v.co = Vector((v.co.x*sx + loc[0], v.co.y*sy + loc[1], (v.co.z + 0.5)*sz + loc[2]))
+def ring(bm, r, z, n):
+    return [bm.verts.new((r*math.cos(math.tau*(i + 0.5)/n), r*math.sin(math.tau*(i + 0.5)/n), z)) for i in range(n)]
+
+def band(bm, a, b):
+    for i in range(len(a)):
+        bm.faces.new((a[i], a[(i+1) % len(a)], b[(i+1) % len(a)], b[i]))
+
+def gem(r):
+    """Cut stone facing +Z: pavilion point sunk below, girdle at 0, table on top."""
+    bm = bmesh.new(); n = 10
+    tip = bm.verts.new((0, 0, -0.5*r)); g = ring(bm, r, 0.0, n); t = ring(bm, 0.6*r, 0.38*r, n)
+    for i in range(n): bm.faces.new((tip, g[(i+1) % n], g[i]))
+    band(bm, g, t); bm.faces.new(t)
     return bm
 
-def lathe(profile, loc, segs=20):
-    """Turned part: profile [(radius, z), ...] bottom to top, revolved about Z at loc (x, y, z)."""
-    bm = bmesh.new(); rings = []
-    for r, z in profile:
-        rings.append([bm.verts.new((loc[0] + r*math.cos(a), loc[1] + r*math.sin(a), loc[2] + z))
-                      for a in (math.tau*k/segs for k in range(segs))])
-    for r0, r1 in zip(rings, rings[1:]):
-        for k in range(segs):
-            bm.faces.new((r0[k], r0[(k+1) % segs], r1[(k+1) % segs], r1[k]))
-    bm.faces.new(rings[0][::-1]); bm.faces.new(rings[-1])
+def bezel(r):
+    """Gold collar round the stone, facing +Z."""
+    bm = bmesh.new(); n = 20
+    rs = [ring(bm, rr, z, n) for rr, z in ((r*1.0, -0.3*r), (r*1.38, -0.3*r), (r*1.38, 0.08*r), (r*1.12, 0.2*r), (r*0.96, 0.12*r))]
+    for a, b in zip(rs, rs[1:]): band(bm, a, b)
     return bm
 
-def slab(outline, y0, y1):
-    """Extrude a closed XZ outline [(x, z), ...] between y0 (front) and y1 (back)."""
-    bm = bmesh.new()
-    f = [bm.verts.new((x, y0, z)) for x, z in outline]; b = [bm.verts.new((x, y1, z)) for x, z in outline]
-    n = len(outline)
-    bm.faces.new(f); bm.faces.new(b[::-1])
-    for k in range(n):
-        bm.faces.new((f[k], b[k], b[(k+1) % n], f[(k+1) % n]))
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+def socket(r):
+    bm = bmesh.new(); bmesh.ops.create_circle(bm, cap_ends=True, segments=16, radius=r*1.15)
     return bm
 
-def arch(hw, zb, zs, zp, n=24):
-    """Outline with straight sides up to zs, then a pointed arch to the peak zp."""
-    top = [(hw*x, zs + (zp - zs)*(1 - abs(x))**0.55) for x in (1 - 2*k/n for k in range(n + 1))]
-    return [(-hw, zb), (hw, zb)] + top
-
-def arch_z(hw, zs, zp, x):
-    return zs + (zp - zs)*max(0.0, 1 - abs(x)/hw)**0.55
-
-# ---- materials
-# marble: ambientCG Marble012 (CC0) colour/roughness/normal maps, box-projected in object space (no UVs needed)
-TEX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "textures", "Marble012_2K-JPG_")
-stone, sb = mat("Marble", (1, 1, 1))
-nt = stone.node_tree; N = nt.nodes.new; Lk = nt.links.new
-tc = N("ShaderNodeTexCoord"); mp = N("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (P["marble_scale"],)*3
-Lk(tc.outputs["Object"], mp.inputs["Vector"])
-def tex(kind, colour=True):
-    t = N("ShaderNodeTexImage"); t.image = bpy.data.images.load(TEX + kind + ".jpg")
-    if not colour: t.image.colorspace_settings.name = "Non-Color"
-    t.projection = 'BOX'; t.projection_blend = 0.25; Lk(mp.outputs["Vector"], t.inputs["Vector"])
-    return t
-col = tex("Color")
-tint = N("ShaderNodeMix"); tint.data_type = 'RGBA'; tint.blend_type = 'MULTIPLY'; tint.inputs["Factor"].default_value = 1.0
-tint.inputs["B"].default_value = (*P["tint"], 1); Lk(col.outputs["Color"], tint.inputs["A"]); Lk(tint.outputs["Result"], sb.inputs["Base Color"])
-rgh = tex("Roughness", False)
-rr = N("ShaderNodeMapRange"); rr.inputs["To Min"].default_value = 0.12; rr.inputs["To Max"].default_value = 0.45   # polished
-Lk(rgh.outputs["Color"], rr.inputs["Value"]); Lk(rr.outputs["Result"], sb.inputs["Roughness"])
-nrm = tex("NormalGL", False)
-nm = N("ShaderNodeNormalMap"); nm.inputs["Strength"].default_value = 0.6
-Lk(nrm.outputs["Color"], nm.inputs["Color"]); Lk(nm.outputs["Normal"], sb.inputs["Normal"])
-
-gold, _ = mat("Gold", P["gold"], Metallic=1.0, Roughness=0.3)
-gem_mats = [mat(f"Gem{i}", c, Roughness=0.02, IOR=1.75, **{"Transmission Weight": 0.5, "Coat Weight": 0.6})[0]
-            for i, c in enumerate(P["gems"])]
-hole, _ = mat("Socket", (0.012, 0.01, 0.009), Roughness=0.8)
-
-# ---- stepped plinth, seat block, slab armrests
-obj("Plinth", box(2.5, 2.1, 0.22, (0, 0.05, 0)), stone, bevel=0.04)
-obj("Step", box(2.2, 1.85, 0.18, (0, 0.08, 0.22)), stone, bevel=0.04)
-Z0 = 0.4                                           # top of the plinth
-SW, SD, SH = 1.3, 1.25, 0.55                       # seat width, depth, height
-obj("Seat", box(SW, SD, SH, (0, 0, Z0)), stone, bevel=0.05)
-obj("SeatPanel", box(SW - 0.3, 0.04, SH - 0.22, (0, -SD/2 - 0.01, Z0 + 0.11)), stone, bevel=0.015)   # carved front panel
-AW, AH = 0.32, 1.1                                 # armrest slab width, height above the plinth
-for s in (-1, 1):
-    x = s*(SW/2 + AW/2)
-    obj("Arm", box(AW, SD + 0.1, AH, (x, -0.02, Z0)), stone, bevel=0.07, segs=4)
-    obj("ArmCap", box(AW + 0.08, SD + 0.18, 0.1, (x, -0.04, Z0 + AH)), stone, bevel=0.04)
-
-# ---- tall back slab with a pointed crest; raised carved panel on its front
-BW, BT = SW + 2*AW + 0.04, 0.32                    # back spans the arms
-BY = SD/2 - 0.02                                   # front face of the back
-ZS, ZP = 2.45, 3.05                                # where the crest starts, its peak
-obj("Back", slab(arch(BW/2, Z0, ZS, ZP), BY, BY + BT), stone, bevel=0.05, segs=4)
-PW, PZS, PZP = SW/2 - 0.08, 2.2, 2.65             # panel half width, arch start, peak
-obj("Panel", slab(arch(PW, Z0 + SH, PZS, PZP), BY - 0.05, BY + 0.01), stone, bevel=0.025)
-obj("PanelIn", slab(arch(PW - 0.1, Z0 + SH + 0.1, PZS - 0.05, PZP - 0.16), BY - 0.08, BY - 0.04), stone, bevel=0.02)
-for s in (-1, 1):                                  # stone balls on the back's shoulders
-    sp = bmesh.new(); bmesh.ops.create_uvsphere(sp, u_segments=20, v_segments=12, radius=0.16)
-    for v in sp.verts: v.co += Vector((s*(BW/2 - 0.16), BY + BT/2, ZS + 0.12))
-    obj("Ball", sp, stone)
-
-# ---- jewels in gold bezels (or empty sockets): all face the front (-Y)
-def setting(x, y, z, r, k):
-    bz = lathe([(r*1.35, -0.03), (r*1.35, 0.0), (r*1.1, 0.025), (r*0.95, 0.02)], (0, 0, 0), segs=16)
-    bmesh.ops.rotate(bz, verts=bz.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.pi/2, 3, 'X'))
-    bmesh.ops.translate(bz, verts=bz.verts, vec=(x, y, z))
+dg = bpy.context.evaluated_depsgraph_get()
+GLINTS = []                                        # (where, radius, colour) of each jewel, for its sparkle
+def setting(px, py, r, c):
+    """At the front view's pixel (px, py) of the 512 ortho render of the raw model (2 units across, centred):
+    find the surface, set a jewel of radius r (raw units) along its normal."""
+    x, z = (px - 256)/256, (256 - py)/256
+    x, z = (x - mid.x)*k, (z - mid.z)*k
+    r *= k
+    hit, loc, nrm, *_ = sc.ray_cast(dg, Vector((x, -20, z)), Vector((0, 1, 0)))
+    if hit:
+        nrm = (nrm + Vector((0, -1.5, 0))).normalized()             # lean toward the front, so it reads from the camera
+    else:                                                            # an open hole: sit in it, level with its rim
+        rim = [sc.ray_cast(dg, Vector((x + 1.6*r*math.cos(a), -20, z + 1.6*r*math.sin(a))), Vector((0, 1, 0)))
+               for a in (math.tau*i/8 for i in range(8))]
+        rim = [h[1].y for h in rim if h[0]]
+        if not rim: print("no surface at", px, py); return
+        loc, nrm = Vector((x, sum(rim)/len(rim), z)), Vector((0, -1, 0))
+    m = Matrix.Translation(loc + nrm*0.01) @ nrm.to_track_quat('Z', 'Y').to_matrix().to_4x4()
     if P["jewels"]:
-        obj("Bezel", bz, gold)
-        g = bmesh.new(); bmesh.ops.create_uvsphere(g, u_segments=8, v_segments=4, radius=r)
-        for v in g.verts: v.co = Vector((v.co.x + x, v.co.y*0.55 + y - 0.01, v.co.z + z))
-        obj("Gem", g, gem_mats[k % len(gem_mats)], smooth=False)
-    else:
-        bz.free()                                                          # pried out: setting gone too, dark hole left
-        h = bmesh.new(); bmesh.ops.create_circle(h, cap_ends=True, segments=16, radius=r*1.15)
-        for v in h.verts: v.co = Vector((v.co.x + x, y - 0.012, v.co.y + z))
-        obj("Hole", h, hole)
+        GLINTS.append((loc + nrm*0.4*r, r, P["gems"][c % len(P["gems"])]))
+        for name, bm, mt, sm in (("Bezel", bezel(r), gold, True), ("Gem", gem(r), gem_mats[c % len(gem_mats)], False)):
+            bmesh.ops.transform(bm, matrix=m, verts=bm.verts); part(name, bm, mt, sm)
+    else:                                                            # pried out: setting gone too, dark hole left
+        bm = socket(r); bmesh.ops.transform(bm, matrix=m, verts=bm.verts); part("Hole", bm, hole)
 
-setting(0, BY - 0.005, (PZP + ZP)/2 + 0.05, 0.14, 0)                   # crest jewel above the panel
-for i, t in enumerate((-0.8, -0.45, 0.45, 0.8)):   # round the panel's arch, on its raised rim
-    x = t*(PW - 0.05)
-    setting(x, BY - 0.055, arch_z(PW - 0.05, PZS - 0.02, PZP - 0.07, x), 0.065, i + 1)
-setting(0, BY - 0.085, 1.75, 0.1, 0)               # centre of the inner panel
-for s, k in ((-1, 1), (1, 2)):
-    setting(s*(SW/2 + AW/2), -(SD + 0.1)/2 - 0.025, Z0 + AH - 0.22, 0.08, k)   # arm fronts
-for i, x in enumerate((-0.32, 0, 0.32)):                                    # seat front panel
-    setting(x, -SD/2 - 0.035, Z0 + SH/2, 0.075 if x else 0.09, i)
+setting(256, 203, 0.045, 0)                        # in the back's medallion (an open hole)
+setting(256, 104, 0.04, 2)                         # crest skull's brow
+for s in (-1, 1):
+    setting(256 + s*51, 146, 0.026, 2)             # the red marks either side of the back's arch
+    setting(256 + s*126, 292, 0.034, 0)            # the arm skulls' brows
+setting(256, 404, 0.036, 1)                        # the seat front's skull
 
 # ---- ground: shadow catcher
 gp = bmesh.new(); bmesh.ops.create_grid(gp, x_segments=1, y_segments=1, size=10)
-ground = obj("Ground", gp, stone); ground.is_shadow_catcher = True
+ground = part("Ground", gp, hole); ground.is_shadow_catcher = True
 
 root.rotation_euler = (0, 0, math.radians(P["yaw"]))
 rig(sc, elev=P["elev"])                             # camera angle above the horizon
-studio_world(sc, 0.6)
+
+# ---- magic: a four-point star sparkle on each jewel, facing the camera, and a violet rim light from behind
+def glint_mat(c):
+    m = bpy.data.materials.new("Glint"); nt = m.node_tree; nt.nodes.clear(); N = nt.nodes.new; Lk = nt.links.new
+    uv = N("ShaderNodeTexCoord"); sep = N("ShaderNodeSeparateXYZ"); Lk(uv.outputs["UV"], sep.inputs[0])
+    def f(op, a, b=None):
+        n = N("ShaderNodeMath"); n.operation = op
+        for i, v in enumerate((a, b)):
+            if v is None: continue
+            if isinstance(v, (int, float)): n.inputs[i].default_value = v
+            else: Lk(v, n.inputs[i])
+        return n.outputs[0]
+    dx = f('ABSOLUTE', f('SUBTRACT', sep.outputs["X"], 0.5)); dy = f('ABSOLUTE', f('SUBTRACT', sep.outputs["Y"], 0.5))
+    # star: bright where one of |dx|, |dy| is small, falling off along the arm; plus a round core
+    arm = lambda a, b: f('MULTIPLY', f('POWER', f('MAXIMUM', f('SUBTRACT', 1.0, f('MULTIPLY', a, 2.0)), 0.0), 3.0),
+                         f('POWER', f('MAXIMUM', f('SUBTRACT', 1.0, f('MULTIPLY', b, 60.0)), 0.0), 2.0))
+    core = f('POWER', f('MAXIMUM', f('SUBTRACT', 1.0, f('MULTIPLY', f('ADD', f('MULTIPLY', dx, dx), f('MULTIPLY', dy, dy)), 150.0)), 0.0), 2.0)
+    a = f('MINIMUM', f('ADD', f('ADD', arm(dx, dy), arm(dy, dx)), core), 1.0)
+    em = N("ShaderNodeEmission"); em.inputs["Color"].default_value = (*[0.25 + 0.75*v for v in c], 1); em.inputs["Strength"].default_value = 3
+    tr = N("ShaderNodeBsdfTransparent"); mx = N("ShaderNodeMixShader"); Lk(a, mx.inputs[0])
+    Lk(tr.outputs[0], mx.inputs[1]); Lk(em.outputs[0], mx.inputs[2])
+    out = N("ShaderNodeOutputMaterial"); Lk(mx.outputs[0], out.inputs["Surface"])
+    m.cycles.emission_sampling = 'NONE'
+    return m
+
+if P["jewels"] and P["glints"]:
+    cam = sc.camera.location; dg = bpy.context.evaluated_depsgraph_get()
+    for i, (at, r, c) in enumerate(GLINTS):
+        w = Matrix.Rotation(math.radians(P["yaw"]), 4, 'Z') @ at
+        d = w - cam
+        hit, loc, *_ = sc.ray_cast(dg, cam, d.normalized(), distance=d.length)
+        if hit and (loc - w).length > 3*r: continue    # the jewel is hidden from here: no sparkle
+        s = r*(7 if i == 0 else 5)                  # the medallion's the brightest
+        bm = bmesh.new(); bmesh.ops.create_grid(bm, x_segments=1, y_segments=1, size=s)
+        uvl = bm.loops.layers.uv.new()
+        for fc in bm.faces:
+            for lp in fc.loops: lp[uvl].uv = (lp.vert.co.x/(2*s) + 0.5, lp.vert.co.y/(2*s) + 0.5)
+        tilt = Matrix.Rotation(math.radians(12 + 17*i), 4, 'Z')    # each star turned a little differently
+        face = (cam - w).normalized().to_track_quat('Z', 'Y').to_matrix().to_4x4()
+        bmesh.ops.transform(bm, matrix=Matrix.Translation(w + (cam - w).normalized()*0.05) @ face @ tilt, verts=bm.verts)
+        me = bpy.data.meshes.new("Glint"); bm.to_mesh(me); bm.free()
+        o = link(sc, "Glint", me); o.data.materials.append(glint_mat(c))
+        o.visible_shadow = False; o.visible_diffuse = False; o.visible_glossy = False
+if P["jewels"] and P["rim"]:
+    for x in (-2.5, 2.5):                          # behind, either side: lights the horns' and skulls' edges
+        l = bpy.data.lights.new("Rim", 'AREA'); l.energy = 200; l.size = 1.5; l.color = P["rim"]; l.use_shadow = False
+        o = link(sc, "Rim", l); o.location = (1.2*x, 2.5, 1.8); o.visible_camera = False   # (low: not on the crest's top, seen from above)
+        o.rotation_euler = (Vector((0, 0, 1.4)) - o.location).to_track_quat('-Z', 'Y').to_euler()
+studio_world(sc, P["world"] if P.get("world") else (1.6 if P["jewels"] else 0.6))   # (jewelled: more for the polish to reflect)
 spot(sc, (-3, -4, 4), 150, (1, 0.95, 0.85)); spot(sc, (3, -3, 3), 80, (1, 1, 1))
 sun = bpy.data.lights.new("Sun", 'SUN'); sun.energy = 4; sun.angle = math.radians(6)   # crisp ground shadow
 so = link(sc, "Sun", sun); so.rotation_euler = (math.radians(30), 0, math.radians(-40))   # high sun: short shadow that stays in frame from above

@@ -356,6 +356,7 @@ function Action.teleport()
          Msg(L["Sorry!"])
          return
       end
+      ns.Magic.teleportShow()
       G.playerx, G.playery = ns.rnd(K.MAXX - 2) + 1, ns.rnd(K.MAXY - 2) + 1
       ns.Create.newCaveLevel(t)
       ns.Player.positionPlayer()
