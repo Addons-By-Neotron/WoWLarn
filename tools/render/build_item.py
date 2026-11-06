@@ -1,7 +1,7 @@
 """Build + render one of the carried trinkets / containers.  Usage:
 blender -b -P build_item.py -- out.png '{"kind":"chest", ...}'
 kind: chest, amulet, dragon_orb, enlightenment, scarab, cube, cookie, lock, lamp, hand, talisman, wand, annihilation,
-      and Grizzik's elixirs: rocket_fuel, mind_expander, swamp_brew, glowcap_stew, fel_tonic
+      and Grizzik's elixirs: rocket_fuel, mind_expander, swamp_brew, glowcap_stew, fel_tonic; belt
 yaw / tilt: turn the item (degrees) on top of its own pose.
 ground: stand it on a shadow catcher with a sun (the world objects: chest, lamp), seen from elev degrees.
 """
@@ -626,6 +626,102 @@ def fel_tonic():
         obj("Arc", tube(pts, 0.012, segs=6), arc, smooth=False)
     root.rotation_euler = (math.radians(8), math.radians(-12), math.radians(20))
     return Vector((0, 0, -0.05))
+
+def belt():
+    # Belt of Striking: a broad leather belt coiled in a loop, its pointed tail passed back through an ornate bronze
+    # buckle with a ruby; a row of iron studs (domed bosses between pairs of pyramids) and stitched edges
+    leather = mottled("Leather", (0.06, 0.025, 0.01), (0.17, 0.075, 0.03), rough=0.45, scale=22, bump=0.25, bump_scale=60)
+    dark = mat("Hole", (0.02, 0.01, 0.005), Roughness=0.8)[0]
+    thread = mat("Thread", (0.75, 0.62, 0.42), Roughness=0.8)[0]
+    bronze = mat("Bronze", (0.8, 0.5, 0.22), Metallic=1.0, Roughness=0.28)[0]
+    stud = mat("Stud", (0.6, 0.6, 0.62), Metallic=1.0, Roughness=0.25)[0]
+    ruby = mat("Ruby", (0.6, 0.01, 0.02), Roughness=0.04, **{"Coat Weight": 1.0, "Emission Color": (1.0, 0.05, 0.05, 1),
+                                                           "Emission Strength": 0.6})[0]
+    RX, RY, W, T = 0.66, 0.52, 0.4, 0.05           # the loop's radii, the strap's width and thickness
+    UP = Vector((0, 0, 1))
+    def frame(a, lift=0.0):
+        """Point on the loop at angle a (the buckle is at -90 degrees, facing the camera), its tangent and outward normal."""
+        p = Vector((RX*math.cos(a), RY*math.sin(a), 0.03*math.sin(2*a))); t = Vector((-RX*math.sin(a), RY*math.cos(a), 0)).normalized()
+        n = t.cross(UP).normalized()
+        return p + n*lift, t, n
+    def strap(secs, closed=False):
+        """Sweep the strap's rectangle along (centre, tangent, normal, width) sections."""
+        bm = bmesh.new(); rings = []
+        for p, t, n, w in secs:
+            u = UP*(w/2); v = n*(T/2)
+            rings.append([bm.verts.new(p + s*u + q*v) for s, q in ((-1, -1), (1, -1), (1, 1), (-1, 1))])
+        pairs = list(zip(rings, rings[1:])) + ([(rings[-1], rings[0])] if closed else [])
+        for A, B in pairs:
+            for k in range(4):
+                bm.faces.new((A[k], A[(k+1) % 4], B[(k+1) % 4], B[k]))
+        if not closed: bm.faces.new(rings[0][::-1]); bm.faces.new(rings[-1])
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        return bm
+    def basis(t, n, p):
+        """Matrix placing local x along the strap, y up its width and z out of its face, at p."""
+        b = Matrix((t, n.cross(t).normalized(), n)).transposed().to_4x4(); b.translation = p; return b
+    FRONT = -math.pi/2
+    N_ = 180
+    obj("Strap", strap([(*frame(FRONT + math.tau*i/N_), W) for i in range(N_)], closed=True), leather, bevel=0.008)
+    # the tail: outside the loop from the buckle round to the right, flaring off the loop and narrowing to a point
+    TAIL = 0.75; tail = []
+    lift = lambda s: T*1.05 + 0.45*max(0, s - 0.45)**2
+    for i in range(41):
+        s = i/40; p, t, n = frame(FRONT + TAIL*s, lift(s))
+        tail.append((p - UP*0.12*max(0, s - 0.45)**2, t, n, W*0.9*(1 if s < 0.86 else max(0.05, (1 - s)/0.14)**0.7)))
+    obj("Tail", strap(tail), leather, bevel=0.006)
+    holes = bmesh.new()
+    for s in (0.4, 0.52, 0.64, 0.76):               # the tail's punched holes
+        p, t, n = frame(FRONT + TAIL*s, lift(s)); p -= UP*0.12*max(0, s - 0.45)**2
+        h = bmesh.new(); bmesh.ops.create_cone(h, cap_ends=True, segments=16, radius1=0.022, radius2=0.022, depth=0.01)
+        h.transform(basis(t, n, p + n*T*0.48)); merge(holes, h)
+    obj("Holes", holes, dark)
+    st = bmesh.new(); sts = bmesh.new()
+    def on_loop(a, lift, inside):                  # skip the buckle and where the tail lies over the loop
+        d = (a - FRONT) % math.tau
+        return not (d < TAIL + 0.08 or d > math.tau - 0.3) or inside
+    for i in range(N_*2):                           # stitching along both edges of the outer face (loop and tail)
+        a = FRONT + math.tau*i/(N_*2)
+        for lift, ok in ((T/2, on_loop(a, 0, False)), (T*1.05 + T/2, (a - FRONT) % math.tau < TAIL*0.85)):
+            if not ok or i % 2: continue
+            p, t, n = frame(a, lift)
+            for side in (-1, 1):
+                d = bmesh.new(); bmesh.ops.create_cube(d, size=1)
+                d.transform(basis(t, n, p + UP*side*(W/2 - 0.03)) @ Matrix.Diagonal((0.03, 0.012, 0.012, 1))); merge(sts, d)
+    obj("Stitches", sts, thread)
+    for k in range(30):                             # studs: a domed boss, then a pair of pyramids, round the loop
+        a = FRONT + math.tau*(k + 0.5)/30
+        if not on_loop(a, 0, False): continue
+        p, t, n = frame(a, T/2)
+        if k % 2 == 0:
+            d = bmesh.new(); bmesh.ops.create_uvsphere(d, u_segments=20, v_segments=10, radius=0.07)
+            d.transform(basis(t, n, p) @ Matrix.Diagonal((1, 1, 0.6, 1))); merge(st, d)
+        else:
+            for side in (-1, 1):
+                d = bmesh.new(); bmesh.ops.create_cone(d, cap_ends=True, segments=4, radius1=0.05, radius2=0.0, depth=0.05)
+                d.transform(basis(t, n, p + UP*side*W*0.24 + n*0.025) @ Matrix.Rotation(math.pi/4, 4, 'Z')); merge(st, d)
+    obj("Studs", st, stud, smooth=False)
+    # the buckle: a rounded frame standing proud of the strap, a plate inside it with a ruby in a beaded setting
+    p, t, n = frame(FRONT, T*1.6); B = basis(t, n, p)
+    hx, hz, cr = 0.22, W/2 + 0.07, 0.08; ring_pts = []
+    for q in range(4):                              # rounded rectangle in the strap's plane
+        cx, cz = (hx - cr)*(1 if q in (0, 3) else -1), (hz - cr)*(1 if q < 2 else -1)
+        for j in range(9):
+            ang = math.pi/2*q + math.pi/2*j/8
+            ring_pts.append(B @ Vector((cx + cr*math.cos(ang), cz + cr*math.sin(ang), 0)))
+    ring_pts.append(ring_pts[0])
+    obj("Buckle", tube(ring_pts, 0.032, segs=12), bronze)
+    plate = bmesh.new(); bmesh.ops.create_uvsphere(plate, u_segments=32, v_segments=16, radius=1)
+    plate.transform(B @ Matrix.Diagonal((0.15, 0.2, 0.03, 1))); obj("Plate", plate, bronze)
+    obj("Setting", torus(0.08, 0.014, B @ Matrix.Translation((0, 0, 0.025)) @ Matrix.Diagonal((1, 1.25, 1, 1)), segs=32, tseg=8), bronze)
+    beads = bmesh.new()
+    for k in range(14):
+        ang = math.tau*k/14; sphere(0.016, B @ Vector((0.12*math.cos(ang), 0.155*math.sin(ang), 0.022)), bm=beads, segs=10)
+    obj("Beads", beads, bronze)
+    gem = bmesh.new(); bmesh.ops.create_uvsphere(gem, u_segments=24, v_segments=12, radius=1)
+    gem.transform(B @ Matrix.Translation((0, 0, 0.03)) @ Matrix.Diagonal((0.066, 0.085, 0.045, 1))); obj("Ruby", gem, ruby)
+    root.rotation_euler = (math.radians(24), 0, math.radians(-15))   # tipped back to look into the loop
+    return Vector((0, 0, 0))
 
 off = globals()[P["kind"]]()
 root.location = Vector((0, 0, 1.4)) + off

@@ -25,6 +25,7 @@ I = [
     (95, "volatile_swamp_brew", dict(kind="swamp_brew", halo=0.25, halo_color=(0.4, 1.0, 0.15))),
     (96, "glowcap_stew", dict(kind="glowcap_stew", halo=0.3, halo_color=(0.2, 0.6, 1.0))),
     (97, "overcharged_fel_tonic", dict(kind="fel_tonic", halo=0.4, halo_color=(0.45, 1.0, 0.1))),
+    (40, "belt", dict(kind="belt", halo=0.2, halo_color=(1.0, 0.25, 0.15))),   # Belt of Striking
 ]
 M += [(i, slug, dict(p, script="build_item.py")) for i, slug, p in I]
 M += [(68, "shield", dict(script="build_shield.py"))]   # the model is Artem Mykhailov's Medieval Shield (see CREDITS.md)
