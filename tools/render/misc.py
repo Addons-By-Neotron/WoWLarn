@@ -19,6 +19,12 @@ I = [
     (86, "hand_of_fear", dict(kind="hand", halo=0.3, halo_color=(0.5, 0.1, 0.8))),
     (87, "sphere_talisman", dict(kind="talisman", halo=0.35, halo_color=(0.55, 0.2, 1.0))),
     (88, "wand_of_wonder", dict(kind="wand", halo=0.35, halo_color=(1.0, 0.85, 1.0))),
+    # Grizzik's elixirs (sold in his den in the dungeon)
+    (93, "goblin_rocket_fuel", dict(kind="rocket_fuel", halo=0.25, halo_color=(1.0, 0.45, 0.1))),
+    (94, "gnomish_mind_expander", dict(kind="mind_expander", halo=0.35, halo_color=(0.7, 0.3, 1.0))),
+    (95, "volatile_swamp_brew", dict(kind="swamp_brew", halo=0.25, halo_color=(0.4, 1.0, 0.15))),
+    (96, "glowcap_stew", dict(kind="glowcap_stew", halo=0.3, halo_color=(0.2, 0.6, 1.0))),
+    (97, "overcharged_fel_tonic", dict(kind="fel_tonic", halo=0.4, halo_color=(0.45, 1.0, 0.1))),
 ]
 M += [(i, slug, dict(p, script="build_item.py")) for i, slug, p in I]
 # thrones: see thrones.py (Media/Throne); the chest and the brass lamp: objects.py (Media/Objects)

@@ -14,7 +14,7 @@ from render_common import link, mat, rig, render, studio_world, spot
 args = sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else []
 OUT = args[0] if args else "altar.png"
 P = dict(height=1.9, tint=(0.72, 0.7, 0.66), marble_scale=0.8, gold=(0.95, 0.68, 0.25), cloth=(0.1, 0.18, 0.45),
-         holy=True, pages=1.2, shaft=0.35, flame=6.0, yaw=-20, elev=20, save_blend=False)
+         holy=True, pages=1.2, shaft=0.35, flame=6.0, yaw=0, elev=20, save_blend=False)
 if len(args) > 1:
     P.update(json.loads(args[1]))
 bpy.ops.wm.read_factory_settings(use_empty=True)

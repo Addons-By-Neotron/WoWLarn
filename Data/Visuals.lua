@@ -289,10 +289,15 @@ local MISC_FILE = {
    [K.OCOOKIE] = "misc_83_fortune_cookie_icon.png", [K.OHANDofFEAR] = "misc_86_hand_of_fear_icon.png",
    [K.ONOTHEFT] = "misc_49_device_of_theft_prevention_icon.png",
    [K.OSPHTALISMAN] = "misc_87_sphere_talisman_icon.png", [K.OWWAND] = "misc_88_wand_of_wonder_icon.png",
+   -- Grizzik's elixirs
+   [K.OSPEED] = "misc_93_goblin_rocket_fuel_icon.png", [K.OACID] = "misc_94_gnomish_mind_expander_icon.png",
+   [K.OHASH] = "misc_95_volatile_swamp_brew_icon.png", [K.OSHROOMS] = "misc_96_glowcap_stew_icon.png",
+   [K.OCOKE] = "misc_97_overcharged_fel_tonic_icon.png",
 }
 
 -- The buildings of the town and the dungeon's bank branch (Media/Buildings).  The town has no 3D view, so the
--- ones there have a single picture; the bank branch (OBANK2, see ANGLED) has one for each camera angle.
+-- ones there have a single picture; the bank branch and Grizzik's den (OBANK2, OPAD, see ANGLED) have one for
+-- each camera angle.
 local BUILDINGS = "Interface\\AddOns\\WoWLarn\\Media\\Buildings\\"
 local BUILDING_FILE = {
    [K.OENTRANCE] = "building_54_entrance", [K.OHOME] = "building_69_home", [K.OBANK] = "building_16_bank",
@@ -335,8 +340,8 @@ local ANGLED = {
    [K.OCHEST] = "Objects\\object_44_chest", [K.OBRASSLAMP] = "Objects\\object_85_brass_lamp",
    -- the great marble statue and the holy altar
    [K.OSTATUE] = "Objects\\object_08_statue", [K.OALTAR] = "Objects\\object_01_altar",
-   -- the bank branch in the dungeon
-   [K.OBANK2] = "Buildings\\building_15_bank2",
+   -- the bank branch and Grizzik's den in the dungeon
+   [K.OBANK2] = "Buildings\\building_15_bank2", [K.OPAD] = "Buildings\\building_98_pad",
    -- the magic mirror
    [K.OMIRROR] = "Mirror\\mirror_11_mirror",
    -- pits and trap doors (the invisible trap door looks the same once it shows)
@@ -374,7 +379,7 @@ end
 
 -- Objects that fill their whole tile in the 2D map: the picture is enlarged until what it shows
 -- (the visible part, see Data/Anchors.lua) is as big as the tile, see V.Fill.
-V.FILL = { [K.OVOLUP] = true, [K.OVOLDOWN] = true, [K.OBANK2] = true }
+V.FILL = { [K.OVOLUP] = true, [K.OVOLDOWN] = true, [K.OBANK2] = true, [K.OPAD] = true }
 for id in pairs(BUILDING_FILE) do V.FILL[id] = true end
 -- The factor to enlarge the picture of an object by to fill a tile, or nil.
 function V.Fill(id)
@@ -403,7 +408,7 @@ V.STANDING = {
    [K.OELEVATORUP] = 1.8, [K.OELEVATORDOWN] = 1.9,  -- (about 0.5 of the frame wide)
    [K.OVOLUP] = 1.35, [K.OVOLDOWN] = 1.15,  -- (0.73 and 0.84 of the frame wide)
    [K.OANNIHILATION] = 1.1,  -- (fills about 0.6 of its frame; it turns in place, so it does not bob)
-   [K.OBANK2] = 1.3,  -- (about 0.77 of the frame wide)
+   [K.OBANK2] = 1.3, [K.OPAD] = 1.3,  -- (about 0.77 of the frame wide)
    [K.OCHEST] = 1.0, [K.OBRASSLAMP] = 0.9,  -- (about 0.85 of the frame wide)
    [K.OMIRROR] = 1.45, [K.OSTATUE] = 1.45,  -- (tall things like the thrones)
    [K.OALTAR] = 1.4,  -- (about 0.67 of the frame wide: about a tile)
@@ -1163,6 +1168,34 @@ function V.DisplayList(id)
    local list = { unpack(display) }
    for _, backup in ipairs(display.backup or {}) do list[#list + 1] = backup end
    return list
+end
+
+-- Prints which monster models this client does not have (some are only in newer clients).  The probe answers
+-- "no" until it has heard from the model, so every display is asked first and the report comes a little later.
+function V.ReportMissingDisplays()
+   local ids = {}
+   for id in pairs(V.DISPLAY) do ids[#ids + 1] = id end
+   table.sort(ids)
+   for _, id in ipairs(ids) do
+      for _, display in ipairs(V.DisplayList(id)) do Usable(display) end
+   end
+   C_Timer.After(3, function()
+      local lines = {}
+      for _, id in ipairs(ids) do
+         local list, gone = V.DisplayList(id), {}
+         for _, display in ipairs(list) do
+            if not Usable(display) then gone[#gone + 1] = display end
+         end
+         if #gone > 0 then
+            local entry = ns.G.monster and ns.G.monster[id]
+            lines[#lines + 1] = format("  %s (%d): %d of %d missing: %s", entry and entry.name or "?", id, #gone, #list,
+               table.concat(gone, ", "))
+         end
+      end
+      print(#lines > 0 and format("WoWLarn: %d monsters have models this client does not have:", #lines)
+         or "WoWLarn: all the monster models are there.")
+      for _, line in ipairs(lines) do print(line) end
+   end)
 end
 
 function V.MonsterGlyph(id)

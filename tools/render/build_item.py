@@ -1,6 +1,7 @@
 """Build + render one of the carried trinkets / containers.  Usage:
 blender -b -P build_item.py -- out.png '{"kind":"chest", ...}'
-kind: chest, amulet, dragon_orb, enlightenment, scarab, cube, cookie, lock, lamp, hand, talisman, wand, annihilation
+kind: chest, amulet, dragon_orb, enlightenment, scarab, cube, cookie, lock, lamp, hand, talisman, wand, annihilation,
+      and Grizzik's elixirs: rocket_fuel, mind_expander, swamp_brew, glowcap_stew, fel_tonic
 yaw / tilt: turn the item (degrees) on top of its own pose.
 ground: stand it on a shadow catcher with a sun (the world objects: chest, lamp), seen from elev degrees.
 """
@@ -498,6 +499,133 @@ def annihilation():
         a = math.tau*k/9 + rnd.uniform(-0.3, 0.3); r = rnd.uniform(0.6, 1.05)
         obj("Mote", ico(rnd.uniform(0.012, 0.025), (r*math.cos(a), r*math.sin(a), rnd.uniform(-0.03, 0.03)), subdiv=1), motes, parent=d)
     return Vector((0, 0, 0))
+
+# ---- Grizzik's elixirs (the dungeon's goblin alchemist)
+def glowing(name, c, strength):
+    return mat(name, tuple(0.3*v for v in c), Roughness=0.15, **{"Emission Color": (*c, 1), "Emission Strength": strength})[0]
+
+def rocket_fuel():
+    # Goblin Rocket Fuel: a riveted red canister with yellow hazard bands, a gauge window of glowing orange fuel, a
+    # valve wheel on its nozzle, three little fins round its foot
+    paint = mat("Paint", (0.5, 0.04, 0.02), Metallic=0.5, Roughness=0.4)[0]
+    hazard = mat("Hazard", (0.9, 0.65, 0.05), Metallic=0.3, Roughness=0.5)[0]
+    obj("Can", lathe([(0, -0.6), (0.36, -0.6), (0.4, -0.55), (0.4, 0.45), (0.3, 0.6), (0.12, 0.66), (0.12, 0.78), (0, 0.78)]), paint)
+    bands = bmesh.new()
+    for z in (-0.42, 0.3):
+        lathe([(0.405, z - 0.06), (0.405, z + 0.06)], bm=bands)
+    obj("Bands", bands, hazard)
+    rv = bmesh.new()
+    for z in (-0.5, -0.34, 0.22, 0.38):
+        for k in range(14):
+            a = math.tau*k/14; sphere(0.018, (0.41*math.cos(a), 0.41*math.sin(a), z), bm=rv, segs=8)
+    obj("Rivets", rv, IRON)
+    obj("Gauge", box(-0.07, 0.07, -0.42, -0.38, -0.25, 0.15), glowing("Fuel", (1.0, 0.4, 0.05), 4.0))
+    obj("GaugeRim", box(-0.1, 0.1, -0.415, -0.395, -0.28, 0.18), IRON, bevel=0.01)
+    obj("Wheel", torus(0.13, 0.022, Matrix.Translation((0, 0, 0.84)), segs=24, tseg=8), IRON)
+    sp = bmesh.new()
+    for k in range(4):
+        a = math.tau*k/4; tube([(0, 0, 0.84), (0.13*math.cos(a), 0.13*math.sin(a), 0.84)], 0.012, segs=6, bm=sp)
+    tube([(0, 0, 0.76), (0, 0, 0.86)], 0.03, segs=10, bm=sp)
+    obj("Spokes", sp, IRON)
+    fins = bmesh.new()
+    for k in range(3):
+        a = math.tau*k/3 + 0.5; c, s = math.cos(a), math.sin(a)
+        vs = [fins.verts.new(v) for v in ((0.38*c, 0.38*s, -0.6), (0.62*c, 0.62*s, -0.72), (0.62*c, 0.62*s, -0.6), (0.38*c, 0.38*s, -0.25))]
+        fins.faces.new(vs)
+    obj("Fins", fins, hazard, smooth=False)
+    root.rotation_euler = (math.radians(12), math.radians(-14), math.radians(25))
+    return Vector((0, 0, 0.05))
+
+def mind_expander():
+    # Gnomish Mind-Expander: a glass bulb of swirling violet-teal thought, a brass gear collar round its neck, a
+    # copper coil on top
+    brass = mat("Brass", (0.85, 0.6, 0.25), Metallic=1.0, Roughness=0.3)[0]
+    copper = mat("Copper", (0.9, 0.42, 0.25), Metallic=1.0, Roughness=0.3)[0]
+    swirl = glow_mat("Thought", [(0.3, (0.1, 0.0, 0.3)), (0.55, (0.6, 0.15, 1.0)), (0.75, (0.1, 0.9, 0.9)), (0.9, (1.0, 0.9, 1.0))], 2.0,
+                     base=(0.05, 0.02, 0.1), scale=3, distortion=6)
+    obj("Bulb", sphere(0.5, (0, 0, -0.15), segs=48), swirl)
+    obj("Glass", sphere(0.53, (0, 0, -0.15), segs=48), mat("Glass", (0.9, 0.95, 1.0), Roughness=0.02, IOR=1.45, **{"Transmission Weight": 1.0})[0])
+    gear = bmesh.new()
+    torus(0.26, 0.05, Matrix.Translation((0, 0, 0.42)), bm=gear, segs=32, tseg=8)
+    for k in range(16):                            # the gear's teeth
+        a = math.tau*k/16; t = bmesh.new(); bmesh.ops.create_cube(t, size=1)
+        t.transform(Matrix.Translation((0.33*math.cos(a), 0.33*math.sin(a), 0.42)) @ Matrix.Rotation(a, 4, 'Z') @ Matrix.Diagonal((0.07, 0.05, 0.08, 1)))
+        merge(gear, t)
+    obj("Gear", gear, brass, smooth=False)
+    obj("Neck", lathe([(0.17, 0.3), (0.15, 0.6), (0.19, 0.64), (0.19, 0.7), (0, 0.7)]), brass)
+    coil = [(0.11*math.cos(t), 0.11*math.sin(t), 0.72 + 0.045*t) for t in (k*0.35 for k in range(40))]
+    obj("Coil", tube(coil, 0.02, segs=8), copper)
+    obj("Spark", sphere(0.05, coil[-1], segs=12), glowing("Spark", (0.6, 1.0, 1.0), 8.0))
+    root.rotation_euler = (math.radians(10), math.radians(-10), math.radians(20))
+    return Vector((0, 0, -0.15))
+
+def swamp_brew():
+    # Volatile Swamp Brew: a mossy clay jug, its cork pushed up by green slime running over the lip and down its
+    # side, bubbles on the slime
+    clay = mottled("Clay", (0.12, 0.13, 0.05), (0.32, 0.22, 0.12), rough=0.8, scale=5)
+    obj("Jug", lathe([(0, -0.6), (0.38, -0.6), (0.48, -0.3), (0.46, 0.05), (0.3, 0.32), (0.16, 0.42), (0.16, 0.52), (0.19, 0.56), (0.13, 0.56), (0, 0.5)]), clay)
+    obj("Handle", tube([(0.15, 0, 0.42), (0.42, 0, 0.42), (0.55, 0, 0.2), (0.46, 0, -0.05)], 0.045, segs=10), clay)
+    slime = glowing("Slime", (0.35, 1.0, 0.1), 1.2)
+    obj("Cork", lathe([(0, 0.6), (0.13, 0.6), (0.15, 0.78), (0, 0.8)]), mottled("Cork", (0.3, 0.2, 0.1), (0.55, 0.4, 0.25), scale=20, bump=0.5))
+    g = bmesh.new()
+    lathe([(0.0, 0.555), (0.2, 0.56), (0.21, 0.58), (0.0, 0.6)], bm=g)        # a pool of slime in the mouth
+    for a, length in ((-1.9, 0.45), (-1.4, 0.75), (-0.9, 0.35), (2.4, 0.55)):
+        pts = []
+        for k in range(8):
+            t = k/7; z = 0.56 - t*length
+            r = 0.2 + 0.28*min(1.0, max(0.0, (0.56 - z)/0.3)) if z > 0.05 else 0.47
+            pts.append((r*math.cos(a + 0.05*math.sin(5*t)), r*math.sin(a + 0.05*math.sin(5*t)), z))
+        tube(pts, [0.04, 0.035, 0.05], segs=8, bm=g)
+        sphere(0.055, pts[-1], bm=g, segs=12)       # a drop gathering at its end
+    for k in range(5):
+        a = rnd.uniform(0, math.tau); sphere(rnd.uniform(0.02, 0.04), (0.12*math.cos(a), 0.12*math.sin(a), 0.6), bm=g, segs=10)
+    obj("Slime", g, slime)
+    root.rotation_euler = (math.radians(14), 0, math.radians(-30))
+    return Vector((0, 0, 0.0))
+
+def glowcap_stew():
+    # Glowcap Stew: a wooden bowl of brown stew with glowing blue mushroom caps floating in it, a spoon
+    wood = wood_material("Bowl", (0.2, 0.11, 0.05), axis="X", roughness=0.6)
+    obj("Bowl", lathe([(0, -0.35), (0.3, -0.36), (0.62, -0.15), (0.7, 0.15), (0.66, 0.16), (0.58, -0.1), (0.28, -0.28), (0, -0.28)]), wood)
+    obj("Stew", lathe([(0, 0.06), (0.64, 0.06), (0, 0.065)]), mottled("Stew", (0.12, 0.05, 0.02), (0.35, 0.18, 0.06), rough=0.35, scale=8, bump=0.6))
+    cap = glowing("Glowcap", (0.15, 0.6, 1.0), 2.5); stem = mat("Stem", (0.75, 0.75, 0.7), Roughness=0.6)[0]
+    for x, y, r in ((-0.25, -0.1, 0.16), (0.2, 0.15, 0.13), (0.15, -0.28, 0.11), (-0.1, 0.3, 0.1), (0.38, -0.05, 0.09)):
+        c = obj("Cap", lathe([(0, 0.06), (r, 0.07), (r*0.9, 0.07 + r*0.45), (r*0.5, 0.07 + r*0.75), (0, 0.07 + r*0.8)], segs=24), cap)
+        c.location = (x, y, 0)
+        dots = bmesh.new()                         # pale spots on the cap
+        for k in range(4):
+            a = rnd.uniform(0, math.tau); sphere(r*0.12, (r*0.5*math.cos(a), r*0.5*math.sin(a), 0.07 + r*0.65), bm=dots, segs=8)
+        obj("Spots", dots, stem, parent=c)
+    obj("Spoon", tube([(0.3, 0.1, 0.0), (0.55, 0.25, 0.3), (0.8, 0.4, 0.62)], 0.028, segs=8), wood)
+    obj("SpoonBowl", sphere(0.1, (0.28, 0.08, 0.02), scale=(1.2, 0.8, 0.35), segs=16), wood)
+    root.rotation_euler = (math.radians(28), 0, math.radians(15))
+    return Vector((0, 0, 0.1))
+
+def fel_tonic():
+    # Overcharged Fel Tonic: a tall vial of crackling fel-green in an iron cage, a jagged violet crystal stopper,
+    # green lightning arcing round it
+    fel = glow_mat("Fel", [(0.3, (0.05, 0.25, 0.0)), (0.6, (0.4, 1.0, 0.05)), (0.85, (0.9, 1.0, 0.5))], 2.5, base=(0.02, 0.1, 0.0), scale=3, distortion=5)
+    obj("Fel", lathe([(0, -0.75), (0.2, -0.74), (0.24, -0.6), (0.24, 0.35), (0.12, 0.5), (0.1, 0.6), (0, 0.6)]), fel)
+    obj("Glass", lathe([(0, -0.8), (0.23, -0.79), (0.27, -0.62), (0.27, 0.37), (0.14, 0.53), (0.13, 0.66), (0, 0.66)]),
+        mat("Glass", (0.85, 1.0, 0.85), Roughness=0.02, IOR=1.45, **{"Transmission Weight": 1.0})[0])
+    cage = bmesh.new()
+    for z in (-0.65, -0.1, 0.35):
+        torus(0.29, 0.022, Matrix.Translation((0, 0, z)), bm=cage, segs=32, tseg=6)
+    for k in range(4):
+        a = math.tau*k/4 + 0.4; tube([(0.29*math.cos(a), 0.29*math.sin(a), z) for z in (-0.65, 0.35)], 0.02, segs=6, bm=cage)
+    obj("Cage", cage, IRON)
+    crystal = glowing("Crystal", (0.6, 0.1, 1.0), 1.5)
+    obj("Stopper", cone(0.12, 0.38, (0, 0, 0.6), (0.1, 0, 1)), crystal, smooth=False)
+    obj("Shard", cone(0.06, 0.22, (0.05, 0.03, 0.62), (0.7, 0.3, 1)), crystal, smooth=False)
+    arc = glowing("Arc", (0.5, 1.0, 0.2), 10.0)
+    for a0, z0, z1 in ((0.5, -0.5, 0.2), (2.6, -0.2, 0.45), (4.3, -0.7, -0.1)):
+        pts = []
+        for k in range(9):
+            t = k/8; a = a0 + 1.2*t; r = 0.36 + rnd.uniform(-0.06, 0.08)
+            pts.append((r*math.cos(a), r*math.sin(a), z0 + (z1 - z0)*t + rnd.uniform(-0.05, 0.05)))
+        obj("Arc", tube(pts, 0.012, segs=6), arc, smooth=False)
+    root.rotation_euler = (math.radians(8), math.radians(-12), math.radians(20))
+    return Vector((0, 0, -0.05))
 
 off = globals()[P["kind"]]()
 root.location = Vector((0, 0, 1.4)) + off

@@ -1,7 +1,8 @@
 """Build + render one of the town's buildings (or the dungeon's bank branch) on the ground, with a shadow.  Usage:
 blender -b -P build_building.py -- out.png '{"kind":"home", "elev":20, ...}'
 kind: entrance (the way down into the dungeon), home, bank (the town's), bank2 (its branch in the dungeon: a vault
-      door in the rock), dndstore (the Thrift Shoppe), school, tradepost, lrs (the Larn Revenue Service).
+      door in the rock), dndstore (the Thrift Shoppe), school, tradepost, lrs (the Larn Revenue Service), pad (Grizzik's
+      Questionable Elixirs, the goblin alchemist's den in the dungeon).
 All face -y (the camera) and are turned by yaw so the front and the right-hand side show.
 """
 import bpy, bmesh, math, os, random, sys, json
@@ -157,6 +158,8 @@ IRON = mat("Iron", (0.05, 0.05, 0.055), Metallic=0.8, Roughness=0.45)[0]
 GOLD = mat("Gold", (1.0, 0.7, 0.28), Metallic=1.0, Roughness=0.25)[0]
 BLACK = mat("Black", (0.0, 0.0, 0.0), Roughness=1.0)[0]
 GLOW = mat("Window", (0.2, 0.1, 0.03), Roughness=0.2, **{"Emission Color": (1.0, 0.62, 0.25, 1), "Emission Strength": 2.5})[0]
+BREW = mat("Brew", (0.05, 0.3, 0.03), Roughness=0.2, **{"Emission Color": (0.2, 1.0, 0.1, 1), "Emission Strength": 1.2})[0]
+BREW.cycles.emission_sampling = 'NONE'             # (not a light: it would haze the shadow catcher)
 FLAME = mat("Flame", (1.0, 0.5, 0.1), **{"Emission Color": (1.0, 0.45, 0.08, 1), "Emission Strength": 12.0})[0]
 
 # ---- parts
@@ -474,6 +477,78 @@ def lrs():
         window(side(W) @ Matrix.Translation((0, -0.02, 0)), cy, 0.6, w=0.2, h=0.36, frame=TRIM, bars=True)
         window(side(W) @ Matrix.Translation((0, -0.02, 0)), cy, 1.25, w=0.2, h=0.3, frame=TRIM, bars=True)
     return 1.0
+
+def flask(m):
+    """Emblem: a round-bottomed flask of glowing green brew."""
+    obj("Flask", lathe([(0, -0.09), (0.06, -0.085), (0.085, -0.04), (0.07, 0.0), (0.025, 0.03), (0.022, 0.09), (0, 0.09)], 20,
+                       m @ Matrix.Translation((0, -0.07, 0))), BREW, smooth=True)
+
+def pad():
+    # Grizzik's Questionable Elixirs, the goblin alchemist's den down in the dungeon: a ramshackle front of planks
+    # patched with riveted scrap iron, dug into a mound of rock, a round-topped door, a crooked sign with a flask,
+    # a bubbling cauldron of green brew in front, bottles on a crate, a smokestack poking out of the rock
+    rk = rock_material("Rock", (0.3, 0.28, 0.26), 0.8)[0]
+    bm = bmesh.new()
+    rock_lump(Vector((0, 0.4, 0.38)), 1.15, (1.1, 0.7, 0.85), bm=bm)
+    for k in range(5):
+        a = rnd.uniform(-math.pi, math.pi); rock_lump(Vector((0.95*math.cos(a), 0.4 + 0.6*math.sin(a), 0.1)), rnd.uniform(0.25, 0.45), bm=bm, subdiv=1)
+    obj("Mound", bm, rk, smooth=True)
+    boards = wood_material("Boards", (0.14, 0.085, 0.045), axis="Z")
+    pl = bmesh.new()                               # the front: planks of uneven heights, a little askew
+    for k in range(9):
+        x = -0.72 + 0.16*k; top = 1.05 + rnd.uniform(-0.08, 0.08)
+        box(x, x + 0.15, -0.48, -0.1, 0, top, bm=pl, m=Matrix.Rotation(rnd.uniform(-0.02, 0.02), 4, 'Y'))
+    obj("Planks", pl, boards, bevel=0.006)
+    obj("Beam", box(-0.8, 0.8, -0.55, -0.1, 1.0, 1.1, m=Matrix.Rotation(math.radians(-3), 4, 'Y')), TIMBERX, bevel=0.01)
+    scrap = mat("Scrap", (0.25, 0.13, 0.07), Metallic=0.7, Roughness=0.7)[0]   # rusty patches, riveted on
+    rv = bmesh.new()
+    for x0, x1, z0, z1, tw in ((-0.68, -0.38, 0.12, 0.46, 4), (0.4, 0.7, 0.55, 0.9, -6), (0.42, 0.66, 0.08, 0.3, 2)):
+        mm = Matrix.Translation(((x0 + x1)/2, -0.49, (z0 + z1)/2)) @ Matrix.Rotation(math.radians(tw), 4, 'Y')
+        obj("Patch", box(-(x1 - x0)/2, (x1 - x0)/2, -0.012, 0.0, -(z1 - z0)/2, (z1 - z0)/2, m=mm), scrap, bevel=0.004)
+        for sx in (-1, 1):
+            for sz in (-1, 1):
+                t = bmesh.new(); bmesh.ops.create_uvsphere(t, u_segments=8, v_segments=5, radius=0.012)
+                t.transform(mm @ Matrix.Translation((sx*((x1 - x0)/2 - 0.03), -0.012, sz*((z1 - z0)/2 - 0.03)))); merge(rv, t)
+    obj("Rivets", rv, IRON, smooth=True)
+    door(FRONT @ Matrix.Translation((0, -0.48, 0)), -0.05, w=0.36, h=0.68, frame=TIMBER, wood=wood_material("PadDoor", (0.2, 0.06, 0.03), axis="Z"))
+    window(FRONT @ Matrix.Translation((0, -0.5, 0)), 0.5, 0.42 + 0.3, w=0.18, h=0.18, bars=True)
+    sign(FRONT @ Matrix.Translation((0, -0.42, 0)) @ Matrix.Rotation(math.radians(8), 4, 'Y'), -0.62, 0.95, flask, w=0.34, h=0.24)
+    st = Matrix.Translation((0.5, 0.45, 0.0))      # the smokestack, out of the rock behind the front, riveted bands
+    obj("Stack", lathe([(0.07, 0.6), (0.07, 1.75), (0.1, 1.8), (0.1, 1.86), (0.0, 1.86)], 16, st), scrap, smooth=True)
+    hb = bmesh.new()
+    for z in (1.1, 1.45):
+        lathe([(0.078, z), (0.078, z + 0.03)], 16, st, bm=hb)
+    obj("Bands", hb, IRON, smooth=True)
+    obj("Spark", lathe([(0, 1.86), (0.06, 1.861), (0, 1.862)], 16, st), BREW)   # green glow inside its mouth
+    # the cauldron: an iron pot on three legs, brimming with glowing green brew, bubbles on it
+    cx, cy = 0.45, -0.85
+    obj("Pot", lathe([(0.0, 0.08), (0.12, 0.09), (0.2, 0.16), (0.22, 0.26), (0.19, 0.34), (0.2, 0.36), (0.17, 0.36), (0.16, 0.33),
+                      (0.18, 0.26), (0.16, 0.17), (0.0, 0.12)], 24, Matrix.Translation((cx, cy, 0))), IRON, smooth=True)
+    lg = bmesh.new()
+    for k in range(3):
+        a = math.tau*k/3 + 0.4
+        box(-0.015, 0.015, -0.015, 0.015, 0, 0.12, bm=lg, m=Matrix.Translation((cx + 0.13*math.cos(a), cy + 0.13*math.sin(a), 0)))
+    obj("Legs", lg, IRON)
+    obj("Brew", lathe([(0, 0.31), (0.17, 0.31), (0, 0.312)], 24, Matrix.Translation((cx, cy, 0))), BREW, smooth=True)
+    bb = bmesh.new()
+    for k in range(7):
+        r = rnd.uniform(0.02, 0.045); a = rnd.uniform(0, math.tau); d = rnd.uniform(0, 0.12)
+        t = bmesh.new(); bmesh.ops.create_uvsphere(t, u_segments=10, v_segments=6, radius=r)
+        t.transform(Matrix.Translation((cx + d*math.cos(a), cy + d*math.sin(a), 0.315)) @ Matrix.Diagonal((1, 1, 0.7, 1))); merge(bb, t)
+    obj("Bubbles", bb, BREW, smooth=True)
+    l = bpy.data.lights.new("BrewGlow", 'POINT'); l.energy = 15; l.color = (0.4, 1.0, 0.25); l.shadow_soft_size = 0.2
+    lo = link(sc, "BrewGlow", l); lo.location = (cx, cy, 0.5); lo.parent = root
+    # a crate of elixirs beside the door: five bottles, one of each colour
+    crates_and_barrels([(-0.55, -0.75, "crate", 0.13)])
+    for k, c in enumerate(((1.0, 0.45, 0.1), (0.25, 0.5, 1.0), (0.3, 0.8, 0.15), (0.9, 0.85, 0.3), (0.7, 0.2, 0.9))):
+        g = mat(f"Elixir{k}", tuple(0.4*v for v in c), Roughness=0.1, IOR=1.45, **{"Transmission Weight": 0.6,
+                "Emission Color": (*c, 1), "Emission Strength": 0.6})[0]
+        g.cycles.emission_sampling = 'NONE'
+        x = -0.65 + 0.05*k; y = -0.75 + (0.04 if k % 2 else -0.04)
+        obj("Bottle", lathe([(0, 0), (0.025, 0), (0.028, 0.05), (0.012, 0.075), (0.011, 0.1), (0, 0.1)], 12,
+                            Matrix.Translation((x, y, 0.26))), g, smooth=True)
+    torch(-0.88, -0.5, 0.85)
+    return 0.6
 
 def entrance():
     # the way down: a stone stair sinking into a dark pit, ringed by a paved kerb, under a stone arch with a torch

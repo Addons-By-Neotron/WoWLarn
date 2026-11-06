@@ -1,12 +1,12 @@
 """Standing mirror -> Media/Mirror as 256px icons (world object).  Id is the game's OMIRROR.
 Usage: [JOBS=4] python3 mirror.py [slug ...]   (no args = all)
 <slug> is the 20 degree view (like the thrones); <slug>_<angle> the views for the game camera's 30-80 degrees, every 5.
-Turned 22.5 degrees: mostly facing the camera, with a little of the frame's depth showing.
+Facing the camera square on.
 """
 import runner
 
 M = [
-    (11, "mirror", dict(yaw=22.5, shadow_cut=24)),
+    (11, "mirror", dict(yaw=0, shadow_cut=24)),
 ]
 # one fixed crop for all views (frame, px of the 512 render), bottom-aligned so the mirror stands on the icon's
 # bottom edge; FRAME fits the widest view (BBOX=1 python3 mirror.py ... reports each view's reach from the centre)

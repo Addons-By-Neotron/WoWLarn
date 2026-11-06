@@ -12,7 +12,7 @@ from render_common import link, mat, rig, render, studio_world, spot
 
 args = sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else []
 OUT = args[0] if args else "statue.png"
-P = dict(tint=(0.9, 0.87, 0.8), marble_scale=0.6, height=3.0, grime=0.4, yaw=-20, elev=20, save_blend=False)
+P = dict(tint=(0.9, 0.87, 0.8), marble_scale=0.6, height=3.0, grime=0.4, yaw=0, elev=20, save_blend=False)
 if len(args) > 1:
     P.update(json.loads(args[1]))
 bpy.ops.wm.read_factory_settings(use_empty=True)
