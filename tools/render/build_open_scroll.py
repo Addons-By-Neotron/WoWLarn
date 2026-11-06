@@ -1,5 +1,6 @@
 """Build + render an open scroll: a flat sheet with a roll at top and bottom, both curling backwards.
 Usage: blender -b -P build_open_scroll.py -- out.png '{"ink":"/path/glyphs.png", ...}'
+top_flip: the top roll curls away from the viewer instead (illogical, but looks nicer). res/samples: render size and quality.
 """
 import bpy, bmesh, math, os, random, sys, json
 from mathutils import Vector
@@ -9,7 +10,8 @@ from render_common import paper_material, rig, render
 args = sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else []
 OUT = args[0] if args else "open_scroll.png"
 P = dict(paper=(0.8, 0.66, 0.42), ink=None, ink_color=(0.12, 0.05, 0.02),
-         width=1.5, height=1.8, roll_r=0.17, turns=2.3, yaw=24, seed=5, save_blend=False)
+         width=1.5, height=1.8, roll_r=0.17, turns=2.3, yaw=24, seed=5, save_blend=False,
+         top_flip=False, res=512, samples=128)
 if len(args) > 1:
     P.update(json.loads(args[1]))
 random.seed(P["seed"])
@@ -25,7 +27,10 @@ def spiral(phi, sign):
     r = R*(1 - 0.65*phi/PHI)
     return (-R + r*math.cos(phi), sign*(H/2 + r*math.sin(phi)))
 ns = 120
-sec = [spiral(PHI*(1 - k/ns), 1) for k in range(ns)]                    # top roll, inner -> front edge
+def top_spiral(phi):
+    y, z = spiral(phi, 1)
+    return (-y, z) if P["top_flip"] else (y, z)                        # mirrored: roll centre behind the sheet
+sec = [top_spiral(PHI*(1 - k/ns)) for k in range(ns)]                   # top roll, inner -> front edge
 nf = 40
 for k in range(nf+1):                                                    # flat sheet with a slight bow
     t = k/nf; sec.append((0.03*math.sin(t*math.pi), H/2 - H*t))   # bows slightly away
@@ -70,4 +75,4 @@ sheet.rotation_euler = (0, 0, math.radians(P["yaw"]))
 sheet.location = (0, 0, 1.4)
 
 rig(sc)
-render(sc, OUT, P["save_blend"])
+render(sc, OUT, P["save_blend"], P["samples"], P["res"])
