@@ -341,6 +341,10 @@ local ANGLED = {
    [K.OMIRROR] = "Mirror\\mirror_11_mirror",
    -- pits and trap doors (the invisible trap door looks the same once it shows)
    [K.OPIT] = "Traps\\trap_04_pit", [K.OTRAPDOOR] = "Traps\\trap_75_trapdoor", [K.OIVTRAPDOOR] = "Traps\\trap_75_trapdoor",
+   -- teleport, arrow and dart traps (the hidden ones look the same once they show)
+   [K.OTELEPORTER] = "Traps\\trap_09_teleport", [K.OIVTELETRAP] = "Traps\\trap_09_teleport",
+   [K.OTRAPARROW] = "Traps\\trap_66_arrow", [K.OTRAPARROWIV] = "Traps\\trap_66_arrow",
+   [K.ODARTRAP] = "Traps\\trap_74_dart", [K.OIVDARTRAP] = "Traps\\trap_74_dart",
 }
 -- The picture of an angled object without the folder path and the "_icon.png": the plain one
 -- for the 2D map (no angle), else the one that fits the camera angle.
@@ -357,6 +361,8 @@ end
 -- not by the bottom edge of the frame (the pictures are not centred in their frame, and the
 -- thrones are meant to rest on the bottom).  See Data/Anchors.lua, from tools/gen-anchors.py.
 local CENTERED = { [K.OSTAIRSDOWN] = true, [K.OSTAIRSUP] = true, [K.OPIT] = true, [K.OTRAPDOOR] = true, [K.OIVTRAPDOOR] = true,
+   [K.OTELEPORTER] = true, [K.OIVTELETRAP] = true, [K.OTRAPARROW] = true, [K.OTRAPARROWIV] = true,
+   [K.ODARTRAP] = true, [K.OIVDARTRAP] = true,
    [K.OFOUNTAIN] = true, [K.ODEADFOUNTAIN] = true,
    [K.OELEVATORUP] = true, [K.OELEVATORDOWN] = true,
    [K.OVOLUP] = true, [K.OVOLDOWN] = true }  -- (the stairs up: by the middle of their round base)
@@ -402,6 +408,8 @@ V.STANDING = {
    [K.OMIRROR] = 1.45, [K.OSTATUE] = 1.45,  -- (tall things like the thrones)
    [K.OALTAR] = 1.4,  -- (about 0.67 of the frame wide: about a tile)
    [K.OPIT] = 1.4, [K.OTRAPDOOR] = 1.6, [K.OIVTRAPDOOR] = 1.6,  -- (holes in the floor: 0.7 and 0.55 of the frame wide)
+   [K.OTRAPARROW] = 1.6, [K.OTRAPARROWIV] = 1.6, [K.ODARTRAP] = 1.6, [K.OIVDARTRAP] = 1.6,  -- (in the trapdoor's frame)
+   [K.OTELEPORTER] = 1.6, [K.OIVTELETRAP] = 1.6,  -- (the dais: 0.5 of the frame wide)
 }
 
 -- Objects that lie flat in the floor: in the 3D view their top-down picture (the one without an angle)
