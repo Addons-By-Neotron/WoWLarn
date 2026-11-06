@@ -293,6 +293,7 @@ local MISC_FILE = {
    [K.OSPEED] = "misc_93_goblin_rocket_fuel_icon.png", [K.OACID] = "misc_94_gnomish_mind_expander_icon.png",
    [K.OHASH] = "misc_95_volatile_swamp_brew_icon.png", [K.OSHROOMS] = "misc_96_glowcap_stew_icon.png",
    [K.OCOKE] = "misc_97_overcharged_fel_tonic_icon.png",
+   [K.OSHIELD] = "misc_68_shield_icon.png",
 }
 
 -- The buildings of the town and the dungeon's bank branch (Media/Buildings).  The town has no 3D view, so the

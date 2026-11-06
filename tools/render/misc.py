@@ -27,6 +27,7 @@ I = [
     (97, "overcharged_fel_tonic", dict(kind="fel_tonic", halo=0.4, halo_color=(0.45, 1.0, 0.1))),
 ]
 M += [(i, slug, dict(p, script="build_item.py")) for i, slug, p in I]
+M += [(68, "shield", dict(script="build_shield.py"))]   # the model is Artem Mykhailov's Medieval Shield (see CREDITS.md)
 # thrones: see thrones.py (Media/Throne); the chest and the brass lamp: objects.py (Media/Objects)
 
 def prepare(name, i, p, script):
