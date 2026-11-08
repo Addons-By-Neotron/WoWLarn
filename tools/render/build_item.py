@@ -180,7 +180,6 @@ def chest():
     box(-0.07, 0.07, -D - 0.07, -D - 0.03, Hb - 0.12, Hb + 0.25, bm=lock)   # the hasp down from the lid
     obj("Lock", lock, mat("Brass", (0.75, 0.5, 0.2), Metallic=1.0, Roughness=0.3)[0], smooth=False, bevel=0.01)
     obj("Keyhole", box(-0.025, 0.025, -D - 0.055, -D - 0.045, Hb - 0.32, Hb - 0.2), BLACK, smooth=False)
-    root.rotation_euler = (0, 0, math.radians(-14))
     return Vector((0, 0, -0.65))
 
 def amulet():

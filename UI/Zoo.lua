@@ -93,7 +93,10 @@ function zoo:Create()
       self:Update()
    end)
    Button(L["Close"], 50, 180, function() frame:Hide() end)
-   frame:SetScript("OnShow", function() self:Update() end)
+   frame:SetScript("OnShow", function()
+      self:Update()
+      ns.Visuals.ReportMissingDisplays()  -- (a monster whose model is missing shows only its shadow)
+   end)
 end
 
 -- Draws every monster, in the 2.5D view of the map or flat; the models are placed afresh, so

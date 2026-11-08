@@ -690,7 +690,7 @@ local function DrawFlat(layers, x, y, object)
    local ex, ey = Project(cx - half, cy + half, 0)
    if not (ax and bx and dx and ex) then return end
    surface = "picture"
-   Quad(layers[FLOOR], WHITE, ax, ay, bx, by, dx, dy, ex, ey, V.ObjectIcon(object), flat.box, 2)
+   Quad(layers[FLOOR], WHITE, ax, ay, bx, by, dx, dy, ex, ey, flat.picture, flat.box, 2)
 end
 
 -- A door, built like the walls from quads: the leaves (the picture of the door) stand in the middle of

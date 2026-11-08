@@ -418,14 +418,13 @@ V.STANDING = {
    [K.OTELEPORTER] = 1.6, [K.OIVTELETRAP] = 1.6,  -- (the dais: 0.5 of the frame wide)
 }
 
--- Objects that lie flat in the floor: in the 3D view their top-down picture (the one without an angle)
--- is laid on the floor like a tile, so it has the perspective of the floor and does not skew
--- as the camera moves.  size: of a tile; box: the part of the picture that shows the object
--- (left, right, top, bottom, as parts of the picture).
-V.FLAT = {
-   [K.OTRAPDOOR] = { size = 0.85, box = { 59 / 256, 197 / 256, 111 / 256, 249 / 256 } },
-   [K.OIVTRAPDOOR] = { size = 0.85, box = { 59 / 256, 197 / 256, 111 / 256, 249 / 256 } },
-}
+-- Objects that lie flat in the floor: in the 3D view their top-down picture (picture: seen straight
+-- down, not the 2D map's) is laid on the floor like a tile, so it has the perspective of the floor and
+-- does not skew as the camera moves.  size: of a tile; box: the part of the picture that shows the
+-- object (left, right, top, bottom, as parts of the picture).
+local TRAPDOOR_FLAT = { size = 0.85, picture = MEDIA .. "Traps\\trap_75_trapdoor_top_icon.png",
+   box = { 59 / 256, 197 / 256, 111 / 256, 249 / 256 } }
+V.FLAT = { [K.OTRAPDOOR] = TRAPDOOR_FLAT, [K.OIVTRAPDOOR] = TRAPDOOR_FLAT }
 
 function V.PotionPicture(arg)
    local known = arg and arg > 0 and ns.G.potionknown[arg] ~= 0 and POTION_FILE[arg]
@@ -512,40 +511,67 @@ local function Displays(...)
    return list
 end
 
--- Whether the client has a display (some are only in the newer clients).  A display is
--- tried on a model that is never shown; the answer is kept.  One that is not known at once
--- is tried again when its model has loaded, and the map is drawn again then.
--- A display the client does not know is shown as a placeholder model (it has a model file id
--- too), so the file of a display that cannot exist is learned first and counts as "not there".
-local usable, probe, missing = {}, nil, nil
+-- Whether the client has a display (some are only in the newer clients).  Each display is
+-- tried on a model of its own that is never shown (a shared one would answer only for the
+-- last display asked: each new one replaces the one before it has loaded).  A display
+-- the client does not know is shown as a placeholder model (it has a model file id too), so
+-- the file of a display that cannot exist is learned first and counts as "not there".  The
+-- answer is known once both have loaded; until then the display counts as not there, and the
+-- map is drawn again when one turns out to be.
+local usable, probes, spare, missing, placeholder, blind = {}, {}, {}, nil, nil, false
 local NO_SUCH_DISPLAY = 99999999
-local function Has(model)
-   local file = model.GetModelFileID and model:GetModelFileID()
-   return file ~= nil and file ~= 0 and file ~= missing
+local function FileOf(model)
+   local file = model:GetModelFileID()
+   if file ~= nil and file ~= 0 then return file end
+end
+-- The answer for a probe that has loaded, if the placeholder's file is known by now; the
+-- probe is then put back for another display.  later: the answer came after the display was
+-- asked for, so the map is drawn again if it is there.
+local function Decide(model, later)
+   local display = model.display
+   if not display or missing == nil or not FileOf(model) then return end
+   usable[display] = FileOf(model) ~= missing
+   probes[display], model.display = nil, nil
+   model:ClearModel()
+   spare[#spare + 1] = model
+   if later and usable[display] then ns.ui:Refresh("map") end
+end
+local function OnProbeLoaded(model)
+   if model == placeholder then
+      if missing == nil then
+         missing = FileOf(model)
+         for _, waiting in pairs(probes) do Decide(waiting, true) end
+      end
+   else
+      Decide(model, true)
+   end
+end
+local function Probe()
+   local model = table.remove(spare)
+   if model then return model end
+   model = CreateFrame("PlayerModel", nil, UIParent)
+   model:SetSize(8, 8)
+   model:SetPoint("TOPLEFT", UIParent, "BOTTOMRIGHT", 100, -100)  -- (off screen)
+   model:SetScript("OnModelLoaded", OnProbeLoaded)
+   return model
 end
 local function Usable(display)
    if usable[display] ~= nil then return usable[display] end
-   if not probe then
-      probe = CreateFrame("PlayerModel", nil, UIParent)
-      probe:SetSize(8, 8)
-      probe:SetPoint("TOPLEFT", UIParent, "BOTTOMRIGHT", 100, -100)  -- (off screen)
-      probe:SetScript("OnModelLoaded", function(model)
-         if model.display == NO_SUCH_DISPLAY then
-            missing = model.GetModelFileID and model:GetModelFileID()
-         elseif model.display and not usable[model.display] and Has(model) then
-            usable[model.display] = true
-            ns.ui:Refresh("map")
-         end
-      end)
-      probe.display = NO_SUCH_DISPLAY
-      probe:SetDisplayInfo(NO_SUCH_DISPLAY)
-      missing = probe.GetModelFileID and probe:GetModelFileID()
+   if not placeholder then
+      placeholder = Probe()
+      blind = not placeholder.GetModelFileID  -- (an old client: can't tell, so all are there)
+      if blind then return true end
+      placeholder:SetDisplayInfo(NO_SUCH_DISPLAY)
+      missing = FileOf(placeholder)
    end
-   probe.display = display
-   if display < 0 then probe:SetModel(-display) else probe:SetDisplayInfo(display) end
-   -- (until the placeholder is known, the answer waits for OnModelLoaded)
-   usable[display] = (not probe.GetModelFileID) or (missing ~= nil and Has(probe))
-   return usable[display]
+   if blind then return true end
+   if not probes[display] then
+      local model = Probe()
+      probes[display], model.display = model, display
+      if display < 0 then model:SetModel(-display) else model:SetDisplayInfo(display) end
+      Decide(model)  -- (some load at once)
+   end
+   return usable[display] or false
 end
 
 -- Displays to try in turn: { first choices..., backup = { used if none of those is there } }.
@@ -1183,14 +1209,16 @@ function V.ReportMissingDisplays()
    C_Timer.After(3, function()
       local lines = {}
       for _, id in ipairs(ids) do
-         local list, gone = V.DisplayList(id), {}
+         local list, gone, unsure = V.DisplayList(id), {}, {}
          for _, display in ipairs(list) do
-            if not Usable(display) then gone[#gone + 1] = display end
+            if probes[display] then unsure[#unsure + 1] = display  -- (not loaded yet: no answer)
+            elseif not Usable(display) then gone[#gone + 1] = display end
          end
-         if #gone > 0 then
+         if #gone + #unsure > 0 then
             local entry = ns.G.monster and ns.G.monster[id]
-            lines[#lines + 1] = format("  %s (%d): %d of %d missing: %s", entry and entry.name or "?", id, #gone, #list,
-               table.concat(gone, ", "))
+            lines[#lines + 1] = format("  %s (%d): %d of %d missing%s%s", entry and entry.name or "?", id, #gone, #list,
+               #gone > 0 and ": " .. table.concat(gone, ", ") or "",
+               #unsure > 0 and "; no answer yet: " .. table.concat(unsure, ", ") or "")
          end
       end
       print(#lines > 0 and format("WoWLarn: %d monsters have models this client does not have:", #lines)
