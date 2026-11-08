@@ -1156,6 +1156,7 @@ L["Right-click to choose something else."] = true
 L["Empty slot"] = true
 L["Right-click to choose a spell, potion or scroll."] = true
 L["(clear the slot)"] = true
+L["Potions and scrolls"] = true
 L["Slot %d"] = true
 L["Spirit nagas and poltergeists hurt you half as much."] = true
 L["+10 wisdom.  Three times in four it cancels the special attack of a demon lord, demon prince, wraith or vampire (never Lucifer's)."] = true

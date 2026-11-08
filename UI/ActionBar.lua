@@ -153,22 +153,37 @@ local function OnEnter(button)
    GameTooltip:Show()
 end
 
--- The popup: what a slot can hold now.  Clear first, then the spells that are known, then the
--- potions and scrolls in the pack.
+-- The popup: what a slot can hold now.  Clear first, then the spells that are known, in the groups of
+-- the spell book (a title for each, then the spells with their icons), then the potions and scrolls
+-- in the pack.
 function bar:Choices()
    local choices = { { text = L["(clear the slot)"] } }
-   local T = ns.Tables
-   for index = 1, K.SPNUM do
-      if G.spelknow[index] ~= 0 then
-         choices[#choices + 1] = { text = "|cffffd100" .. T.spelcode[index] .. "|r  " .. T.spelname[index], slot = { spell = T.spelcode[index] } }
+   local T, SI = ns.Tables, ns.SpellInfo
+   for number, group in ipairs(SI.GROUPS) do
+      local started
+      for index = 1, K.SPNUM do
+         if SI.group(index) == number and G.spelknow[index] ~= 0 then
+            if not started then
+               started = true
+               choices[#choices + 1] = { header = group.name }
+            end
+            local code = T.spelcode[index]
+            choices[#choices + 1] = { text = "|cffffd100" .. code .. "|r  " .. T.spelname[index], slot = { spell = code },
+               icon = "Interface\\Icons\\" .. (ns.Visuals.SPELL_ICON[code] or "INV_Misc_Book_08") }
+         end
       end
    end
-   local seen = {}
+   local seen, started = {}, false
    for pack = 1, K.IVENSIZE do
       local object, arg = G.iven[pack], G.ivenarg[pack]
       if (object == K.OPOTION or object == K.OSCROLL) and not seen[object .. ":" .. arg] then
          seen[object .. ":" .. arg] = true
-         choices[#choices + 1] = { text = ns.Player.objectName(object, arg), slot = { object = object, arg = arg } }
+         if not started then
+            started = true
+            choices[#choices + 1] = { header = L["Potions and scrolls"] }
+         end
+         choices[#choices + 1] = { text = ns.Player.objectName(object, arg), slot = { object = object, arg = arg },
+            icon = ns.Visuals.ObjectIcon(object, arg) or FALLBACK_ICON }
       end
    end
    return choices
@@ -182,7 +197,15 @@ function bar:UpdatePopup()
       local button, choice = popup.rows[row], popup.choices[offset + row]
       button.choice = choice
       button:SetShown(choice ~= nil)
-      if choice then button.text:SetText(choice.text) end
+      if choice then
+         local header = choice.header
+         button.text:SetText(header and ("|cffffd100" .. header .. "|r") or choice.text)
+         button.icon:SetShown(choice.icon ~= nil)
+         if choice.icon then ns.Visuals.SetIcon(button.icon, choice.icon) end
+         button.text:ClearAllPoints()
+         button.text:SetPoint("LEFT", choice.icon and ROW_H + 4 or (header and 2 or 4), 0)
+         button:EnableMouse(not header)  -- (a title is no choice)
+      end
    end
 end
 
@@ -208,11 +231,15 @@ function bar:OpenPopup(button)
          choiceButton:SetSize(POPUP_W - 36, ROW_H)
          choiceButton:SetPoint("TOPLEFT", 10, -30 - (row - 1) * ROW_H)
          choiceButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+         choiceButton.icon = choiceButton:CreateTexture(nil, "ARTWORK")
+         choiceButton.icon:SetSize(ROW_H - 2, ROW_H - 2)
+         choiceButton.icon:SetPoint("LEFT", 2, 0)
+         choiceButton.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
          choiceButton.text = choiceButton:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
          choiceButton.text:SetPoint("LEFT", 2, 0)
          choiceButton.text:SetJustifyH("LEFT")
          choiceButton:SetScript("OnClick", function(b)
-            if not b.choice then return end
+            if not b.choice or b.choice.header then return end
             self:Assign(popup.number, b.choice.slot)
             popup:Hide()
          end)
