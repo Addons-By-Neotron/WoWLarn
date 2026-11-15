@@ -32,7 +32,10 @@ local bar = {}
 ns.actionBar = bar
 
 local SLOTS, SIZE, SPACING = 10, 34, 3
-local ROWS, ROW_H, POPUP_W = 16, 18, 270
+-- the popup: ROWS lines of COLS choices, each COL_W wide (the icon, the spell's letters in a column CODE_W
+-- wide, then the name), and the scroll bar on the right
+local ROWS, ROW_H, COLS, COL_W, CODE_W = 16, 18, 2, 175, 26
+local POPUP_W = COLS * COL_W + 40
 local FALLBACK_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 
 function bar:Enabled()
@@ -168,7 +171,7 @@ function bar:Choices()
                choices[#choices + 1] = { header = group.name }
             end
             local code = T.spelcode[index]
-            choices[#choices + 1] = { text = "|cffffd100" .. code .. "|r  " .. T.spelname[index], slot = { spell = code },
+            choices[#choices + 1] = { code = code, text = T.spelname[index], slot = { spell = code },
                icon = "Interface\\Icons\\" .. (ns.Visuals.SPELL_ICON[code] or "INV_Misc_Book_08") }
          end
       end
@@ -189,34 +192,76 @@ function bar:Choices()
    return choices
 end
 
+-- The choices in lines of the popup: a title on a line of its own, the choices under it COLS to a line
+-- (the clear choice too, alone on its line).
+local function Lines(choices)
+   local lines, line = {}, nil
+   for _, choice in ipairs(choices) do
+      if choice.header or not choice.slot then
+         lines[#lines + 1] = { choice }
+         line = nil
+      elseif line and #line < COLS then
+         line[#line + 1] = choice
+      else
+         line = { choice }
+         lines[#lines + 1] = line
+      end
+   end
+   return lines
+end
+
 function bar:UpdatePopup()
    local popup = self.popup
-   FauxScrollFrame_Update(popup.scroll, #popup.choices, ROWS, ROW_H)
+   FauxScrollFrame_Update(popup.scroll, #popup.lines, ROWS, ROW_H)
    local offset = FauxScrollFrame_GetOffset(popup.scroll)
    for row = 1, ROWS do
-      local button, choice = popup.rows[row], popup.choices[offset + row]
-      button.choice = choice
-      button:SetShown(choice ~= nil)
-      if choice then
-         local header = choice.header
-         button.text:SetText(header and ("|cffffd100" .. header .. "|r") or choice.text)
-         button.icon:SetShown(choice.icon ~= nil)
-         if choice.icon then ns.Visuals.SetIcon(button.icon, choice.icon) end
-         button.text:ClearAllPoints()
-         button.text:SetPoint("LEFT", choice.icon and ROW_H + 4 or (header and 2 or 4), 0)
-         button:EnableMouse(not header)  -- (a title is no choice)
+      local line = popup.lines[offset + row]
+      for col = 1, COLS do
+         local cell, choice = popup.rows[row][col], line and line[col]
+         cell.choice = choice
+         cell:SetShown(choice ~= nil)
+         if choice then
+            local header = choice.header
+            cell:SetWidth(header and COLS * COL_W - 4 or COL_W - 4)  -- (a title runs across the columns)
+            cell.icon:SetShown(choice.icon ~= nil)
+            if choice.icon then ns.Visuals.SetIcon(cell.icon, choice.icon) end
+            cell.code:SetText(choice.code or "")
+            cell.text:SetText(header and ("|cffffd100" .. header .. "|r") or choice.text)
+            cell.text:ClearAllPoints()
+            -- the names in a column after the letters (the potions and scrolls have none: the same column)
+            cell.text:SetPoint("LEFT", header and 2 or (choice.icon and ROW_H + 4 + CODE_W or 4), 0)
+            cell.text:SetPoint("RIGHT", -2, 0)
+            cell:EnableMouse(not header)  -- (a title is no choice)
+         end
       end
    end
 end
 
 function bar:OpenPopup(button)
    if not self.popup then
-      local popup = ns.CreatePanel(self.frame)
-      popup:SetFrameStrata("DIALOG")
+      -- (on UIParent: in the game window it would be cut off at the window's edges)
+      local popup = ns.CreatePanel(UIParent)
+      popup:SetFrameStrata("FULLSCREEN_DIALOG")
+      popup:SetToplevel(true)
+      self.frame:HookScript("OnHide", function() popup:Hide() end)
       popup:SetSize(POPUP_W, ROWS * ROW_H + 40)
+      popup:SetClampedToScreen(true)
       popup:EnableMouse(true)
       popup:Hide()
       self.popup = popup
+      -- Escape closes it (before the game window, which takes the keys, sees it); the other keys go on
+      popup:EnableKeyboard(true)
+      popup:SetScript("OnKeyDown", function(p, key)
+         p:SetPropagateKeyboardInput(key ~= "ESCAPE")
+         if key == "ESCAPE" then p:Hide() end
+      end)
+      -- and so does a click outside it (a right-click on a slot closes it and opens it again for that slot)
+      popup:SetScript("OnShow", function(p) p:RegisterEvent("GLOBAL_MOUSE_DOWN") end)
+      popup:SetScript("OnHide", function(p) p:UnregisterEvent("GLOBAL_MOUSE_DOWN") end)
+      popup:SetScript("OnEvent", function(p)
+         local scrollBar = _G["WoWLarnActionBarScrollScrollBar"]  -- (the scroll bar hangs off the right of the popup)
+         if not p:IsMouseOver() and not (scrollBar and scrollBar:IsMouseOver()) then p:Hide() end
+      end)
       popup.title = popup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
       popup.title:SetPoint("TOPLEFT", 10, -10)
       popup.scroll = CreateFrame("ScrollFrame", "WoWLarnActionBarScroll", popup, "FauxScrollFrameTemplate")
@@ -227,29 +272,37 @@ function bar:OpenPopup(button)
       end)
       popup.rows = {}
       for row = 1, ROWS do
-         local choiceButton = CreateFrame("Button", nil, popup)
-         choiceButton:SetSize(POPUP_W - 36, ROW_H)
-         choiceButton:SetPoint("TOPLEFT", 10, -30 - (row - 1) * ROW_H)
-         choiceButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-         choiceButton.icon = choiceButton:CreateTexture(nil, "ARTWORK")
-         choiceButton.icon:SetSize(ROW_H - 2, ROW_H - 2)
-         choiceButton.icon:SetPoint("LEFT", 2, 0)
-         choiceButton.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-         choiceButton.text = choiceButton:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-         choiceButton.text:SetPoint("LEFT", 2, 0)
-         choiceButton.text:SetJustifyH("LEFT")
-         choiceButton:SetScript("OnClick", function(b)
-            if not b.choice or b.choice.header then return end
-            self:Assign(popup.number, b.choice.slot)
-            popup:Hide()
-         end)
-         popup.rows[row] = choiceButton
+         popup.rows[row] = {}
+         for col = 1, COLS do
+            local cell = CreateFrame("Button", nil, popup)
+            cell:SetSize(COL_W - 4, ROW_H)
+            cell:SetPoint("TOPLEFT", 10 + (col - 1) * COL_W, -30 - (row - 1) * ROW_H)
+            cell:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+            cell.icon = cell:CreateTexture(nil, "ARTWORK")
+            cell.icon:SetSize(ROW_H - 2, ROW_H - 2)
+            cell.icon:SetPoint("LEFT", 2, 0)
+            cell.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+            cell.code = cell:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")  -- (gold)
+            cell.code:SetPoint("LEFT", ROW_H + 4, 0)
+            cell.code:SetWidth(CODE_W)
+            cell.code:SetJustifyH("LEFT")
+            cell.text = cell:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+            cell.text:SetJustifyH("LEFT")
+            cell.text:SetWordWrap(false)  -- (a long name is cut short with "...")
+            cell:SetScript("OnClick", function(b)
+               if not b.choice or b.choice.header then return end
+               self:Assign(popup.number, b.choice.slot)
+               popup:Hide()
+            end)
+            popup.rows[row][col] = cell
+         end
       end
    end
    local popup = self.popup
    popup.number = button.number
-   popup.choices = self:Choices()
+   popup.lines = Lines(self:Choices())
    popup.title:SetText(format(L["Slot %d"], button.number % 10))
+   popup:SetScale(button:GetEffectiveScale() / UIParent:GetEffectiveScale())  -- (the size of the game window)
    popup:ClearAllPoints()
    popup:SetPoint("BOTTOM", button, "TOP", 0, 6)
    popup:Show()

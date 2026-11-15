@@ -159,6 +159,14 @@ function panel:Create()
    tinsert(UISpecialFrames, "WoWLarnDebugPanel")
    self.frame = frame
    frame:SetScript("OnHide", function() if self.list then self.list:Hide() end end)
+   -- Escape closes the item list if it is open, else the panel (before the game window, which takes the
+   -- keys, sees it); the other keys go on
+   frame:EnableKeyboard(true)
+   frame:SetScript("OnKeyDown", function(f, key)
+      f:SetPropagateKeyboardInput(key ~= "ESCAPE")
+      if key ~= "ESCAPE" then return end
+      if self.list and self.list:IsShown() then self.list:Hide() else f:Hide() end
+   end)
 
    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
    title:SetPoint("TOP", 0, -8)
