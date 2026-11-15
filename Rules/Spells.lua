@@ -130,8 +130,9 @@ end
 Spells.direct = Direct
 
 -- C: godirect(). A missile that keeps on going in the direction until its power is spent.
--- cshow is the glyph drawn on the way, delay the milliseconds spent on each tile.
-local function GoDirectRun(spell, dam, str, delay, cshow)
+-- cshow is the glyph drawn on the way, delay the milliseconds spent on each tile; beam: the picture of a
+-- beam to draw instead of the spell's (the scroll of pulverization's ray).
+local function GoDirectRun(spell, dam, str, delay, cshow, beam)
    local monster = G.monster
    local ui = ns.ui
    if spell < 1 or spell > SPNUM then return end
@@ -154,7 +155,7 @@ local function GoDirectRun(spell, dam, str, delay, cshow)
       end
       -- if not blind show the effect
       if c[K.BLINDCOUNT] == 0 then
-         local beam = ns.Visuals.SPELL_BEAM[spell]
+         beam = beam or ns.Visuals.SPELL_BEAM[spell]
          if beam then
             ui:BeamStep(x, y, dx, dy, beam)
          else

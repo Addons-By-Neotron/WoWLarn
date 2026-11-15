@@ -215,6 +215,8 @@ V.SPELL_SELF = {
 -- The lightning: a tile of bolt for every square it goes through, turned to where it goes (see ui:BeamStep).
 -- Frames 0-7 the bolt shoots across the tile, 8-23 it crackles, 24-31 it dies away from the caster's end.
 V.SPELL_BEAM = { [K.SP_LIGHTNING] = SPELLS .. "spell_23_lightning_anim.png" }
+-- The ray of the scroll of pulverization: a beam too, in the same frames (tools/render/ray_anim.py).
+V.PULVERIZE_BEAM = SCROLLS .. "scroll_23_pulverization_ray_anim.png"
 -- A tile shoots in the time to the next one (V.BEAM_STEP), and dies in the time before the next one starts to (at most
 -- V.BEAM_DIE): one tile at a time each way, so the bolt never has a gap.  (Shooting, a tile is there on the caster's
 -- side; dying, on the far side; the crackle frames all run edge to edge, so any two of them join.)
