@@ -244,7 +244,8 @@ local FLIPBOOK = {  -- (15 frames a second)
    [EYE_ANIM] = { cols = 8, rows = 8, frames = 64, period = 64 / 15 },
    [SPHERE_ANIM] = { cols = 8, rows = 8, frames = 64, period = 64 / 15 },
 }
-FLIPBOOK[V.SPELL_BEAM[K.SP_LIGHTNING]] = { cols = 8, rows = 4, frames = 32, period = 1 }
+for _, path in pairs(V.SPELL_BEAM) do FLIPBOOK[path] = { cols = 8, rows = 4, frames = 32, period = 1 } end
+FLIPBOOK[V.PULVERIZE_BEAM] = { cols = 8, rows = 4, frames = 32, period = 1 }
 for _, path in pairs(V.SPELL_BURST) do FLIPBOOK[path] = { cols = 8, rows = 4, frames = 32, period = 1 } end
 for _, path in pairs(V.SPELL_SELF) do FLIPBOOK[path] = { cols = 8, rows = 4, frames = 32, period = 1 } end
 for _, path in pairs(V.SPELL_SPRITE) do FLIPBOOK[path] = { cols = 8, rows = 4, frames = 32, period = 32 / 20 } end
