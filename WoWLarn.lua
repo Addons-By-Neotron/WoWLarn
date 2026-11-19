@@ -167,6 +167,7 @@ function mod:PrintHelp()
    self:info("/larn models  - the model viewer (choose the look of the monsters)")
    self:info("/larn zoo  - all the monsters in one place")
    self:info("/larn mapdebug  - what the map is drawing")
+   self:info("/larn modeldebug <display>  - how every model frame showing a display is set up (map and zoo)")
    self:info("/larn tilt <factor>  - look down on the creatures by a part of the camera angle (0 none, 1 full)")
    self:info("/larn tex floor|wall|lava <id|+|->  - try textures for this level")
 --@end-debug@
@@ -216,6 +217,9 @@ function mod:ChatCommand(input)
       ns.ui:RefreshNow("map")
    elseif cmd == "mapdebug" then
       ns.map:Debug()
+   elseif cmd:match("^modeldebug") then  -- every model frame that holds a display: /larn modeldebug 2719
+      local display = tonumber(cmd:match("^modeldebug%s*(%S*)"))
+      if display then ns.map3d.DebugDisplay(display) else self:Print("/larn modeldebug <display>") end
    elseif cmd == "debug" then
       ns.debugPanel:Toggle()
    elseif cmd == "wizard" then

@@ -134,6 +134,9 @@ function map:Describe(x, y)
    local monster = ns.Display.visibleMonster(x, y)
    if monster ~= 0 then
       GameTooltip:SetText(G.monster[monster].name, 1, 0.3, 0.3)
+      if G.wizard then
+         for _, line in ipairs(ns.map3d.DebugLines(x, y)) do GameTooltip:AddLine(line, 0.7, 0.7, 0.7) end
+      end
       GameTooltip:Show()
       return true
    end
@@ -390,6 +393,7 @@ end
 
 function map:Draw()
    if not self.cols or not G.class then return end
+   wipe(ns.map3d.tileFrames)  -- (each view notes again which model frame is on which tile)
    if self:Is3D() then
       if not self.flatHidden then
          ShowFlat(self, false)
@@ -424,7 +428,7 @@ function map:Draw()
          if x <= MAXX and y <= MAXY and G.know[x][y] ~= 0 and (x ~= G.playerx or y ~= G.playery) then
             local display, facing, anim = ns.map3d.MonsterModel(x, y)
             if display then
-               ns.map3d.Model(frame, display, self.offsetX + (col - 0.5) * TILE,
+               ns.map3d.tileFrames[x * 100 + y] = ns.map3d.Model(frame, display, self.offsetX + (col - 0.5) * TILE,
                   self.offsetY + row * TILE - TILE * 0.05, TILE * 0.9, facing, anim)
             end
          end

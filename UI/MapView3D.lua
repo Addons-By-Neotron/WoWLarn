@@ -291,7 +291,9 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
       frame = CreateFrame("Frame", nil, (owner or layer.shared) and layer:GetParent() or layer)
       frame.model = CreateFrame("PlayerModel", nil, frame)
       frame.model:SetAllPoints()
+      map3d.allModels[frame] = true
       frame.model:SetScript("OnModelLoaded", function(self)
+         self.loads = (self.loads or 0) + 1  -- (for the wizard's tooltip: a model that keeps loading never settles)
          self:SetFacing(frame.facing or FACING)
          if frame.anim and self.SetAnimation then self:SetAnimation(frame.anim) end  -- (loading resets it)
          if MODEL_ROOM ~= 1 and self.SetModelScale then self:SetModelScale(1 / MODEL_ROOM) end  -- (and this)
@@ -376,8 +378,11 @@ local function Model(layer, look, x, y, width, facing, anim, owner)
       frame.model.settleUntil = GetTime() + SETTLE
    end
    frame:Show()
+   return frame
 end
 
+map3d.allModels = setmetatable({}, { __mode = "k" })  -- every model frame, wherever it is (/larn modeldebug)
+map3d.tileFrames = {}  -- the model frame drawn for each tile (x * 100 + y), for the wizard's tooltip
 map3d.tilt = 0  -- how much of the camera angle the models lean by (1: as much as the camera looks down; debug: /larn tilt)
 map3d.Model = Model  -- (the monster zoo draws with it)
 map3d.MODEL_ASPECT = MODEL_ASPECT
@@ -974,7 +979,7 @@ local function DrawTile(layers, x, y, ground)
             end
          end
          Shadow(layers[ACTOR], wx, wy, TILE * 0.42)
-         Model(layers[ACTOR], display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, Facing(toward), anim)
+         map3d.tileFrames[x * 100 + y] = Model(layers[ACTOR], display, mx, my + TILE * 0.05 * scale, TILE * 0.9 * scale, Facing(toward), anim)
       else
          Glyph(layers[ACTOR], V.MonsterGlyph(monster), V.MONSTER_COLOR, mx, my + TILE * 0.1 * scale, TILE * 0.9 * scale)
       end
@@ -1165,6 +1170,69 @@ function map3d:StackRows(roundY)
 end
 
 -- /larn mapdebug: the model frames that are shown, and the levels they are drawn at (higher is in front).
+-- Lines for the tooltip of a monster's tile in wizard mode: how its model is drawn, to find out why one does not show.
+function map3d.DebugLines(x, y)
+   local lines = {}
+   local function Add(...) lines[#lines + 1] = format(...) end
+   local monster = ns.Display.visibleMonster(x, y)
+   local display = monster ~= 0 and V.MonsterDisplay(monster, G.look[x][y])
+   Add("monster %d look %d display %s", monster, G.look[x][y], tostring(display))
+   if display and display ~= "player" then
+      Add("scale %.2f room %.1f lower %.3f turn %.3f", V.Scale(display), V.Room(display), V.Lower(display), V.Turn(display))
+   end
+   local frame = map3d.tileFrames[x * 100 + y]
+   if not frame then Add("no model frame drawn here") return lines end
+   local m = frame.model
+   local _, cy = frame:GetCenter()
+   Add("frame %.0fx%.0f shown %s visible %s alpha %.2f level %d strata %s centre y %s", frame:GetWidth(), frame:GetHeight(),
+      tostring(frame:IsShown()), tostring(frame:IsVisible()), frame:GetEffectiveAlpha(), frame:GetFrameLevel(), frame:GetFrameStrata(),
+      cy and format("%.0f", cy) or "?")
+   Add("model look %s file %s shown %s visible %s %.0fx%.0f level %d", tostring(frame.look),
+      tostring(m.GetModelFileID and m:GetModelFileID()), tostring(m:IsShown()), tostring(m:IsVisible()), m:GetWidth(), m:GetHeight(),
+      m:GetFrameLevel())
+   Add("camera scale %s facing %s anim %s settled %s settling %.1fs loads %d", tostring(frame.scale), tostring(frame.facing),
+      tostring(frame.anim), tostring(m.settled), math.max(0, (m.settleUntil or 0) - GetTime()), m.loads or 0)
+   local px, py, pz = m:GetCameraPosition()
+   local tx, ty, tz = m:GetCameraTarget()
+   Add("camera %.2f %.2f %.2f target %.2f %.2f %.2f kept %s", px or 0, py or 0, pz or 0, tx or 0, ty or 0, tz or 0, m.cam and "yes" or "no")
+   return lines
+end
+
+-- /larn modeldebug <display>: every model frame that holds the display (the map's, the zoo's), how the model is
+-- set up and which of its parents could hide or clip it.
+function map3d.DebugDisplay(display)
+   local found = 0
+   for frame in pairs(map3d.allModels) do
+      if frame.look == display then
+         found = found + 1
+         local m = frame.model
+         local _, cy = frame:GetCenter()
+         print(format("frame %d: %.0fx%.0f shown %s visible %s alpha %.2f level %d strata %s centre y %s", found,
+            frame:GetWidth(), frame:GetHeight(), tostring(frame:IsShown()), tostring(frame:IsVisible()), frame:GetEffectiveAlpha(),
+            frame:GetFrameLevel(), frame:GetFrameStrata(), cy and format("%.0f", cy) or "?"))
+         local px, py, pz = m:GetCameraPosition()
+         local tx, ty, tz = m:GetCameraTarget()
+         local ox, oy, oz = 0, 0, 0
+         if m.GetPosition then ox, oy, oz = m:GetPosition() end
+         print(format("  model file %s scale %s position %.2f %.2f %.2f facing %.2f camdist %s modelalpha %s loads %d settled %s",
+            tostring(m.GetModelFileID and m:GetModelFileID()), tostring(m.GetModelScale and m:GetModelScale()), ox or 0, oy or 0, oz or 0,
+            m:GetFacing() or 0, tostring(m.GetCamDistanceScale and m:GetCamDistanceScale()),
+            tostring(m.GetModelAlpha and m:GetModelAlpha()), m.loads or 0, tostring(m.settled)))
+         print(format("  camera %.2f %.2f %.2f target %.2f %.2f %.2f kept %s  frame.scale %s", px or 0, py or 0, pz or 0,
+            tx or 0, ty or 0, tz or 0, m.cam and "yes" or "no", tostring(frame.scale)))
+         local parent, depth = frame:GetParent(), 0
+         while parent and depth < 6 do
+            depth = depth + 1
+            print(format("  parent %d %s: %.0fx%.0f visible %s alpha %.2f clips %s", depth, tostring(parent:GetName() or parent:GetObjectType()),
+               parent:GetWidth(), parent:GetHeight(), tostring(parent:IsVisible()), parent:GetEffectiveAlpha(),
+               tostring(parent.DoesClipChildren and parent:DoesClipChildren())))
+            parent = parent:GetParent()
+         end
+      end
+   end
+   print(format("display %s: %d model frames", tostring(display), found))
+end
+
 function map3d:DebugModels()
    print(format("models: player at %d,%d, %d rows (%d far), player row %d", G.playerx, G.playery, ROWS, FAR_ROWS, FAR_ROWS + 1))
    for _, frame in ipairs(self.sharedLayer.models) do
