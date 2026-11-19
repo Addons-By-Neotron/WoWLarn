@@ -640,7 +640,7 @@ V.DISPLAY = {
    [K.GREENDRAGON] = 6375,
    [K.REDDRAGON] = 6376,  -- (Flamescale Drake)
    [K.PLATINUMDRAGON] = 11460,  -- (Azuregos)
-   [K.BRONZEDRAGON] = 2719,  -- (Anachronos)
+   [K.BRONZEDRAGON] = 11380,  -- (Nefarian: shown as a black dragon)
    [K.WHITEDRAGON] = 10585,  -- (a cobalt whelp)
    [K.WATERLORD] = 110,  -- (Baron Aquanis)
    [K.EYE] = 2421,  -- (Eye of Kilrogg)
@@ -708,7 +708,7 @@ V.MONSTER_SOUND = {
    [K.GREENDRAGON] = { attack = 4060, wound = 4061, die = 4063, special = 4065 },  -- (Flamescale Drake)
    [K.REDDRAGON] = { attack = 4060, wound = 4061, die = 4063, special = 4065 },  -- (Flamescale Drake)
    [K.PLATINUMDRAGON] = { attack = 3520, wound = 3521, die = 3523, special = 3525 },  -- (Azuregos)
-   [K.BRONZEDRAGON] = { attack = 3520, wound = 3521, die = 3523, special = 3525 },  -- (Anachronos)
+   [K.BRONZEDRAGON] = { attack = 3520, wound = 3521, die = 3523, special = 3525 },  -- (a dragon's sounds)
    [K.WHITEDRAGON] = { attack = 429, wound = 430, die = 432, special = 428 },  -- (Cobalt Whelp)
    [K.WATERLORD] = { attack = 1403, wound = 1404, die = 1406, special = 1408 },  -- (Baron Aquanis)
    [K.EYE] = { attack = 8697, wound = 8698, die = 8700, special = { 8580, 8581, 8582, 8583, 8584, 8585, 8586, 8587 } },  -- (C'Thun)
@@ -882,6 +882,7 @@ V.LOWER = {
    [11141] = 0.34,
    [11166] = 0.18,
    [11293] = 0.34,
+   [11380] = -0.26,
    [11442] = 0.04,
    [11452] = 0.32,
    [11609] = 0.18,
@@ -945,7 +946,6 @@ V.SCALE = {
    [2003] = 1.61,
    [2023] = 1.1,
    [2024] = 1.1,
-   [2719] = 0.91,
    [3206] = 0.51,
    [3207] = 0.51,
    [4449] = 1.1,
@@ -991,6 +991,7 @@ V.SCALE = {
    [10979] = 1.46,
    [11096] = 1.46,
    [11293] = 1.33,
+   [11380] = 0.56,
    [11460] = 0.91,
    [11997] = 0.83,
    [12168] = 0.83,
@@ -1040,7 +1041,6 @@ V.ROOM = {
    [2024] = 2.5,
    [2703] = 1.5,
    [2705] = 1.5,
-   [2719] = 2.5,
    [3206] = 2.5,
    [3207] = 2.5,
    [6373] = 3,
@@ -1050,6 +1050,7 @@ V.ROOM = {
    [10579] = 2.5,
    [10991] = 1.5,
    [11096] = 2.5,
+   [11380] = 3.5,
    [11460] = 2.5,
    [12990] = 3,
    [15533] = 2.5,
@@ -1166,6 +1167,7 @@ V.MONSTER_NAME = {
    [K.SILVERDRAGON] = L["silver drake"],  -- (drake models)
    [K.GREENDRAGON] = L["green drake"],
    [K.REDDRAGON] = L["red drake"],
+   [K.BRONZEDRAGON] = L["black dragon"],  -- (Nefarian's model)
 }
 for id, name in pairs(V.MONSTER_NAME) do
    ns.MonsterData[id].name = name

@@ -1130,6 +1130,7 @@ L["azure whelp"] = true
 L["silver drake"] = true
 L["green drake"] = true
 L["red drake"] = true
+L["black dragon"] = true
 L["%s rises for good: %d (now %d)."] = true
 L["%s falls for good: %d (now %d)."] = true
 L["Maximum health"] = true
