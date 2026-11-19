@@ -90,8 +90,9 @@ end
 -- know[x][y]    nonzero once seen         hitp[x][y]  monster hit points
 -- mon[x][y]     monster id (C: mitem[x][y].mon)
 -- stealth[x][y] nonzero if the monster there is awake
--- doorway[x][y] how the door there faces, fixed when first drawn: 1 across the way (a wall that runs east
---               to west), 2 along it (a wall that runs north to south); the walls may be blasted away later
+-- doorway[x][y] how the door there faces, fixed when first drawn: 3 across the way (a wall that runs east
+--               to west), 4 along it (a wall that runs north to south); the walls may be blasted away later
+--               (1 and 2: the same, from older versions, which went by the walls seen so far: worked out again)
 -- seen[x][y]    1 once the tile has been known: the map keeps showing the ground of a tile that is
 --               not known (know is 0) because a monster just moved there or away
 -- look[x][y]    which of its looks the monster there has (0: not chosen yet), see Visuals.lua

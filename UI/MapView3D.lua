@@ -702,11 +702,20 @@ local LEAF_HEIGHT = WALL_HEIGHT * 0.8  -- the opening, under the lintel
 local DOOR_WIDTH = WALL_HEIGHT * 0.8  -- of the opening that holds the leaves: as wide as high (the leaves picture is a square); the rest of the 88 of the wall's opening is stone beside the door
 local LINTEL_THICK = 0.5  -- of the thickness of the wall
 local function DrawDoor(layers, x, y, ahead, object)
-   if G.doorway[x][y] == 0 then  -- (worked out from the walls once: they can be blasted away)
-      local sides = IsBlock(x, y - 1) and IsBlock(x, y + 1) and not (IsBlock(x - 1, y) and IsBlock(x + 1, y))
-      G.doorway[x][y] = sides and 2 or 1
+   -- worked out once (the walls can be blasted away later), from the walls that are there, seen or not: from
+   -- those seen so far, a door seen before the walls beside it would keep the wrong way for good.  (1 and 2 are
+   -- such old answers, from the walls seen: worked out again.)
+   local way = G.doorway[x][y]
+   if way ~= 3 and way ~= 4 then
+      local function Solid(bx, by)
+         return bx >= 1 and bx <= MAXX and by >= 1 and by <= MAXY and G.item[bx][by] == K.OWALL
+            and not V.WallVariant(G.level, bx, by)
+      end
+      local sides = Solid(x, y - 1) and Solid(x, y + 1) and not (Solid(x - 1, y) and Solid(x + 1, y))
+      way = sides and 4 or 3
+      G.doorway[x][y] = way
    end
-   local sideways = G.doorway[x][y] == 2
+   local sideways = way == 4
    local x0, y0 = (x - 1) * TILE, (y - 1) * TILE
    -- a is along the wall: the opening, between the faces of the blocks beside it; c across it: the thickness of the wall
    local a0, a1 = (sideways and y0 or x0) - WALL_INSET, (sideways and y0 or x0) + TILE + WALL_INSET
