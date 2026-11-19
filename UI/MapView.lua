@@ -297,12 +297,18 @@ end
 
 -- C: the missile shown by godirect(). Call without arguments to remove it.
 -- seconds: how long it takes to fly there from the tile before (dx, dy is the step), so that it glides.
+-- (Leaving the player, it starts at the edge of the player's tile, not on top of the player.)
 function map:SetOverlay(x, y, glyph, color, sprite, dx, dy, seconds)
    if not x then self.overlays = nil return end
    local glide = seconds and seconds > 0 and dx
    local now = GetTime()
+   local fromX, fromY
+   if glide then
+      fromX, fromY = x - dx, y - dy
+      if fromX == G.playerx and fromY == G.playery then fromX, fromY = x - dx / 2, y - dy / 2 end
+   end
    self.overlays = { { x = x, y = y, glyph = glyph, color = color, sprite = sprite, dx = dx, dy = dy,
-      fromX = glide and x - dx, fromY = glide and y - dy, t0 = now, seconds = glide and seconds },
+      fromX = fromX, fromY = fromY, t0 = now, seconds = glide and seconds },
       ends = glide and now + seconds }
 end
 

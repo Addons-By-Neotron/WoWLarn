@@ -567,15 +567,14 @@ function ui:Missile(x, y, glyph, delay, color, sprite, dx, dy)
 end
 
 -- A step of a bolt of lightning: a tile more of it, in the direction dx, dy.  It stays until ui:BeamEnd.
--- (The first step starts it from the caster: half a tile from the middle of the caster's.)
+-- (It starts on the tile next to the caster, not on top of the caster.)
 function ui:BeamStep(x, y, dx, dy, sprite)
    local beam, now = self.beam, GetTime()
    if not beam then
-      beam = { ends = math.huge,
-         { x = x - dx, y = y - dy, dx = dx, dy = dy, sprite = sprite, beam = true, half = true, covered = true, t0 = now, index = 0 } }
+      beam = { ends = math.huge }
       self.beam = beam
    end
-   beam[#beam].covered = true  -- (it is all there now: no half-shot tile behind the new one)
+   if beam[#beam] then beam[#beam].covered = true end  -- (it is all there now: no half-shot tile behind the new one)
    beam[#beam + 1] = { x = x, y = y, dx = dx, dy = dy, sprite = sprite, beam = true, t0 = now, index = #beam }
    ns.map:SetOverlays(beam)
    self:Refresh("map")
