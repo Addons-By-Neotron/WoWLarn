@@ -679,7 +679,7 @@ V.DISPLAY = {
    [K.SHAMBLINGMOUND] = Displays(2023, 713, 2024),  -- (the fen creeper, dweller and lord)
    [K.GNOMEKING] = 7006,  -- (High Tinker Mekkatorque)
    [K.GNOME] = Displays({ 6920, 6931 }),
-   [K.KOBOLD] = Displays({ 114157, 114160 }, { 114709, 114718 }),
+   [K.KOBOLD] = Prefer(Displays({ 114157, 114160 }, { 114709, 114718 }), { 10913, 10912, 373, 365, 139, 163, 26, 2153 }),  -- (else the classic kobolds)
    [K.HOBGOBLIN] = Displays(30244, { 30261, 30267 }),
    [K.ORC] = Displays({ 9794, 9805 }),
    [K.SNAKE] = Displays(1206, 1986, 2954, 2955, 2957, 4268, 8173, 6303),
@@ -1169,6 +1169,12 @@ V.MONSTER_NAME = {
    [K.REDDRAGON] = L["red drake"],
    [K.BRONZEDRAGON] = L["black dragon"],  -- (Nefarian's model)
 }
+-- Forever has no hobgoblin models: the hobgoblins are ogres there.  Retail keeps them.
+local build = select(4, GetBuildInfo()) or 0
+if build >= 16000 and build < 17000 then
+   V.DISPLAY[K.HOBGOBLIN] = Displays(415, 1122, 11567, 1052, 10704, 597, 11545, 14402, 11549, 655)
+   V.MONSTER_NAME[K.HOBGOBLIN] = L["ogre"]
+end
 for id, name in pairs(V.MONSTER_NAME) do
    ns.MonsterData[id].name = name
 end
