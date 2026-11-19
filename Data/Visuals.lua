@@ -515,24 +515,33 @@ end
 
 -- Whether the client has a display (some are only in the newer clients).  Each display is
 -- tried on a model of its own that is never shown (a shared one would answer only for the
--- last display asked: each new one replaces the one before it has loaded).  A display
--- the client does not know is shown as a placeholder model (it has a model file id too), so
--- the file of a display that cannot exist is learned first and counts as "not there".  The
--- answer is known once both have loaded; until then the display counts as not there, and the
--- map is drawn again when one turns out to be.
+-- last display asked: each new one replaces the one before it has loaded).  A display the
+-- client does not know gets no model file on some clients, and a placeholder model (with a
+-- file of its own) on others, so the file of a display that cannot exist is learned first
+-- (missing: nil until known, false if there is none) and counts as "not there".  A display
+-- that has no file after PROBE_WAIT seconds is not there.  Until the answer is known the
+-- display counts as not there, and the map is drawn again when one turns out to be.
 local usable, probes, spare, missing, placeholder, blind = {}, {}, {}, nil, nil, false
 local NO_SUCH_DISPLAY = 99999999
+local PROBE_WAIT = 3
 local function FileOf(model)
    local file = model:GetModelFileID()
    if file ~= nil and file ~= 0 then return file end
 end
+-- What a display the client does not know looks like, once it has loaded or had its time.
+local function Resolve()
+   if missing == nil then missing = FileOf(placeholder) or false end
+end
 -- The answer for a probe that has loaded, if the placeholder's file is known by now; the
 -- probe is then put back for another display.  later: the answer came after the display was
--- asked for, so the map is drawn again if it is there.
-local function Decide(model, later)
+-- asked for, so the map is drawn again if it is there.  final: the probe has had its time.
+local function Decide(model, later, final)
    local display = model.display
-   if not display or missing == nil or not FileOf(model) then return end
-   usable[display] = FileOf(model) ~= missing
+   if not display then return end
+   if final then Resolve() end
+   local file = FileOf(model)
+   if missing == nil or not (file or final) then return end
+   usable[display] = file ~= nil and file ~= missing
    probes[display], model.display = nil, nil
    model:ClearModel()
    spare[#spare + 1] = model
@@ -540,7 +549,7 @@ local function Decide(model, later)
 end
 local function OnProbeLoaded(model)
    if model == placeholder then
-      if missing == nil then
+      if missing == nil and FileOf(model) then
          missing = FileOf(model)
          for _, waiting in pairs(probes) do Decide(waiting, true) end
       end
@@ -565,6 +574,10 @@ local function Usable(display)
       if blind then return true end
       placeholder:SetDisplayInfo(NO_SUCH_DISPLAY)
       missing = FileOf(placeholder)
+      C_Timer.After(PROBE_WAIT, function()  -- (no file by now: unknown displays have none)
+         Resolve()
+         for _, waiting in pairs(probes) do Decide(waiting, true) end
+      end)
    end
    if blind then return true end
    if not probes[display] then
@@ -572,6 +585,9 @@ local function Usable(display)
       probes[display], model.display = model, display
       if display < 0 then model:SetModel(-display) else model:SetDisplayInfo(display) end
       Decide(model)  -- (some load at once)
+      C_Timer.After(PROBE_WAIT, function()  -- (no file by now: not there)
+         if probes[display] == model then Decide(model, true, true) end
+      end)
    end
    return usable[display] or false
 end
@@ -1208,7 +1224,7 @@ function V.ReportMissingDisplays()
    for _, id in ipairs(ids) do
       for _, display in ipairs(V.DisplayList(id)) do Usable(display) end
    end
-   C_Timer.After(3, function()
+   C_Timer.After(PROBE_WAIT + 1, function()
       local lines = {}
       for _, id in ipairs(ids) do
          local list, gone, unsure = V.DisplayList(id), {}, {}
@@ -1217,7 +1233,7 @@ function V.ReportMissingDisplays()
             elseif not Usable(display) then gone[#gone + 1] = display end
          end
          if #gone + #unsure > 0 then
-            local entry = ns.G.monster and ns.G.monster[id]
+            local entry = ns.G.monster and ns.G.monster[id] or ns.MonsterData[id]  -- (no game running: the data)
             lines[#lines + 1] = format("  %s (%d): %d of %d missing%s%s", entry and entry.name or "?", id, #gone, #list,
                #gone > 0 and ": " .. table.concat(gone, ", ") or "",
                #unsure > 0 and "; no answer yet: " .. table.concat(unsure, ", ") or "")
