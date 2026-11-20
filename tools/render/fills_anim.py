@@ -19,6 +19,7 @@ S = [
     (26, "flood", dict(kind="flood", solid=True, elev=15)),
     (16, "cone_of_cold", dict(kind="frost", elev=15, halo=0.3, halo_color=(0.4, 0.7, 1.0))),   # on each tile it reaches
     (20, "cloud_kill", dict(kind="gas", elev=15)),                  # on each tile round the caster
+    (21, "vaporize_rock", dict(kind="vaporize", elev=15, halo=0.3, halo_color=(0.7, 0.5, 1.0))),   # on each tile round the caster
     (36, "summon_demon", dict(kind="claw", elev=15, halo=0.5, halo_color=(1.0, 0.1, 0.02))),   # the demon's strike
     # the spells that hit one monster: each on its tile
     (13, "phantasmal_forces", dict(kind="phantasm", elev=15, halo=0.3, halo_color=(0.6, 0.4, 1.0))),

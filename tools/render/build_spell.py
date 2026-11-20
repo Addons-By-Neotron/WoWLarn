@@ -420,6 +420,33 @@ def gas():
         o.scale = (g*(0.85 + 0.2*t), g*(0.85 + 0.2*t), g*(0.75 + 0.2*t))
     motes("Fume", 10, (0.55, 1.0, 0.2), 0.014, 0.55, 0.85, t, gate=fade*smooth(0.1, 0.3, t))   # poison drifting up
 
+def vaporize():
+    """Vaporize rock on one tile: a white-violet flash, the rock bursts into chunks that glow hot, fly up and out and
+    boil away to nothing, and a cloud of rock vapour billows up and thins out.  It plays once."""
+    t = P["t"]; fade = once(t, 0.55)
+    sc.cycles.transparent_max_bounces = 64
+    flash = 1 - smooth(0.0, 0.16, t)
+    if flash > 0.01:                               # the flash as it goes: a ring of light more than a ball
+        sphere("Flash", 0.2 + 0.4*smooth(0.0, 0.16, t), faded("Flash", (0.85, 0.75, 1.0), 4.0*flash, 0.3*flash, rim=0.9),
+               loc=BASE_C + Vector((0, 0, 0.45)), segs=32)
+    vapour = [(0.0, (0.12, 0.1, 0.16)), (0.55, (0.45, 0.4, 0.52)), (0.85, (0.75, 0.7, 0.82)), (1.0, (0.95, 0.9, 1.0))]
+    for k, ((ox, oy, oz), r) in enumerate([((0.0, 0.0, 0.35), 0.42), ((-0.3, 0.15, 0.22), 0.32), ((0.32, -0.1, 0.25), 0.32),
+                                           ((0.1, 0.25, 0.62), 0.3), ((-0.12, -0.2, 0.7), 0.28)]):
+        g = smooth(0.08 + 0.04*k, 0.4 + 0.04*k, t)  # rock vapour billowing up
+        if g <= 0.001: continue
+        o = sphere(f"Vapour{k}", r*1.3, smoke(f"Vapour{k}", 20 + k, vapour, 0.7, 0.7*fade, 0.3*smooth(0.45, 1.0, t), rise=0.9),
+                   loc=BASE_C + Vector((ox, oy, oz + 0.25*t)), segs=32)
+        o.scale = (g*(0.9 + 0.2*t), g*(0.9 + 0.2*t), g*(0.8 + 0.3*t))
+    for k in range(14):                            # chunks of rock: flung up and out, glowing hotter as they shrink away
+        f = min(1.0, max(0.0, (t - 0.01*k)/0.7))
+        if not 0 < f < 1: continue
+        a = math.tau*k*0.38; out = 0.2 + 0.55*f
+        hot = smooth(0.3, 0.8, f)
+        col = tuple(g*(1 - hot) + h*hot for g, h in zip((0.18, 0.16, 0.15), (1.0, 0.55, 0.2)))
+        sphere("Chunk", (0.07 + 0.035*(k % 3))*(1 - f*f), faded("Chunk", col, 0.3 + 3.0*hot, 1.0, rim=0.2), segs=6,
+               loc=BASE_C + Vector((out*math.cos(a), 0.75*out*math.sin(a), 0.15 + 1.1*f - 0.6*f*f)))
+    motes("Ember", 12, (1.0, 0.6, 0.3), 0.013, 0.5, 0.9, t, gate=fade*smooth(0.05, 0.25, t))
+
 def phantasm():
     """Phantasmal forces on one tile: ghosts of nothing rise round the monster and wheel about it, pale violet with
     staring eyes, then come apart into wisps.  It plays once."""

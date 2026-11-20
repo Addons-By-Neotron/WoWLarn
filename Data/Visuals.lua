@@ -186,6 +186,7 @@ V.SPELL_BURST = {
    [K.SP_MAGIC_FIRE] = SPELLS .. "spell_32_wall_of_fire_anim.png",
    [K.SP_COLD] = SPELLS .. "spell_16_cone_of_cold_anim.png",  -- (each tile when the ring of the cone gets there)
    [K.SP_CLOUD_KILL] = SPELLS .. "spell_20_cloud_kill_anim.png",
+   [K.SP_VAPORIZE_ROCK] = SPELLS .. "spell_21_vaporize_rock_anim.png",  -- (each tile round the caster, once the rock is gone)
    [K.SP_SUMMON_DEMON] = SPELLS .. "spell_36_summon_demon_anim.png",  -- (the demon's claws, on whoever it strikes)
    [K.SP_PHANTASMAL_FORCES] = SPELLS .. "spell_13_phantasmal_forces_anim.png",
    [K.SP_DEHYDRATION] = SPELLS .. "spell_22_dehydration_anim.png",

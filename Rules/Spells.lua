@@ -481,6 +481,22 @@ local function Vaporize()
             hitp[i][j] = G.monster[K.DEMONPRINCE].hitpoints
             for _ = 1, 4 do ns.Monster.createMonster(K.DEMONPRINCE) end
          end
+      end
+   end
+   -- what it looks like: the rock boiling away on the tiles round the caster (drawn once the walls are gone, else
+   -- the wall blocks would hide it)
+   if c[K.BLINDCOUNT] == 0 then
+      local tiles = {}
+      for i = math.max(G.playerx - 1, 1), math.min(G.playerx + 1, MAXX) do
+         for j = math.max(G.playery - 1, 1), math.min(G.playery + 1, MAXY) do
+            if i ~= G.playerx or j ~= G.playery then tiles[#tiles + 1] = { i, j } end
+         end
+      end
+      ns.ui:Refresh("map")
+      ns.ui:Burst(tiles, "*", 900, nil, ns.Visuals.SPELL_BURST[K.SP_VAPORIZE_ROCK])
+   end
+   for i = math.max(G.playerx - 1, 2), xh do
+      for j = math.max(G.playery - 1, 2), yh do
          local m = mon[i][j]
          if m == K.XORN or m == K.TROLL then  -- these take damage from vaporize rock
             IfBlind(i, j)
