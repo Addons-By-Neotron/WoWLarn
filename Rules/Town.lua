@@ -54,8 +54,9 @@ local function Leave()
 end
 
 -- The Ularn Revenue Service does not serve tax evaders. Shows why and waits for Esc.
-local function Frozen(title, text)
+local function Frozen(title, text, interior)
    ns.store:Open(title, text, 0)
+   ns.store:SetInterior(interior)
    ns.prompt:Set(L["Press escape to leave"])
    local key
    repeat key = ns.ui:GetKey() until key == ESC
@@ -139,11 +140,12 @@ end
 function Town.dndStore()
    local title = L["Ularn Thrift Shoppe"]
    if G.taxes > 0 then
-      Frozen(title, format(L["The Ularn Revenue Service has ordered us to not do business with tax evaders.\n\nThey have also told us that you owe %d gp in back taxes and, as we must comply with the law, we cannot serve you at this time.  So Sorry."], G.taxes))
+      Frozen(title, format(L["The Ularn Revenue Service has ordered us to not do business with tax evaders.\n\nThey have also told us that you owe %d gp in back taxes and, as we must comply with the law, we cannot serve you at this time.  So Sorry."], G.taxes), ns.Visuals.INTERIOR.shop)
       return
    end
    local store, ui = ns.store, ns.ui
    store:Open(title, L["Welcome to the Ularn Thrift Shoppe.  We stock many items explorers find useful in their adventures.  Feel free to browse to your heart's content.  Also be advised that if you break 'em, you pay for 'em."], 2)
+   store:SetInterior(ns.Visuals.INTERIOR.shop)
    local page = 0
    local pages = math.ceil(K.DNDSIZE / K.IVENSIZE)
    while true do
@@ -232,6 +234,7 @@ end
 function Town.school()
    local store, ui = ns.store, ns.ui
    store:Open(L["The College of Ularn"], L["The College of Ularn offers the exciting opportunity of higher education to all inhabitants of the caves.  Here is the class schedule.  All courses cost 250 gold pieces."], 1)
+   store:SetInterior(ns.Visuals.INTERIOR.college)
    while true do
       store:SetRows(CourseRows())
       ShowGold()
@@ -346,10 +349,11 @@ function Town.bank(branch)
    local title = branch and L["Welcome to the 8th-level branch office of the First National Bank of Ularn."]
       or L["Welcome to the First National Bank of Ularn."]
    if G.taxes > 0 then
-      Frozen(title, format(L["The Ularn Revenue Service has ordered that your account be frozen until all levied taxes have been paid.  They have also told us that you owe %d gp in taxes and we must comply with them. We cannot serve you at this time.  Sorry.\n\nWe suggest you go to the LRS office and pay your taxes."], G.taxes))
+      Frozen(title, format(L["The Ularn Revenue Service has ordered that your account be frozen until all levied taxes have been paid.  They have also told us that you owe %d gp in taxes and we must comply with them. We cannot serve you at this time.  Sorry.\n\nWe suggest you go to the LRS office and pay your taxes."], G.taxes), ns.Visuals.INTERIOR[branch and "branch" or "bank"])
       return
    end
    store:Open(title, L["We buy gemstones at the appraisals shown below."], 1)
+   store:SetInterior(ns.Visuals.INTERIOR[branch and "branch" or "bank"])
    Interest()  -- credit any needed interest
    if G.level == 8 then c[K.TELEFLAG] = 0 end
 
@@ -502,6 +506,7 @@ end
 function Town.tradingPost()
    local store, ui = ns.store, ns.ui
    store:Open(L["The Ularn Trading Post"], L["Welcome to the Ularn Trading Post.  We buy items that explorers no longer find useful.  Since the condition of the items you bring in is not certain, and we incur great expense in reconditioning the items, we usually pay only 20% of their value were they to be new.  If the items are badly damaged, we will pay only 10% of their new value."], 0)
+   store:SetInterior(ns.Visuals.INTERIOR.trade)
    while true do
       ShowGold()
       local slot = ui:PickItem(L["sell"])
@@ -557,6 +562,7 @@ function Town.lrs()
       local owe = G.taxes > 0 and format(L["You presently owe %d gp in taxes."], G.taxes) or L["You do not owe us any taxes."]
       local have = c[K.GOLD] > 0 and format(L["You have %d gp."], c[K.GOLD]) or L["You have no gold pieces."]
       store:Open(L["The Ularn Revenue Service"], L["Welcome to the Ularn Revenue Service district office.  How can we help you?"] .. "\n\n" .. owe .. "\n\n" .. have, 0)
+      store:SetInterior(ns.Visuals.INTERIOR.lrs)
    end
    Show()
    while true do
@@ -595,6 +601,7 @@ function Town.home()
          iven[slot], ivenarg[slot] = 0, 0
          local text = L["Congratulations.  You found the potion of cure dianthroritis!\n\nFrankly, No one thought you could do it.  Boy!  Did you surprise them!"]
          store:Open(title, text, 0)
+         store:SetInterior(ns.Visuals.INTERIOR.home)
          ui:Nap(1000)
          if G.gtime > K.TIMELIMIT then
             store:SetIntro(text .. "\n\n" .. format(L["However... the doctor has the sad duty to inform you that your daughter has died! You didn't make it in time.  In your agony, you kill the doctor, your %s and yourself!  Too bad..."], spouse))
@@ -620,6 +627,7 @@ function Town.home()
    end
 
    store:Open(title, "", 0)
+   store:SetInterior(ns.Visuals.INTERIOR.home)
    if G.gtime > K.TIMELIMIT then
       store:SetIntro(format(L["The doctor has the sad duty to inform you that your daughter has died! You didn't make it in time.  In your agony, you kill the doctor, your %s and yourself!  Too bad..."], spouse))
       ui:Nap(5000)
@@ -677,6 +685,7 @@ end
 function Town.pad()
    local store, ui = ns.store, ns.ui
    store:Open(L["Grizzik's Questionable Elixirs"], L["Psst, friend!  Grizzik's got the finest elixirs this side of the Barrens.  One of each, no refunds, and don't ask what's in 'em.  Time is money!"], 1)
+   store:SetInterior(ns.Visuals.INTERIOR.den)
    while true do
       store:SetRows(ElixirRows())
       ShowGold()

@@ -272,6 +272,24 @@ function V.FlipbookAt(path, progress)
 end
 function V.IsFlipbook(path) return FLIPBOOK[path] ~= nil end
 
+-- The insides of the places you go into (Media/Interiors, tools/render/build_interior.py): shown over the map
+-- while you are there.  Each picture is the part 0..u, 0..v of its texture (padded out to a power of two), aspect
+-- its width / height.
+local INTERIORS = "Interface\\AddOns\\WoWLarn\\Media\\Interiors\\"
+V.INTERIOR = {
+   home = { file = INTERIORS .. "interior_home.png", u = 1280 / 2048, v = 800 / 1024, aspect = 1280 / 800 },
+   bank = { file = INTERIORS .. "interior_bank.png", u = 1280 / 2048, v = 800 / 1024, aspect = 1280 / 800 },
+   branch = { file = INTERIORS .. "interior_branch.png", u = 1280 / 2048, v = 800 / 1024, aspect = 1280 / 800 },  -- (the 8th-level branch office)
+   shop = { file = INTERIORS .. "interior_shop.png", u = 1280 / 2048, v = 800 / 1024, aspect = 1280 / 800 },  -- (the Thrift Shoppe)
+   trade = { file = INTERIORS .. "interior_trade.png", u = 1280 / 2048, v = 800 / 1024, aspect = 1280 / 800 },  -- (the Trading Post)
+   college = { file = INTERIORS .. "interior_college.png", u = 1280 / 2048, v = 800 / 1024, aspect = 1280 / 800 },
+   lrs = { file = INTERIORS .. "interior_lrs.png", u = 1280 / 2048, v = 800 / 1024, aspect = 1280 / 800 },  -- (the Revenue Service office)
+   den = { file = INTERIORS .. "interior_den.png", u = 1280 / 2048, v = 800 / 1024, aspect = 1280 / 800 },  -- (Grizzik's)
+   entrance = { file = INTERIORS .. "interior_entrance.png", u = 1280 / 2048, v = 800 / 1024, aspect = 1280 / 800 },  -- (the dungeon's)
+   volcano = { file = INTERIORS .. "interior_volcano.png", u = 1280 / 2048, v = 800 / 1024, aspect = 1280 / 800 },  -- (down the shaft)
+   volcano_up = { file = INTERIORS .. "interior_volcano_up.png", u = 1280 / 2048, v = 800 / 1024, aspect = 1280 / 800 },  -- (up it)
+}
+
 -- The pictures of the rings (Media/Rings).  Rings are never unidentified in Larn, so each shows
 -- its own; the generic one is for a ring that has no picture.
 local RINGS = "Interface\\AddOns\\WoWLarn\\Media\\Rings\\"
@@ -426,9 +444,12 @@ V.STANDING = {
 -- down, not the 2D map's) is laid on the floor like a tile, so it has the perspective of the floor and
 -- does not skew as the camera moves.  size: of a tile; box: the part of the picture that shows the
 -- object (left, right, top, bottom, as parts of the picture).
-local TRAPDOOR_FLAT = { size = 0.85, picture = MEDIA .. "Traps\\trap_75_trapdoor_top_icon.png",
-   box = { 59 / 256, 197 / 256, 111 / 256, 249 / 256 } }
-V.FLAT = { [K.OTRAPDOOR] = TRAPDOOR_FLAT, [K.OIVTRAPDOOR] = TRAPDOOR_FLAT }
+local function Flat(name)  -- (all three are rendered in the same frame)
+   return { size = 0.85, picture = MEDIA .. "Traps\\" .. name .. "_top_icon.png", box = { 59 / 256, 197 / 256, 111 / 256, 249 / 256 } }
+end
+local TRAPDOOR_FLAT, ARROW_FLAT, DART_FLAT = Flat("trap_75_trapdoor"), Flat("trap_66_arrow"), Flat("trap_74_dart")
+V.FLAT = { [K.OTRAPDOOR] = TRAPDOOR_FLAT, [K.OIVTRAPDOOR] = TRAPDOOR_FLAT, [K.OTRAPARROW] = ARROW_FLAT, [K.OTRAPARROWIV] = ARROW_FLAT,
+   [K.ODARTRAP] = DART_FLAT, [K.OIVDARTRAP] = DART_FLAT }
 
 function V.PotionPicture(arg)
    local known = arg and arg > 0 and ns.G.potionknown[arg] ~= 0 and POTION_FILE[arg]
@@ -770,9 +791,14 @@ local function Own(name)
 end
 
 V.LOWER = {
+   [26] = 0.1,
    [110] = -0.1,
+   [139] = 0.1,
    [160] = 0.18,
+   [163] = 0.1,
    [358] = 0.34,
+   [365] = 0.1,
+   [373] = 0.1,
    [391] = 0.34,
    [486] = 0.34,
    [506] = 0.34,
@@ -804,6 +830,7 @@ V.LOWER = {
    [2000] = 0.2,
    [2003] = 0.2,
    [2028] = 0.34,
+   [2153] = 0.1,
    [2569] = 0.34,
    [2710] = 0.12,
    [2712] = 0.12,
@@ -864,6 +891,8 @@ V.LOWER = {
    [10585] = -0.1,
    [10902] = 0.12,
    [10903] = 0.12,
+   [10912] = 0.1,
+   [10913] = 0.1,
    [10970] = 0.02,
    [10971] = 0.02,
    [10972] = 0.02,
@@ -933,8 +962,13 @@ end
 -- stands from the model, 1 is the usual; above 1 shrinks the model.  What is set in the model
 -- viewer (global.scales) wins.
 V.SCALE = {
+   [26] = 1.61,
    [110] = 0.83,
+   [139] = 1.61,
    [146] = 0.68,
+   [163] = 1.61,
+   [365] = 1.61,
+   [373] = 1.61,
    [391] = 1.33,
    [486] = 1.33,
    [506] = 1.33,
@@ -947,6 +981,7 @@ V.SCALE = {
    [2003] = 1.61,
    [2023] = 1.1,
    [2024] = 1.1,
+   [2153] = 1.61,
    [3206] = 0.51,
    [3207] = 0.51,
    [4449] = 1.1,
@@ -980,6 +1015,8 @@ V.SCALE = {
    [9794] = 0.91,
    [10543] = 0.75,
    [10579] = 0.51,
+   [10912] = 1.61,
+   [10913] = 1.61,
    [10970] = 1.46,
    [10971] = 1.46,
    [10972] = 1.46,

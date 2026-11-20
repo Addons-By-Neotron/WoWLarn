@@ -213,6 +213,103 @@ end
 
 function store:Close()
    if self.frame then self.frame:Hide() end
+   self:SetInterior()
+end
+
+-- The inside of the place (V.INTERIOR): a picture over the whole map, the window of text docked at the
+-- bottom over it.  nil takes it away (the window back in the middle).  The picture covers the map: what
+-- sticks out past the map's shape is cut off, top and bottom or the sides.
+function store:SetInterior(interior)
+   if not self.frame then return end
+   local map = self.frame:GetParent()
+   if interior and not self.interior then
+      local back = CreateFrame("Frame", nil, map)
+      back:SetAllPoints(map)
+      back:SetFrameStrata("DIALOG")
+      back:SetFrameLevel(self.frame:GetFrameLevel() - 1)
+      back:EnableMouse(true)  -- (the map under it is not clicked through)
+      back.texture = back:CreateTexture(nil, "BACKGROUND")
+      back.texture:SetAllPoints()
+      back:SetScript("OnSizeChanged", function() self:FitInterior() end)
+      self.interior = back
+   end
+   self.shownInterior = interior
+   if not self.interior then return end
+   self.interior:SetShown(interior ~= nil)
+   self.frame:ClearAllPoints()
+   if interior then
+      self.interior.texture:SetTexture(interior.file)
+      self:FitInterior()
+      self.frame:SetPoint("BOTTOM", 0, 12)
+   else
+      self.frame:SetPoint("CENTER")
+   end
+   self:Resize()
+end
+
+-- Stepping onto a place: its picture over the whole map and a small window at the bottom with what
+-- was found and two buttons, go in (label, sending key) and Leave (i).  Keys as ui:Choose (prompt is
+-- the line it shows; Esc is i).  Returns the key; the picture stays when it is key (the window of the
+-- place opens over it), else it is taken away.
+function store:Doorway(interior, text, label, key, prompt)
+   local ui = ns.ui
+   if not self.frame then return ui:Choose(prompt, key) end
+   local door = self.door
+   if not door then
+      local function Key(k)
+         ns.main:SetFocus(true)
+         ns.ui:InjectKey(k)
+      end
+      door = ns.CreatePanel(self.frame:GetParent())
+      door:SetSize(400, 78)
+      door:SetPoint("BOTTOM", 0, 16)
+      door:SetFrameStrata("DIALOG")
+      door:SetFrameLevel(self.frame:GetFrameLevel() + 2)
+      door:EnableMouse(true)
+      door:Hide()
+      door.text = door:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+      door.text:SetPoint("TOPLEFT", 10, -10)
+      door.text:SetPoint("TOPRIGHT", -10, -10)
+      door.text:SetJustifyH("CENTER")
+      door.go = CreateFrame("Button", nil, door, "UIPanelButtonTemplate")
+      door.go:SetSize(140, 22)
+      door.go:SetPoint("BOTTOM", -76, 10)
+      door.go:SetScript("OnClick", function(b) Key(b.key) end)
+      local leave = CreateFrame("Button", nil, door, "UIPanelButtonTemplate")
+      leave:SetSize(140, 22)
+      leave:SetPoint("BOTTOM", 76, 10)
+      leave:SetText(L["Leave"])
+      leave:SetScript("OnClick", function() Key("i") end)
+      self.door = door
+   end
+   self.frame:Hide()
+   self:SetInterior(interior)
+   door.text:SetText(text)
+   door.go:SetText(label)
+   door.go.key = key
+   door:Show()
+   local answer = ui:Choose(prompt, key)
+   door:Hide()
+   if answer ~= key then self:SetInterior() end
+   return answer
+end
+
+function store:FitInterior()
+   local interior, back = self.shownInterior, self.interior
+   if not interior or not back then return end
+   local w, h = back:GetWidth(), back:GetHeight()
+   if not w or not h or w <= 0 or h <= 0 then return end
+   local u, v = interior.u, interior.v  -- (the picture is the part 0..u, 0..v of its texture)
+   local aspect = interior.aspect
+   local l, r, t, b = 0, u, 0, v
+   if w / h > aspect then  -- the map is wider: cut off the top and bottom
+      local keep = aspect / (w / h)
+      t, b = v * (1 - keep) / 2, v * (1 + keep) / 2
+   else  -- taller: cut off the sides
+      local keep = (w / h) / aspect
+      l, r = u * (1 - keep) / 2, u * (1 + keep) / 2
+   end
+   back.texture:SetTexCoord(l, r, t, b)
 end
 
 -- Starts a new screen. columns is 1 (default) or 2 for a list of rows, 0 for a screen of text.
@@ -226,6 +323,7 @@ function store:Open(title, intro, columns)
    self.confirm:Hide()
    self.amount:Hide()
    self.leave:SetText(self.columns == 0 and L["OK"] or L["Leave"])
+   self:SetInterior()
    self.intro:SetText(intro or "")
    self.status:SetText("")
    self.note:SetText("")
@@ -273,11 +371,19 @@ function store:SetRows(rows)
       end
    end
    local count = math.min(#rows, ROWS * COLUMNS)
-   local lines = self.columns == 1 and count or math.min(perColumn, ROWS)
+   self.lines = self.columns == 1 and count or math.min(perColumn, ROWS)
+   self:Resize()
+end
+
+-- The height of the window for what it shows: a screen of text at least TEXT_H high, unless it is
+-- over a picture of the place (then as high as the text, so the picture shows).
+function store:Resize()
+   if not self.frame then return end
    if self.columns == 0 then
-      self.frame:SetHeight(HEADER_H + math.max(TEXT_H, self.intro:GetStringHeight() + 8) + FOOTER_H + 8)
+      local least = self.shownInterior and 40 or TEXT_H
+      self.frame:SetHeight(HEADER_H + math.max(least, self.intro:GetStringHeight() + 8) + FOOTER_H + 8)
    else
-      self.frame:SetHeight(HEADER_H + INTRO_H + math.max(lines, 1) * ROW_H + FOOTER_H + 8)
+      self.frame:SetHeight(HEADER_H + INTRO_H + math.max(self.lines or 0, 1) * ROW_H + FOOTER_H + 8)
    end
 end
 
@@ -360,7 +466,10 @@ function store:Amount(text, max)
 end
 
 function store:SetIntro(text)
-   if self.frame then self.intro:SetText(text or "") end
+   if self.frame then
+      self.intro:SetText(text or "")
+      self:Resize()
+   end
 end
 
 function store:SetStatus(text)

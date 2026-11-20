@@ -1308,3 +1308,10 @@ L["Show a window when a door shocks you, and when your hit points fall to a quar
 L["The door shocked you!  You have %d of %d hit points left."] = true
 L["You are nearly dead!  You have %d of %d hit points left."] = true
 L["Warning"] = true
+L["Enroll"] = true
+L["Do business"] = true
+L["Browse"] = true
+L["Go inside"] = true
+L["Check it out"] = true
+L["Climb down"] = true
+L["Climb up"] = true

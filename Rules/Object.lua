@@ -344,14 +344,14 @@ for _, id in ipairs({ K.OSCHOOL, K.OBANK, K.OBANK2, K.ODNDSTORE, K.OTRADEPOST, K
 end
 
 local BUILDING = {
-   [K.OSCHOOL] = { found = L["You have found the College of Ularn."], key = "g", enter = function() ns.Town.school() end },
-   [K.OBANK] = { found = L["You have found the bank of Ularn."], key = "g", enter = function() ns.Town.bank(false) end },
-   [K.OBANK2] = { found = L["You have found a branch office of the bank of Ularn."], key = "g", enter = function() ns.Town.bank(true) end },
-   [K.ODNDSTORE] = { found = L["There is a Thrift Shoppe here."], key = "g", enter = function() ns.Town.dndStore() end },
-   [K.OTRADEPOST] = { found = L["You have found the Ularn trading Post."], key = "g", enter = function() ns.Town.tradingPost() end },
-   [K.OHOME] = { found = L["You have found your way home."], key = "g", enter = function() ns.Town.home() end },
-   [K.OPAD] = { found = L["You have found Grizzik's Questionable Elixirs!"], key = "c", enter = function() ns.Town.pad() end },
-   [K.OLRS] = { found = L["There is an LRS office here."], key = "g", enter = function() ns.Town.lrs() end },
+   [K.OSCHOOL] = { found = L["You have found the College of Ularn."], key = "g", go = L["Enroll"], interior = "college", enter = function() ns.Town.school() end },
+   [K.OBANK] = { found = L["You have found the bank of Ularn."], key = "g", go = L["Do business"], interior = "bank", enter = function() ns.Town.bank(false) end },
+   [K.OBANK2] = { found = L["You have found a branch office of the bank of Ularn."], key = "g", go = L["Do business"], interior = "branch", enter = function() ns.Town.bank(true) end },
+   [K.ODNDSTORE] = { found = L["There is a Thrift Shoppe here."], key = "g", go = L["Browse"], interior = "shop", enter = function() ns.Town.dndStore() end },
+   [K.OTRADEPOST] = { found = L["You have found the Ularn trading Post."], key = "g", go = L["Sell"], interior = "trade", enter = function() ns.Town.tradingPost() end },
+   [K.OHOME] = { found = L["You have found your way home."], key = "g", go = L["Go inside"], interior = "home", enter = function() ns.Town.home() end },
+   [K.OPAD] = { found = L["You have found Grizzik's Questionable Elixirs!"], key = "c", go = L["Check it out"], interior = "den", enter = function() ns.Town.pad() end },
+   [K.OLRS] = { found = L["There is an LRS office here."], key = "g", go = L["Do business"], interior = "lrs", enter = function() ns.Town.lrs() end },
 }
 for _, building in pairs(BUILDING) do
    building.prompt = building.key == "c" and L["Do you (c) check it out, or (i) ignore it?"] or L["Do you (g) go inside, or (i) stay here?"]
@@ -587,7 +587,9 @@ function Object.lookForObject()
 
    elseif id == K.OENTRANCE then
       Msg(L["You have found %s"], name)
-      if ui:Choose(L["Do you (g) go inside, or (i) ignore it?"], "g") == "g" then
+      if ns.store:Doorway(ns.Visuals.INTERIOR.entrance, format(L["You have found %s"], name), L["Go inside"], "g",
+            L["Do you (g) go inside, or (i) ignore it?"]) == "g" then
+         ns.store:SetInterior()
          Create.newCaveLevel(1)
          G.playerx, G.playery = 34, MAXY - 1
          G.item[34][MAXY], G.know[34][MAXY], G.mon[34][MAXY] = 0, 0, 0
@@ -596,8 +598,10 @@ function Object.lookForObject()
 
    elseif id == K.OVOLDOWN then
       Msg(L["You have found %s"], name)
-      if ui:Choose(L["Do you (c) climb down, or (i) ignore it?"], "c") == "i" then return end
+      if ns.store:Doorway(ns.Visuals.INTERIOR.volcano, format(L["You have found %s"], name), L["Climb down"], "c",
+            L["Do you (c) climb down, or (i) ignore it?"]) == "i" then return end
       if G.level ~= 0 then
+         ns.store:SetInterior()
          Msg(L["The shaft only extends 5 feet downward!"])
          return
       end
@@ -605,11 +609,12 @@ function Object.lookForObject()
          Msg(L["You slip and fall down the shaft."])
          G.lastnum = 275
          ns.Player.losehp(30 + ns.rnd(20))
-         if G.dead then return end
+         if G.dead then ns.store:SetInterior() return end
       else
          Msg(L["You climb down."])
       end
-      ui:Nap(3000)
+      ui:Nap(3000)  -- (the picture stays while you climb)
+      ns.store:SetInterior()
       Create.newCaveLevel(DBOTTOM + 1)  -- down to V1
       G.playerx, G.playery = ns.rnd(MAXX - 2) + 1, ns.rnd(MAXY - 2) + 1
       ns.Player.positionPlayer()
@@ -617,15 +622,18 @@ function Object.lookForObject()
 
    elseif id == K.OVOLUP then
       Msg(L["You have found %s"], name)
-      if ui:Choose(L["Do you (c) climb up, or (i) ignore it?"], "c") == "i" then return end
+      if ns.store:Doorway(ns.Visuals.INTERIOR.volcano_up, format(L["You have found %s"], name), L["Climb up"], "c",
+            L["Do you (c) climb up, or (i) ignore it?"]) == "i" then return end
       if ns.Player.packWeight() > 40 + 5 * (c[K.DEXTERITY] + c[K.STRENGTH] + c[K.STREXTRA]) then
+         ns.store:SetInterior()
          Msg(L["You slip and fall down the shaft."])
          G.lastnum = 275
          ns.Player.losehp(15 + ns.rnd(20))
          return
       end
       Msg(L["You climb up."])
-      ui:Nap(3000)
+      ui:Nap(3000)  -- (the picture stays while you climb)
+      ns.store:SetInterior()
       Create.newCaveLevel(0)
       MoveToObject(K.OVOLDOWN)  -- put the player near the volcano shaft
       ns.Player.positionPlayer()
@@ -696,7 +704,8 @@ function Object.lookForObject()
       if NearbyMonster() then return end
       local building = BUILDING[id]
       Msg(building.found)
-      if ui:Choose(building.prompt, building.key) == building.key then
+      -- (the picture of the place, and a little window: go in, or leave)
+      if ns.store:Doorway(ns.Visuals.INTERIOR[building.interior], building.found, building.go, building.key, building.prompt) == building.key then
          building.enter(id)
       end
 

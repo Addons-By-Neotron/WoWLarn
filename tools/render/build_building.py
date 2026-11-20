@@ -550,39 +550,52 @@ def pad():
     torch(-0.88, -0.5, 0.85)
     return 0.6
 
+ENT_PW, ENT_Y0, ENT_Y1 = 0.42, -0.5, 0.75          # the entrance's opening: half width, its face and the back of its tunnel
+
 def entrance():
-    # the way down: a stone stair sinking into a dark pit, ringed by a paved kerb, under a stone arch with a torch
-    # on each pillar
-    rk = rock_material("Steps", (0.3, 0.28, 0.25), 0.8, fade=(-0.1, -0.7))[0]
-    PW, PL = 0.7, 1.3                              # the pit's half width and its length (from the arch back)
-    kb = bmesh.new()                               # the paved kerb round the pit
-    for x0, x1, y0, y1 in ((-PW - 0.3, -PW, -0.1, PL + 0.3), (PW, PW + 0.3, -0.1, PL + 0.3), (-PW - 0.3, PW + 0.3, PL, PL + 0.3)):
-        box(x0, x1, y0, y1, 0, 0.12, bm=kb)
-    obj("Kerb", kb, STONE, bevel=0.015)
+    # the way down (as in the picture of it, build_interior.py entrance): a mound of rock with a stone portal cut into
+    # its face - two jambs with capitals, a lintel - steps going down into the dark behind it, a torch on each jamb,
+    # boulders about and a sign on a post with its warning in red
+    rk = rock_material("Cliff", (0.52, 0.4, 0.29), 0.7)[0]
+    hewn = rock_material("Hewn", (0.55, 0.5, 0.44), 1.4)[0]
+    steps = rock_material("Steps", (0.4, 0.36, 0.31), 1.4, fade=(-0.05, -0.55))[0]
+    PW, Y0, Y1, PH = ENT_PW, ENT_Y0, ENT_Y1, 0.85
+    mound = obj("Mound", rock_lump(Vector((0, 0.45, 0.35)), 1.05, (1.15, 0.8, 0.95), subdiv=3), rk, smooth=True)   # (one closed lump: the cut works)
+    bm = bmesh.new()
+    for a in (0.15, 0.8, 1.6, 2.35, 3.0, -2.6, -0.5):   # (round the sides and back, clear of the opening at the front)
+        rock_lump(Vector((1.05*math.cos(a), 0.45 + 0.7*math.sin(a), 0.12)), rnd.uniform(0.28, 0.45), bm=bm, subdiv=1)
+    obj("MoundLumps", bm, rk, smooth=True)
+    hole = obj("MoundCut", box(-PW - 0.02, PW + 0.02, Y0 - 1, Y1 + 0.05, -1, PH), BLACK); hole.hide_render = True
+    c = mound.modifiers.new("Cut", 'BOOLEAN'); c.operation = 'DIFFERENCE'; c.object = hole
+    pt = bmesh.new()                               # the portal
+    for s_ in (-1, 1):
+        box(s_*PW, s_*(PW + 0.2), Y0 - 0.06, Y0 + 0.3, 0, PH, bm=pt)
+        box(s_*(PW - 0.02), s_*(PW + 0.23), Y0 - 0.09, Y0 + 0.32, PH - 0.05, PH, bm=pt)
+    box(-PW - 0.26, PW + 0.26, Y0 - 0.1, Y0 + 0.3, PH, PH + 0.2, bm=pt)
+    obj("Portal", pt, hewn, bevel=0.015)
+    tn = bmesh.new()                               # the tunnel: walls, roof, the far end; the steps down
+    for s_ in (-1, 1):
+        box(s_*PW, s_*(PW + 0.08), Y0, Y1, -1.0, PH, bm=tn)
+    box(-PW, PW, Y0 + 0.2, Y1, PH - 0.05, PH + 0.05, bm=tn); box(-PW, PW, Y1 - 0.05, Y1, -1.0, PH, bm=tn)
+    obj("Tunnel", tn, BLACK)
     st = bmesh.new()
-    n = 9
-    for k in range(n):                             # steps going down away from the arch
-        y = 0.0 + k*PL/n; z = -0.12*(k + 1)
-        box(-PW, PW, y, y + PL/n, -1.3, z, bm=st)
-    for sx in (-1, 1):                             # the pit's side walls
-        box(sx*PW - 0.02 if sx > 0 else -PW - 0.0, sx*PW + 0.0 if sx > 0 else -PW + 0.02, 0, PL, -1.3, 0.0, bm=st)
-    box(-PW, PW, PL - 0.02, PL, -1.3, 0.0, bm=st)
-    obj("Stair", st, rk, bevel=0.01)
-    obj("Pit", box(-PW, PW, -0.0, PL, -1.4, -1.3), BLACK)
-    for x in (-PW - 0.25, PW):                     # the arch: two pillars and a round top
-        obj("Pillar", box(x, x + 0.25, -0.2, 0.05, 0, 1.25), STONE, bevel=0.015)
-        obj("Cap", box(x - 0.03, x + 0.28, -0.23, 0.08, 1.25, 1.33), TRIM, bevel=0.01)
-    R0, R1 = PW, PW + 0.25
-    arc = bmesh.new()
-    for k in range(10):                            # voussoirs
-        a0, a1 = math.pi*k/10, math.pi*(k + 1)/10 - 0.02
-        pts = [(R0*math.cos(a0), 1.33 + R0*math.sin(a0)), (R1*math.cos(a0), 1.33 + R1*math.sin(a0)),
-               (R1*math.cos(a1), 1.33 + R1*math.sin(a1)), (R0*math.cos(a1), 1.33 + R0*math.sin(a1))]
-        prism(pts, -0.2, 0.05, bm=arc)
-    obj("Arch", arc, TRIM, bevel=0.008)
-    obj("Keystone", prism([(-0.1, 1.33 + R0 - 0.02), (0.1, 1.33 + R0 - 0.02), (0.13, 1.33 + R1 + 0.08), (-0.13, 1.33 + R1 + 0.08)], -0.23, 0.08), STONE, bevel=0.01)
-    torch(-PW - 0.125, -0.28, 0.95); torch(PW + 0.125, -0.28, 0.95)
-    return 0.6
+    n = 7
+    for k in range(n):
+        y = Y0 + k*(Y1 - Y0)/n; z = -0.1*k
+        box(-PW, PW, y, y + (Y1 - Y0)/n, -1.0, z, bm=st)
+    obj("Stairs", st, steps, bevel=0.006)
+    torch(-PW - 0.1, Y0 - 0.12, 0.6); torch(PW + 0.1, Y0 - 0.12, 0.6)
+    bl = bmesh.new()
+    for x, y, r in ((-1.05, -0.55, 0.16), (-0.75, -0.8, 0.1), (1.15, 0.05, 0.14)):
+        rock_lump(Vector((x, y, r*0.4)), r, bm=bl, subdiv=1, jit=0.3)
+    obj("Boulders", bl, rk, smooth=True)
+    sx, sy = 0.95, -0.75                           # the sign
+    obj("SignPost", box(sx - 0.025, sx + 0.025, sy - 0.025, sy + 0.025, 0, 0.62), wood_material("Post", (0.1, 0.065, 0.035), axis="Z"))
+    sg = obj("SignBoard", box(-0.2, 0.2, -0.015, 0.015, -0.09, 0.09), wood_material("Board", (0.12, 0.08, 0.045), axis="X"), bevel=0.006)
+    sg.location = (sx, sy - 0.03, 0.55); sg.rotation_euler = (0, math.radians(-6), 0)
+    wr = obj("SignPaint", box(-0.15, 0.15, -0.018, -0.014, -0.04, 0.05), mat("WarnPaint", (0.7, 0.08, 0.04), Roughness=0.7)[0])
+    wr.parent = sg; wr.location = (0, 0, 0)
+    return 0.55
 
 look = globals()[P["kind"]]()
 
@@ -592,8 +605,8 @@ if P["kind"] == "entrance":                         # the ground has a hole wher
     gm = bpy.data.meshes.new("Ground"); ground.to_mesh(gm); ground.free()
     g = link(sc, "Ground", gm); g.is_shadow_catcher = True
     bo = g.modifiers.new("Hole", 'BOOLEAN'); bo.operation = 'DIFFERENCE'
-    cut = link(sc, "Cut", bpy.data.meshes.new("Cut")); bc = box(-0.7, 0.7, 0.0, 1.3, -0.5, 0.5); bc.to_mesh(cut.data); bc.free()
-    cut.parent = root; cut.hide_render = True; bo.object = cut
+    cut = link(sc, "Cut", bpy.data.meshes.new("Cut")); bc = box(-ENT_PW, ENT_PW, ENT_Y0, ENT_Y1, -0.5, 0.5); bc.to_mesh(cut.data); bc.free()
+    cut.parent = root; cut.hide_render = True; bo.object = cut   # (under the tunnel)
 else:
     bmesh.ops.create_grid(ground, x_segments=1, y_segments=1, size=10)
     gm = bpy.data.meshes.new("Ground"); ground.to_mesh(gm); ground.free()
